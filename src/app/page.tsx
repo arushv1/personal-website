@@ -1,12 +1,15 @@
 import Reveal from "../components/Reveal";
+import TileGrid from "../components/TileGrid";
+import VesselTrace from "../components/VesselTrace";
 import {
-  about,
   awards,
   contact,
-  interlude,
+  courses,
+  education,
+  experiences,
   intro,
   projects,
-  publication,
+  publications,
   researchInterests,
   site,
 } from "../content";
@@ -42,7 +45,7 @@ export default function Home() {
           ) : (
             <p>{intro.headshot}</p>
           )}
-          <div className="vessel-field" aria-hidden="true" />
+          <TileGrid label="A grid of whole slide tiles, zooming in as it scrolls into view" />
           <p>
             <a href={`mailto:${site.email}`}>{site.email}</a> ·{" "}
             <a href={site.linkedin}>LinkedIn</a> · <a href={site.github}>GitHub</a>
@@ -50,54 +53,58 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About */}
-      <section id="about" aria-label="About">
+      {/* Education */}
+      <section id="education" aria-label="Education">
         <Reveal>
           <div className="column">
-            <p className="section-label">01 / About</p>
-            <h2>{about.heading}</h2>
-            {about.paragraphs.map((p, i) =>
-              isPlaceholder(p) ? <Placeholder key={i} text={p} /> : <p key={i}>{p}</p>
-            )}
+            <p className="section-label">01 / Education</p>
+            <h2>{education.school}</h2>
+            <p className="lede">
+              {education.degree}, {education.period}. GPA {education.gpa}.
+            </p>
             <dl className="fact-grid">
-              {about.facts.map((f) => (
+              {education.facts.map((f) => (
                 <div key={f.label}>
                   <dt>{f.label}</dt>
                   <dd>{f.value}</dd>
                 </div>
               ))}
             </dl>
-            {isPlaceholder(about.lookingFor) ? (
-              <Placeholder text={about.lookingFor} />
-            ) : (
-              <p>{about.lookingFor}</p>
-            )}
           </div>
         </Reveal>
       </section>
 
-      {/* Awards as a graphic collage */}
-      <section id="awards" aria-label="Awards">
+      {/* Experiences */}
+      <section id="experiences" aria-label="Experiences">
         <Reveal>
           <div className="column">
-            <p className="section-label">02 / Recognition</p>
-            <h2>Awards, treated as proof, not a list.</h2>
-          </div>
-          <div className="award-collage">
-            {awards.map((a) => (
-              <article key={a.title} className={`award-cell ${a.size}`}>
-                <p className="award-title">{a.title}</p>
-                <p className="award-detail">{a.detail}</p>
-              </article>
-            ))}
+            <p className="section-label">02 / Experiences</p>
+            <h2>Where the work happened.</h2>
+            <VesselTrace label="A vessel line tracing itself across the experiences section" />
+            <div className="experience-list">
+              {experiences.map((e) => (
+                <article key={e.org} className="experience-card">
+                  <p className="project-meta">
+                    {e.role} · {e.org} · {e.period}
+                  </p>
+                  <h3>{e.org}</h3>
+                  <p>{e.summary}</p>
+                  <ul>
+                    {e.bullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
           </div>
         </Reveal>
       </section>
 
-      {/* Work and research as a scroll sequence */}
-      <section id="work" aria-label="Work">
+      {/* Projects as a scroll sequence */}
+      <section id="projects" aria-label="Projects">
         <div className="column">
-          <p className="section-label">03 / Work, in sequence</p>
+          <p className="section-label">03 / Projects</p>
           <h2>Scroll through the work, one project at a time.</h2>
         </div>
       </section>
@@ -146,37 +153,65 @@ export default function Home() {
         </section>
       ))}
 
-      {/* Research */}
-      <section id="research" aria-label="Research">
+      {/* Awards as a graphic collage */}
+      <section id="awards" aria-label="Awards">
         <Reveal>
           <div className="column">
-            <p className="section-label">04 / Research</p>
-            <h2>What I am trying to learn, and why.</h2>
+            <p className="section-label">04 / Awards</p>
+            <h2>Recognition, treated as proof, not a list.</h2>
+          </div>
+          <div className="award-collage">
+            {awards.map((a) => (
+              <article key={a.title} className={`award-cell ${a.size}`}>
+                <p className="award-title">{a.title}</p>
+                <p className="award-detail">{a.detail}</p>
+              </article>
+            ))}
+          </div>
+        </Reveal>
+      </section>
+
+      {/* Publications */}
+      <section id="publications" aria-label="Publications">
+        <Reveal>
+          <div className="column">
+            <p className="section-label">05 / Publications</p>
+            <h2>Published work, and what is coming next.</h2>
+            {publications.published.map((pub) => (
+              <article key={pub.link} className="publication-card">
+                <p>
+                  {pub.citation} <a href={pub.link}>Read it</a>
+                </p>
+              </article>
+            ))}
+            <h3>Manuscript in progress</h3>
+            {publications.planned.map((p) =>
+              isPlaceholder(p) ? <Placeholder key={p} text={p} /> : <p key={p}>{p}</p>
+            )}
+            <h3>Research direction</h3>
             <ul>
               {researchInterests.map((r) => (
                 <li key={r}>{r}</li>
               ))}
             </ul>
-            <h3>Publication</h3>
-            <p>
-              {publication.citation}{" "}
-              <a href={publication.link}>Read it</a>
-            </p>
           </div>
         </Reveal>
       </section>
 
-      {/* Personal interlude */}
-      <section aria-label="Interlude">
+      {/* Courses: entirely placeholders, nothing on record */}
+      <section id="courses" aria-label="Courses">
         <Reveal>
           <div className="column">
-            <p className="section-label">05 / Interlude</p>
-            <h2>{interlude.heading}</h2>
-            {isPlaceholder(interlude.text) ? (
-              <Placeholder text={interlude.text} />
-            ) : (
-              <p>{interlude.text}</p>
-            )}
+            <p className="section-label">06 / Courses</p>
+            <h2>Coursework worth showing.</h2>
+            <p className="lede">{courses.note}</p>
+            <div className="course-grid">
+              {courses.placeholders.map((c) => (
+                <p key={c} className="placeholder course-slot">
+                  <strong>To add:</strong> {c.replace(/^To add:\s*/, "")}
+                </p>
+              ))}
+            </div>
           </div>
         </Reveal>
       </section>
@@ -185,14 +220,15 @@ export default function Home() {
       <section id="contact" className="contact-close" aria-label="Contact">
         <Reveal>
           <div className="column">
-            <p className="section-label">06 / Contact</p>
+            <p className="section-label">07 / Contact</p>
             <h2>{contact.heading}</h2>
             <p className="lede">{contact.text}</p>
             <a className="contact-circle" href={`mailto:${site.email}`}>
               Email Arush
             </a>
             <p>
-              <a href={site.linkedin}>LinkedIn</a> · <a href={site.github}>GitHub</a>
+              <a href={site.linkedin}>LinkedIn</a> · <a href={site.github}>GitHub</a> ·{" "}
+              {site.location}
             </p>
             {isPlaceholder(contact.preferences) ? (
               <Placeholder text={contact.preferences} />

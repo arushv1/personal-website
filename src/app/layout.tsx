@@ -22,10 +22,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="header-cell status">{site.status}</div>
           <div className="header-cell location">{site.location}</div>
           <nav aria-label="Sections">
-            <a href="#about">About</a>
+            <a href="#education">Education</a>
+            <a href="#experiences">Experiences</a>
+            <a href="#projects">Projects</a>
             <a href="#awards">Awards</a>
-            <a href="#work">Work</a>
-            <a href="#research">Research</a>
+            <a href="#publications">Publications</a>
+            <a href="#courses">Courses</a>
           </nav>
           <div className="header-cell">
             <ThemeToggle />

@@ -26,21 +26,94 @@ export const intro = {
   headshot: "To add: headshot image (place the file in public/ and put its path here)",
 };
 
-export const about = {
-  heading: "About",
-  // To add: Arush's own About paragraphs.
-  paragraphs: [
-    "To add: About paragraph 1. Who you are, and what draws you to medical imaging AI.",
-    "To add: About paragraph 2. How you work, and what you are looking for next.",
-  ],
+export const education = {
+  school: "Boston University",
+  degree: "BS Biomedical Engineering",
+  period: "Expected May 2027",
+  gpa: "3.83",
   facts: [
-    { label: "Degree", value: "BS Biomedical Engineering, Boston University, expected May 2027" },
+    { label: "Degree", value: "BS Biomedical Engineering, Boston University" },
+    { label: "Expected", value: "May 2027" },
     { label: "GPA", value: "3.83" },
     { label: "Focus", value: "Medical imaging AI, foundation models, segmentation, evaluation" },
-    { label: "Base", value: "Brookline / Boston, MA" },
   ],
-  // To add: what Arush is looking for next, in his own words.
-  lookingFor: "To add: what you are looking for next",
+};
+
+export type Experience = {
+  role: string;
+  org: string;
+  period: string;
+  summary: string;
+  bullets: string[];
+};
+
+export const experiences: Experience[] = [
+  {
+    role: "Health AI Engineering Intern",
+    org: "Boston Scientific",
+    period: "May 2026 to present",
+    summary:
+      "Built the first internal 3D CTA segmentation pipeline for a vascular therapies AI medical imaging product.",
+    bullets: [
+      "Mean artery Dice 0.87, clDice 0.94, a +0.22 Dice gain over the baseline model.",
+      "Benchmarked 10+ model variants across loss functions, attention mechanisms, and foundation model fine tuning.",
+      "Co-inventor of patent pending medical imaging technology.",
+      "Presented technical findings, model performance, and product impact to directors and executive leadership.",
+    ],
+  },
+  {
+    role: "Undergraduate Deep Learning Researcher",
+    org: "Tian Lab, Boston University",
+    period: "September 2025 to present",
+    summary:
+      "VascuPath: gigapixel scale whole slide image segmentation for vascular changes in CTE and Alzheimer's tissue.",
+    bullets: [
+      "Curating 2,500+ annotated tissue patches from 40+ whole slide images, plus a diagnosis manifest of 760+ WSIs.",
+      "Multi-head model on a neuropathology ViT-L foundation backbone: 99.6% stain classification, 96.7% vessel detection on 500 test patches.",
+      "Per-slide inference cut 70%, from 5 to 6 minutes to 1 to 2 minutes, through a shared embedding.",
+      "Weakly supervised attention based MIL model: held out AUCs 0.92 for repetitive head impact, 0.91 for CTE, 0.94 for high-stage Alzheimer's.",
+    ],
+  },
+  {
+    role: "Lab Assistant",
+    org: "BTEC Lab, Boston University",
+    period: "September 2025 to present",
+    summary:
+      "Proposed an AI knowledge base for the lab assistant team, then took over an existing retrieval system and implemented it for BTEC.",
+    bullets: [
+      "Covers 1,800+ documents across 12 subject areas, used by 13 assistants.",
+      "Benchmarked language models on a 30-question test set drawn from real assistant queries.",
+      "Replaced a dedicated hosted server with a serverless pipeline pulling documents directly from Google Drive.",
+      "Trained 20+ students on core biomedical instruments, including the gel imager, bioprinter, SpectraMax plate reader, and qPCR.",
+    ],
+  },
+];
+
+export const publications = {
+  published: [
+    {
+      citation:
+        "Vyas, A., Bansal, K., et al. Optimizing Non-Invasive Brain-Computer Interfaces for Motor Rehabilitation in Individuals with Spinal Cord Injury. STEM Students on the Rise, Rice University, October 2025.",
+      link: "https://dx.doi.org/10.2139/ssrn.5605290",
+    },
+  ],
+  // Planned, not published: the VascuPath manuscript link goes here when available.
+  planned: [
+    "To add: VascuPath manuscript link when available",
+  ],
+};
+
+export const courses = {
+  note: "Relevant coursework Arush wants to show. No course list is on record yet, so every slot below is a placeholder.",
+  // To add: real course names, one per slot. Add or remove slots as needed.
+  placeholders: [
+    "To add: course 1",
+    "To add: course 2",
+    "To add: course 3",
+    "To add: course 4",
+    "To add: course 5",
+    "To add: course 6",
+  ],
 };
 
 export type Award = {
@@ -67,12 +140,17 @@ export const awards: Award[] = [
   },
   {
     title: "Harold C. Case Merit Scholarship",
-    detail: "For academic excellence, Boston University, 2026",
+    detail: "For academic excellence, Boston University, 2026. One of 15 recipients.",
     size: "small",
   },
   {
-    title: "UROP Symposium presentation",
-    detail: "Presented the VascuPath research at Boston University",
+    title: "UROP Symposium Convergent Research Poster Award",
+    detail: "For the VascuPath research, Boston University, 2026",
+    size: "small",
+  },
+  {
+    title: "2x Student Research Award Recipient",
+    detail: "Boston University UROP, 2025 and 2026",
     size: "small",
   },
 ];
@@ -180,18 +258,6 @@ export const researchInterests = [
   "Evaluation and reliability: benchmarking, failure analysis, and validation that survives contact with real data",
   "Clinical AI that produces evidence clinicians can evaluate and act on",
 ];
-
-export const publication = {
-  citation:
-    "Vyas, A., Bansal, K., et al. Optimizing Non-Invasive Brain-Computer Interfaces for Motor Rehabilitation in Individuals with Spinal Cord Injury. STEM Students on the Rise, Rice University, October 2025.",
-  link: "https://dx.doi.org/10.2139/ssrn.5605290",
-};
-
-export const interlude = {
-  heading: "Between the slides",
-  // To add: a short personal note, a photo, or a detail Arush wants visitors to know.
-  text: "To add: a personal note or photo for this interlude section.",
-};
 
 export const contact = {
   heading: "Start a conversation",
