@@ -5,7 +5,7 @@ import { followLink, routeHref } from './navigation.mjs';
 import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
 import { sections, sectionById, overviewView } from './content/portfolio.mjs';
-import { calloutPosition } from './hotspots.mjs';
+import { layoutHotspots } from './hotspots.mjs';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -152,15 +152,24 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       }
       const viewChanged=needsRender || completed<4 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12;
       const labelsNeedLayout=sections.some(section=>markers.current[section.id]&&!markers.current[section.id].style.transform);
-      if(viewChanged||labelsNeedLayout)for(const section of sections){
-        const id=section.id,marker=markers.current[id],dot=dots.current[id],leader=leaders.current[id];if(!marker||!dot||!leader)continue;
-        projected.fromArray(anchors[id]).project(camera);
-        const w=container.clientWidth,h=container.clientHeight,label=calloutPosition(section,w,h);
-        const x=THREE.MathUtils.clamp((projected.x*.5+.5)*w,16,w-16),y=THREE.MathUtils.clamp((-projected.y*.5+.5)*h,16,h-16);
-        marker.style.width=`${label.width}px`;marker.style.transform=`translate(${label.x}px,${label.y}px)`;
-        dot.style.transform=`translate(${x-label.x}px,${y-label.y}px)`;
-        leader.setAttribute('x1',label.x+(section.callout.side==='left'?label.width:0));leader.setAttribute('y1',label.y+22);
-        leader.setAttribute('x2',x);leader.setAttribute('y2',y);
+      if(viewChanged||labelsNeedLayout){
+        // Project against this frame’s camera, including an instant section snap.
+        camera.updateMatrixWorld(true);
+        const w=container.clientWidth,h=container.clientHeight;
+        const points=sections.flatMap(section=>{
+          const marker=markers.current[section.id];if(!marker)return [];
+          projected.fromArray(anchors[section.id]).project(camera);
+          return [{id:section.id,side:section.callout.side,width:marker.offsetWidth,x:THREE.MathUtils.clamp((projected.x*.5+.5)*w,16,w-16),y:THREE.MathUtils.clamp((-projected.y*.5+.5)*h,16,h-16)}];
+        });
+        const labels=layoutHotspots(points,w,h);
+        for(const point of points){
+          const id=point.id,label=labels[id],marker=markers.current[id],dot=dots.current[id],leader=leaders.current[id];
+          if(!label||!marker||!dot||!leader)continue;
+          marker.style.transform=`translate(${label.x}px,${label.y}px)`;
+          dot.style.transform=`translate(${point.x-label.x}px,${point.y-label.y}px)`;
+          leader.setAttribute('x1',Math.max(label.x,Math.min(point.x,label.x+label.width)));leader.setAttribute('y1',label.y+22);
+          leader.setAttribute('x2',point.x);leader.setAttribute('y2',point.y);
+        }
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
@@ -177,9 +186,9 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}
     {status==='error'&&<div className="model-loading" role="alert"><p>The anatomy couldn’t load.</p><button onClick={()=>location.reload()}>Try again</button></div>}
     {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href={routeHref('/projects',location.search)} onClick={event=>followLink(event,routeHref('/projects',location.search),props.onNavigate)}>Explore the work</a></div>}
-    {status==='ready'&&<div className="model-markers" aria-label="Explore portfolio sections">
+    {status==='ready'&&props.exploring&&<div className="model-markers" aria-label="Explore portfolio sections">
       <svg className="marker-leaders" aria-hidden="true">{sections.map(section=><line key={section.id} ref={el=>{leaders.current[section.id]=el;}}/>)}</svg>
-      {sections.map((section,index)=><a href={routeHref('/'+section.id,location.search)} key={section.id} ref={el=>{markers.current[section.id]=el;}} className={`model-marker ${props.activeChapter===section.id?'selected':''}`} aria-current={props.activeChapter===section.id?'page':undefined} aria-label={`Open ${section.label} — ${section.region}`} onClick={event=>followLink(event,routeHref('/'+section.id,location.search),props.onNavigate)}><span className="marker-label"><span className="marker-number">{String(index+1).padStart(2,'0')}</span><span>{section.label}</span></span><span className="marker-dot" ref={el=>{dots.current[section.id]=el;}}/></a>)}
+      {sections.map(section=><a href={routeHref('/'+section.id,location.search)} key={section.id} ref={el=>{markers.current[section.id]=el;}} className={`model-marker ${props.activeChapter===section.id?'selected':''}`} aria-current={props.activeChapter===section.id?'page':undefined} aria-label={`Open ${section.label} — ${section.region}`} onClick={event=>followLink(event,routeHref('/'+section.id,location.search),props.onNavigate)}><span className="marker-label"><span>{section.label}</span></span><span className="marker-dot" ref={el=>{dots.current[section.id]=el;}}/></a>)}
     </div>}
 
   </div>;

@@ -5,6 +5,7 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 try{
  const page=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'no-preference'});await page.route('https://fonts.googleapis.com/**',r=>r.abort());await page.goto(process.env.PREVIEW_URL||'http://127.0.0.1:5173',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>!document.querySelector('#reveal')?.disabled);
  await page.getByRole('button',{name:'Pause rotation'}).click();
+ await page.getByRole('link',{name:'Explore the atlas',exact:true}).click();
  const canvas=page.locator('canvas');const image=()=>canvas.screenshot({style:'.model-markers{visibility:hidden!important}'});
  async function difference(a,b){const x=await sharp(a).removeAlpha().raw().toBuffer(),y=await sharp(b).removeAlpha().raw().toBuffer();assert.equal(x.length,y.length);let total=0;for(let i=0;i<x.length;i++)total+=Math.abs(x[i]-y[i]);return total/x.length;}
  await page.getByRole('link',{name:/^Open Projects —/}).click();await canvas.focus();await page.keyboard.press('ArrowRight');await page.waitForTimeout(1000);const manual=await image();await page.waitForTimeout(400);assert(await difference(manual,await image())<.3,'Camera continued moving after manual interruption');

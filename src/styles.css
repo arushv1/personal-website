@@ -16,3 +16,13 @@
 .item-number,.marker-number{flex-shrink:0}.item-number{min-width:16px}.item-index a>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 @media(max-width:760px){.item-index a>span:last-child{display:block;-webkit-line-clamp:unset}}
 @media(max-width:760px){.anatomy-canvas>canvas{touch-action:pan-y!important}}
+
+/* Compact exploration labels; the introduction stays free of navigation dots. */
+.model-marker{width:max-content;min-height:44px;display:flex;align-items:center;pointer-events:auto}
+.marker-label{min-height:28px;padding:6px 9px;border-radius:18px;border-color:#353535;background:#080808e8;font-size:13px;gap:0;white-space:nowrap;box-shadow:none}
+.marker-dot{width:12px;height:12px}.marker-leaders line{stroke-opacity:.4}
+.is-exploring .hero{grid-template-columns:minmax(0,1.2fr) minmax(0,.88fr)}
+.is-exploring .section-browser{grid-template-columns:130px minmax(0,1fr);gap:24px}
+@media(min-width:1600px){.is-exploring .section-browser{grid-template-columns:150px minmax(0,1fr)}}
+@media(min-width:761px) and (max-width:1100px){.is-exploring .hero{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr)}.is-exploring .section-browser{grid-template-columns:105px minmax(0,1fr);gap:16px}}
+@media(max-width:760px){.marker-label{font-size:13px;padding:6px 8px;min-height:28px}.is-exploring .section-browser{grid-template-columns:1fr;gap:12px}}

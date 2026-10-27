@@ -21,19 +21,23 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
  async function sameImage(a,b){const x=await pixels(a),y=await pixels(b);assert.equal(x.length,y.length);let difference=0;for(let i=0;i<x.length;i++)difference+=Math.abs(x[i]-y[i]);assert(difference/x.length<.3,'Camera/model pixels changed: '+difference/x.length);}
  async function visibleHotspots(){
   assert.equal(await page.locator('.model-marker').count(),7);
-  const boxes=await page.locator('.marker-label').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height};}));
-  for(const b of boxes)assert(b.height>=44&&b.width>=100);
+  const boxes=await page.locator('.model-marker').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height};}));
+  for(const b of boxes)assert(b.height>=43.5&&b.width>=55);
+  const dots=await page.locator('.marker-dot').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y};}));
+  assert(Math.max(...dots.map(d=>d.x))-Math.min(...dots.map(d=>d.x))>20,'Projected anchors collapsed at the viewer edge');
   for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){const a=boxes[i],b=boxes[j];assert(a.x+a.width<=b.x+.5||b.x+b.width<=a.x+.5||a.y+a.height<=b.y+.5||b.y+b.height<=a.y+.5,'Hotspot labels overlap');}
  }
  try{
-  await page.goto(base,{waitUntil:'domcontentloaded'});await ready();await visibleHotspots();
+  await page.goto(base,{waitUntil:'domcontentloaded'});await ready();assert.equal(await page.locator('.model-marker').count(),0);
+  await page.getByRole('button',{name:'Within',exact:true}).click();assert.equal(await page.locator('.model-marker').count(),0);await page.getByRole('button',{name:'Reset view and layers'}).click();
   assert.equal(await page.locator('#reveal').inputValue(),'0');const home=await modelImage();
   await shot('home');
   for(const button of await page.locator('.scene-actions button').all()){
    const info=await button.evaluate(e=>({text:e.textContent.trim(),height:e.getBoundingClientRect().height,font:parseFloat(getComputedStyle(e).fontSize)}));assert(info.text&&info.height>=44&&info.font>=14);
   }
   for(const button of await page.locator('.layer-stops button').all()){assert(await button.evaluate(e=>e.getBoundingClientRect().height>=44&&parseFloat(getComputedStyle(e).fontSize)>=14));}
-  check('seven visible non-overlapping home hotspots and labeled 44px controls');
+  await page.getByRole('link',{name:'Explore the atlas',exact:true}).click();await route('/atlas','The atlas');await ready();await visibleHotspots();await shot('atlas-entry');
+  check('home and manual reveal hide hotspots; Explore the atlas reveals seven compact hotspots; controls retain 44px targets');
   const views=[];
   for(let i=0;i<ids.length;i++){
    await page.getByRole('link',{name:new RegExp('^Open '+names[i]+' —')}).click();await route('/'+ids[i],names[i]);
@@ -57,8 +61,8 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   const reader=page.getByRole('region',{name:'Projects entries'});await reader.hover();await page.mouse.wheel(0,500);await page.waitForFunction(()=>document.querySelector('.item-reader').scrollTop>100);await sameImage(before,await modelImage());
   await shot('projects-scrolled');check('project index, previous/next and native wheel scroll preserve page and camera');
   await page.getByRole('button',{name:'Within',exact:true}).click();assert.equal(await page.locator('#reveal').inputValue(),'100');
-  await page.getByRole('button',{name:'Reset view and layers'}).click();assert.equal(await page.locator('#reveal').inputValue(),'0');await sameImage(home,await modelImage());
-  await page.getByRole('button',{name:'Within',exact:true}).click();await canvas.focus();await page.keyboard.press('Home');assert.equal(await page.locator('#reveal').inputValue(),'0');
+  await page.getByRole('button',{name:'Reset view and layers'}).click();assert.equal(await page.locator('#reveal').inputValue(),'0');const reset=await modelImage();
+  await page.getByRole('button',{name:'Within',exact:true}).click();await canvas.focus();await page.keyboard.press('Home');assert.equal(await page.locator('#reveal').inputValue(),'0');await sameImage(reset,await modelImage());
   const historyLength=await page.evaluate(()=>history.length);await page.getByRole('link',{name:/^Open Projects —/}).click();assert.equal(await page.locator('#reveal').inputValue(),'100');assert.equal(await page.evaluate(()=>history.length),historyLength);
   check('button and keyboard reset slider + camera; current-section hotspot reselects preset without history spam');
   await page.goto(base+'/projects#threshold',{waitUntil:'domcontentloaded'});await ready();await page.waitForFunction(()=>document.querySelector('.item-index [aria-current]')?.hash==='#threshold');
@@ -89,10 +93,11 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
    assert.equal(await page.locator('.item-index a').count(),4);await page.locator('.item-index').getByRole('link',{name:/QA fixture project/}).click();await page.getByRole('heading',{name:'QA fixture project',exact:true}).waitFor();
    await page.evaluate(async url=>{const data=await import(url);data.sectionById.projects.items.pop();},moduleUrl);check('adding a fourth project in the content array automatically builds the index and reader');
   }
-  await page.setViewportSize({width:1366,height:768});await page.goto(base+'/?reveal=blend',{waitUntil:'domcontentloaded'});await ready();await page.getByRole('link',{name:/^Open Projects —/}).click();await page.waitForURL(base+'/projects?reveal=blend',{waitUntil:'domcontentloaded'});await page.reload({waitUntil:'domcontentloaded'});await ready();
+  await page.setViewportSize({width:1366,height:768});await page.goto(base+'/?reveal=blend',{waitUntil:'domcontentloaded'});await ready();assert.equal(await page.locator('.model-marker').count(),0);await page.getByRole('link',{name:'Explore the atlas',exact:true}).click();await page.getByRole('link',{name:/^Open Projects —/}).click();await page.waitForURL(base+'/projects?reveal=blend',{waitUntil:'domcontentloaded'});await page.reload({waitUntil:'domcontentloaded'});await ready();
   for(const asset of ['/models/avatar.glb','/models/bone.glb','/models/arteries.glb','/models/brain.glb','/draco/draco_decoder.wasm','/arush-vyas-resume.pdf']){const response=await context.request.get(base+asset);assert.equal(response.status(),200);}
   await page.goto(base+'/does-not-exist',{waitUntil:'domcontentloaded'});await page.getByRole('heading',{name:'Page not found.'}).waitFor();
-  check('blend alternative retains mode, assets load and unknown routes recover');
+  await page.goto(base+'/projects',{waitUntil:'domcontentloaded'});await ready();await page.getByRole('link',{name:'Arush Vyas, return home'}).click();await route('/','A closer look');assert.equal(await page.locator('.model-marker').count(),0);
+  check('blend alternative retains mode, assets load, unknown routes recover and returning home hides hotspots');
   assert.deepEqual(errors,[]);fs.writeFileSync(`${out}/report.json`,JSON.stringify({checks,errors,fixtureVerified:!!moduleUrl},null,2));console.log(JSON.stringify({checks,errors,fixtureVerified:!!moduleUrl},null,2));
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

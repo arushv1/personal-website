@@ -4,7 +4,7 @@ export const sections = [
   {
     id:'about', label:'About Me', eyebrow:'THE PERSON', title:'About Me',
     intro:'Biomedical engineering, medical imaging, and a curiosity for how things work.',
-    region:'Face', anchor:[0,.75,1], callout:{side:'left',rank:1},
+    region:'Face', anchor:[0,.75,1], callout:{side:'left'},
     view:{position:[.15,1.35,6.6],target:[0,.75,0],reveal:0},
     items:[
       {id:'at-a-glance',title:'Hi, I’m Arush.',subtitle:'Bay Area roots · Boston, MA',summary:'I’m a biomedical engineering student at Boston University, working at the intersection of medical imaging and AI.',body:['My work connects tissue-scale patterns, three-dimensional vascular imaging, and the questions behind useful clinical tools.']},
@@ -14,14 +14,14 @@ export const sections = [
   {
     id:'education',label:'Education',eyebrow:'FOUNDATIONS',title:'Education',
     intro:'The foundations behind the questions I’m learning to ask.',
-    region:'Cortex',anchor:[-.42,1.35,.15],callout:{side:'right',rank:0},
+    region:'Cortex',anchor:[-.42,1.35,.15],callout:{side:'right'},
     view:{position:[-3.7,2.2,4.9],target:[0,1,0],reveal:100},
     items:[{id:'boston-university',title:'Boston University',subtitle:'BS, Biomedical Engineering',period:'Expected May 2027',summary:'Undergraduate study in biomedical engineering in Boston, Massachusetts.',facts:[['GPA','3.83'],['Degree','Bachelor of Science']],body:['Connecting engineering, computation, and biomedical questions through research and applied projects.']}],
   },
   {
     id:'experience',label:'Experience',eyebrow:'IN PRACTICE',title:'Experience',
     intro:'Research, engineering, and the work of turning ideas into useful tools.',
-    region:'Vascular tree',anchor:[-.5,.2,.35],callout:{side:'left',rank:2},
+    region:'Vascular tree',anchor:[-.5,.2,.35],callout:{side:'left'},
     view:{position:[3.6,1.2,4.7],target:[0,.6,0],reveal:68},
     items:[
       {id:'boston-scientific',title:'Boston Scientific',subtitle:'Health AI Engineering Intern',period:'May 2026 – Present',summary:'Building and evaluating 3D CTA segmentation for vascular-therapies medical imaging.',tags:['Medical imaging','Deep learning','CTA'],highlights:['Developed a segmentation pipeline reaching mean artery Dice 0.87 and clDice 0.94.','Benchmarked model variants, loss functions, attention mechanisms, and foundation-model fine-tuning.','Co-invented patent-pending imaging technology and presented technical findings to leadership.']},
@@ -32,7 +32,7 @@ export const sections = [
   {
     id:'projects',label:'Projects',eyebrow:'THINGS I BUILD',title:'Projects',
     intro:'Different problems, shared curiosity. Explore the work one project at a time.',
-    region:'Frontal cortex',anchor:[.42,1.2,.62],callout:{side:'right',rank:1},
+    region:'Frontal cortex',anchor:[.42,1.2,.62],callout:{side:'right'},
     view:{position:[-1.8,1.8,5.3],target:[0,1,.15],reveal:100},
     items:[
       {id:'symptomai',title:'SymptomAI',subtitle:'Symptom-based disease prediction',period:'October 2025',summary:'Exploring overlapping symptoms and the challenge of distinguishing between possible conditions.',tags:['Python','Flask','React','PyTorch'],body:['A disease prediction system that takes symptom inputs and returns the three most likely conditions. A convolutional neural network models interactions across symptoms.'],highlights:['Designed around 328 symptom inputs and 773 disease classes.','Built a model-training and prediction workflow with GPU acceleration and early stopping.']},
@@ -43,7 +43,7 @@ export const sections = [
   {
     id:'awards',label:'Awards',eyebrow:'MILESTONES',title:'Awards',
     intro:'Recognition for research, building, and learning alongside others.',
-    region:'Crown of the skull',anchor:[.1,1.65,-.05],callout:{side:'left',rank:0},
+    region:'Crown of the skull',anchor:[.1,1.65,-.05],callout:{side:'left'},
     view:{position:[.4,3.1,5.8],target:[0,1,0],reveal:34},
     items:[
       {id:'health-biotech-hack',title:'Health and Biotech Hack',subtitle:'2nd Place · BU DS + X Hackathon',period:'October 2026',summary:'Second place in the Health and Biotech Hack.'},
@@ -56,14 +56,14 @@ export const sections = [
   {
     id:'courses',label:'Courses',eyebrow:'CONTINUING TO LEARN',title:'Courses',
     intro:'A place for coursework, ideas, and the connections between them.',
-    region:'Cervical spine',anchor:[0,-.35,-.3],callout:{side:'left',rank:3},
+    region:'Cervical spine',anchor:[0,-.35,-.3],callout:{side:'left'},
     view:{position:[-4.7,.9,-2.8],target:[0,.3,0],reveal:34},
     items:[],empty:'Selected coursework will appear here.',
   },
   {
     id:'publications',label:'Publications',eyebrow:'SHARED IDEAS',title:'Publications',
     intro:'Writing and research shared beyond the lab.',
-    region:'Posterior cortex',anchor:[.2,1.05,-.75],callout:{side:'right',rank:2},
+    region:'Posterior cortex',anchor:[.2,1.05,-.75],callout:{side:'right'},
     view:{position:[2.4,1.8,-5.4],target:[0,1,0],reveal:100},
     items:[{id:'bci-motor-rehabilitation',navTitle:'Brain–computer interfaces',title:'Optimizing Non-Invasive Brain-Computer Interfaces for Motor Rehabilitation in Individuals with Spinal Cord Injury',subtitle:'Vyas, A., Bansal, K., et al.',period:'October 2025',summary:'STEM Students on the Rise, Rice University.',links:[{label:'Read on SSRN',href:'https://doi.org/10.2139/ssrn.5605290'}]}],
   },

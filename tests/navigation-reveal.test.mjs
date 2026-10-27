@@ -127,16 +127,22 @@ test('portfolio sections, items, views and legacy links remain consistent', asyn
   for(const [old,destination] of Object.entries(legacyRoutes))assert.equal(readRoute(old),destination);
 });
 
-test('all seven callouts fit both sides without overlapping at narrow and desktop sizes', async () => {
+test('compact labels stay near anchors, inside the viewer and non-overlapping', async () => {
   const {sections}=await import('../src/content/portfolio.mjs');
-  const {calloutPosition}=await import('../src/hotspots.mjs');
-  for(const [width,height] of [[288,410],[350,440],[650,398],[800,600]]){
-    const boxes=sections.map(section=>({...calloutPosition(section,width,height),height:44}));
-    assert(boxes.some(b=>b.x<width/2)&&boxes.some(b=>b.x>width/2));
-    for(const box of boxes)assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=height);
-    for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
-      const a=boxes[i],b=boxes[j];
-      assert(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y);
+  const {layoutHotspots}=await import('../src/hotspots.mjs');
+  for(const [width,height] of [[288,410],[350,440],[510,398],[650,600]]){
+    for(const spread of [0,.11]){
+      const points=sections.map((section,index)=>({id:section.id,side:section.callout.side,width:Math.max(64,section.label.length*6.5+18),x:width*(.5+Math.sin(index)*spread),y:height*(.22+index*.08)}));
+      const labels=layoutHotspots(points,width,height),boxes=Object.values(labels);
+      assert.equal(boxes.length,7);
+      for(const point of points){
+        const box=labels[point.id];assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=height);
+        const closestX=Math.max(box.x,Math.min(point.x,box.x+box.width));
+        assert(Math.hypot(closestX-point.x,box.y+22-point.y)<140);
+      }
+      for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
+        const a=boxes[i],b=boxes[j];assert(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y);
+      }
     }
   }
 });

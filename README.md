@@ -83,7 +83,7 @@ The previous website remains available in Git history, including commit `7d7557c
 
 Use `/about`, `/education`, `/experience`, `/projects`, `/awards`, `/courses`, and `/publications`. `/atlas` shows the overview; `/` shows home. Old research/personal URLs redirect to Projects or About Me. The browser restores history, native links support new tabs, and items have direct hash links such as `/projects#threshold`.
 
-All seven labeled hotspots are available as soon as the models load, including on the outer avatar. Their labels are distributed across both sides of the view. Selecting a section moves to its own structure/view and layer preset; manual orbit/zoom interrupts that movement. Reselecting the section restores its preset. Reset (or Home with the canvas focused) restores the whole-person angle and slider 0 while keeping the section text open.
+The opening view has no hotspots. Choose “Explore the atlas” to reveal all seven compact labels beside their dots. They remain available in the section views, with local collision handling and a wider desktop reader. Returning home hides them again. Selecting a section moves to its own structure/view and layer preset; manual orbit/zoom interrupts that movement. Reselecting the section restores its preset. Reset (or Home with the canvas focused) restores the whole-person angle and slider 0 while keeping the section text open.
 
 The aligned sectional reveal remains the default. `?reveal=blend` selects the whole-model fade; `?reveal=section` explicitly selects the default. Both modes preserve native section links and the same shared eye/jaw registration. The internal anatomy is generic and illustrative.
 
