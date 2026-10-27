@@ -12,5 +12,6 @@ export function followLink(event, path, navigate) {
 
 // Retain the optional comparison view through native links and new tabs.
 export function routeHref(path, search='') {
-  return path+(new URLSearchParams(search).get('reveal')==='section'?'?reveal=section':'');
+  const mode=new URLSearchParams(search).get('reveal');
+  return path+(['section','blend'].includes(mode)?'?reveal='+mode:'');
 }

@@ -96,3 +96,13 @@ test('shared head/neck registration stays continuous and does not fold or mirror
   assert(registerAnatomyPoint(0,.6,0)[1]>.95,'Head landmarks should move up toward the avatar');
   assert(registerAnatomyPoint(0,-1,0)[1]<-.4,'Shoulder base must remain low rather than following the head lift');
 });
+
+test('production uses the aligned sectional reveal and retains the blend alternative', async () => {
+  const {revealMode}=await import('../src/reveal.mjs');
+  const {routeHref}=await import('../src/navigation.mjs');
+  assert.equal(revealMode(),'section');
+  assert.equal(revealMode('?reveal=section'),'section');
+  assert.equal(revealMode('?reveal=blend'),'blend');
+  assert.equal(revealMode('?reveal=unknown'),'section');
+  assert.equal(routeHref('/research','?reveal=blend'),'/research?reveal=blend');
+});

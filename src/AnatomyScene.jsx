@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
-import { damp, revealState, layerBlend } from './reveal.mjs';
+import { damp, revealState, layerBlend, revealMode } from './reveal.mjs';
 import { followLink, routeHref } from './navigation.mjs';
 import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
@@ -19,7 +19,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
     catch { setStatus('unsupported'); return; }
     let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasExploring = live.current.exploring;
-    const sectional = new URLSearchParams(location.search).get('reveal')==='section';
+    const sectional = revealMode(location.search)==='section';
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.65));

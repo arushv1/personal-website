@@ -23,3 +23,8 @@ export function layerBlend(value) {
   if(weight===1)return {from:to,to,weight:0};
   return {from,to,weight};
 }
+
+// The selected production experience is sectional; blending stays available.
+export function revealMode(search='') {
+  return new URLSearchParams(search).get('reveal')==='blend'?'blend':'section';
+}
