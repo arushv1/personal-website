@@ -2,6 +2,8 @@
 
 Read this file before changing the repository. It is the handoff for the current design, implementation, decisions, and verification. Keep it updated when Arush makes durable decisions or the architecture changes. Use repository-relative paths so the context works on another machine.
 
+Latest follow-up: optional photos for Projects and Awards (also supported in all other sections). Use `photos: [{src, alt, caption?}]` on an item, with user-supplied files in `public/photos`. No actual photos have been supplied for this change, so arrays remain empty. `CONTENT.md` documents GitHub uploads. `tests/browser-photos.cjs` and `qa/photo-gallery/` record gallery verification. Work branch: `codex/entry-photos`, based on released main `1f9e269`; no production release requested in this follow-up.
+
 ## Goal and current authorization
 
 Build a distinctive, immersive personal website for Arush Vyas. The experience should describe the person behind the resume through interactive exploration, with medical imaging as its visual language.
@@ -102,6 +104,7 @@ Registration: `registration.mjs` provides the single `registerAnatomyPoint()` ma
 - Pause/Rotate, Reset, Zoom out and Zoom in have visible word labels and >=44 px targets in a borderless toolbar. A slim layer strip and gesture hint sit above it, under a larger portrait. The combined controls are capped at 600px wide; visual labels are compact while touch targets remain generous. Layer buttons use readable text and >=44 px targets. Reset and Home with the canvas focused restore reveal 0 and the initial whole-person camera, retaining section text. Entering another section restores its preset.
 - Contact and Model credits remain native dialogs. The current résumé/contact details were updated from the newly supplied PDF. Email is a mailto link; no message is sent automatically.
 - Add projects/other items in `src/content/portfolio.mjs` only; index, counters, navigation and reader content update automatically. Follow `CONTENT.md`. Adding a new section also requires updating the known-route pattern in `vercel.json` and choosing a preferred callout side. Compact label positions are derived from the projected anchors.
+- Items accept optional `photos: [{src, alt, caption?}]`. Upload user-supplied images under `public/photos/`; URLs omit `public`. `EntryPhotos.jsx` supplies a compact native-scroll gallery with captions, Previous/Next and a count for multiple photos. Images load lazily in a reserved, uncropped frame. Empty/omitted arrays render nothing. Projects and Awards expose empty arrays ready for photos; the schema also works in Experience and all other sections. Do not invent or publish placeholder photos.
 - Dispose of scene resources, render targets, observers, event listeners and animation frames on unmount. Retain the shared alignment, source models and model credits.
 
 ## Assets and provenance
