@@ -106,3 +106,37 @@ test('production uses the aligned sectional reveal and retains the blend alterna
   assert.equal(revealMode('?reveal=unknown'),'section');
   assert.equal(routeHref('/research','?reveal=blend'),'/research?reveal=blend');
 });
+
+test('portfolio sections, items, views and legacy links remain consistent', async () => {
+  const {sections,sectionById}=await import('../src/content/portfolio.mjs');
+  const {legacyRoutes}=await import('../src/navigation.mjs');
+  assert.deepEqual(sections.map(s=>s.label),['About Me','Education','Experience','Projects','Awards','Courses','Publications']);
+  assert.equal(new Set(sections.map(s=>s.id)).size,7);
+  assert.equal(new Set(sections.map(s=>s.anchor.join(','))).size,7);
+  assert.equal(new Set(sections.map(s=>s.view.position.join(','))).size,7);
+  for(const section of sections){
+    assert.equal(readRoute('/'+section.id),'/'+section.id);
+    assert.equal(sectionById[section.id],section);
+    assert.equal(new Set(section.items.map(i=>i.id)).size,section.items.length);
+    assert(section.view.position.every(Number.isFinite)&&section.view.target.every(Number.isFinite));
+    assert(Math.hypot(...section.view.position.map((v,i)=>v-section.view.target[i]))>=2.5);
+    assert(section.view.reveal>=0&&section.view.reveal<=100);
+    for(const item of section.items){assert(item.id&&item.title&&item.summary);}
+  }
+  assert.deepEqual(sectionById.projects.items.map(i=>i.id),['symptomai','threshold','vascupath']);
+  for(const [old,destination] of Object.entries(legacyRoutes))assert.equal(readRoute(old),destination);
+});
+
+test('all seven callouts fit both sides without overlapping at narrow and desktop sizes', async () => {
+  const {sections}=await import('../src/content/portfolio.mjs');
+  const {calloutPosition}=await import('../src/hotspots.mjs');
+  for(const [width,height] of [[288,410],[350,440],[650,398],[800,600]]){
+    const boxes=sections.map(section=>({...calloutPosition(section,width,height),height:44}));
+    assert(boxes.some(b=>b.x<width/2)&&boxes.some(b=>b.x>width/2));
+    for(const box of boxes)assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=height);
+    for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
+      const a=boxes[i],b=boxes[j];
+      assert(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y);
+    }
+  }
+});

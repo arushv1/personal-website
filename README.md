@@ -19,23 +19,19 @@ Open the local URL printed by Vite, usually http://localhost:5173. Changes in `s
 
 ## Customize it
 
-| What you want to change | Where to edit |
+Start with [CONTENT.md](CONTENT.md). All seven sections, entries, hotspots and camera presets are defined in `src/content/portfolio.mjs`. To add a project, copy an entry into `projects.items`; the reader, item index, count and navigation update automatically. No component edits are needed.
+
+| What to change | Where |
 | --- | --- |
-| Chapter titles, introductions, and stories | The `chapters` object in `src/App.jsx` |
-| Homepage headline, navigation, contact information, profile links | `src/App.jsx` |
-| Colors, typography, layout, and responsive behavior | `src/styles.css`; `:root` includes `--red` and `--muted` |
-| Camera, orbit limits, lighting, materials, and reveal animation | `src/AnatomyScene.jsx` |
-| Position of the interactive chapter markers | `anchors` in `src/AnatomyScene.jsx` |
-| Resume PDF | Replace `public/arush-vyas-resume.pdf` |
-| 3D models and avatar | `public/models/`; keep the attributions with the assets |
-| Rebuild the avatar from its original textured GLB | `scripts/prepare-avatar.mjs` (`npm run prepare:avatar`) |
-| Browser metadata | `index.html` and the document title in `src/App.jsx` |
+| About Me, Education, Experience, Projects, Awards, Courses, Publications | `src/content/portfolio.mjs` |
+| Item browsing and scroll behavior | `src/SectionReader.jsx` |
+| Header, contact, controls, reset behavior | `src/App.jsx` |
+| Responsive layout, labels, sizes and colors | `src/styles.css` |
+| 3D interaction and section camera transitions | `src/AnatomyScene.jsx` |
+| Distributed hotspot labels | `src/hotspots.mjs` |
+| Résumé PDF | `public/arush-vyas-resume.pdf` |
 
-To add a chapter, update `chapters` and `order` in `App.jsx`, then add its anchor and marker label in `AnatomyScene.jsx`. Keep chapter IDs consistent across those locations.
-
-[AGENTS.md](AGENTS.md) contains the full project context, design rationale, architecture, verification procedure, and remaining work for future agents.
-
-[CLOUD-SETUP.md](CLOUD-SETUP.md) contains the Codex Cloud environment settings, setup prompt, and task handoff instructions. The environment must be created and published in the signed-in Codex account; adding this file does not start cloud work.
+`AGENTS.md` contains the project context, design decisions and verification procedure. `design-qa.md` records evidence for each implementation. Historical screenshots do not establish a new change's result.
 
 ## Commands
 
@@ -56,8 +52,8 @@ This replaces the previous Next.js implementation. `vercel.json` explicitly sele
 ## Experience
 
 - Real 3D pointer orbit, wheel/pinch zoom, keyboard alternatives, zoom buttons, pause/play, and reset.
-- The slider progresses through You, Bone, Vessels, and Within, with all layers sharing one rotatable 3D scene. Explore within opens five personal chapters.
-- Work, About, Contact, resume, GitHub, LinkedIn, and email links.
+- The slider progresses through You, Bone, Vessels, and Within, with all layers sharing one rotatable 3D scene. the atlas opens the seven portfolio sections.
+- Seven section views, native item browsing, Contact, résumé, GitHub, LinkedIn, and email links.
 - Responsive layouts, semantic controls, visible keyboard focus, and reduced-motion handling.
 
 Copy is a draft grounded in Arush's supplied interests and resume. The avatar uses the supplied headshot as a likeness reference; exact desk hardware, personal stories, and detailed project case studies still need Arush's input.
@@ -83,13 +79,13 @@ Selected preprocessing inputs are retained in `source-assets/`, so `npm run prep
 
 The previous website remains available in Git history, including commit `7d7557c`.
 
-## Chapter links and reveal
+## Section links and reveal
 
-Share `/research`, `/roots`, `/making`, `/setup`, `/stories`, or `/about`. `/atlas` opens the overview; `/` opens home. Links support new tabs, refresh and browser history. `vercel.json` rewrites only known chapter/atlas routes to the app shell. Unknown Vercel paths retain a 404; local Vite and Sites show the app’s not-found view. Static asset paths are preserved.
+Use `/about`, `/education`, `/experience`, `/projects`, `/awards`, `/courses`, and `/publications`. `/atlas` shows the overview; `/` shows home. Old research/personal URLs redirect to Projects or About Me. The browser restores history, native links support new tabs, and items have direct hash links such as `/projects#threshold`.
 
-The default reveal uses moving anatomical sections with a narrow feathered boundary. The eyes/jaw, head depth, and neck are fitted using one shared mapping for bones, vessels, cortex and markers. The original textured avatar and real anatomy are preserved. Manual scrubbing pauses rotation without changing the camera. The anatomy remains illustrative.
+All seven labeled hotspots are available as soon as the models load, including on the outer avatar. Their labels are distributed across both sides of the view. Selecting a section moves to its own structure/view and layer preset; manual orbit/zoom interrupts that movement. Reselecting the section restores its preset. Reset (or Home with the canvas focused) restores the whole-person angle and slider 0 while keeping the section text open.
 
-Append `?reveal=blend` to use the alternative whole-model fade. The choice is retained in chapter links and new tabs. `?reveal=section` remains a supported explicit link to the default sectional mode. The previous pre-alignment sectional implementation is preserved on `codex/sectional-reveal-backup`.
+The aligned sectional reveal remains the default. `?reveal=blend` selects the whole-model fade; `?reveal=section` explicitly selects the default. Both modes preserve native section links and the same shared eye/jaw registration. The internal anatomy is generic and illustrative.
 
 Optional browser acceptance suite (requires Playwright and Chromium in the test environment):
 

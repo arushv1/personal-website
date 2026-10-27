@@ -4,21 +4,23 @@ import { damp, revealState, layerBlend, revealMode } from './reveal.mjs';
 import { followLink, routeHref } from './navigation.mjs';
 import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
+import { sections, sectionById, overviewView } from './content/portfolio.mjs';
+import { calloutPosition } from './hotspots.mjs';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
-  const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({});
+  const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({}), leaders=useRef({}), dots=useRef({});
   const [status, setStatus] = useState('loading'), [progress, setProgress] = useState(0);
   live.current = props;
-  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion() }), []);
+  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id) }), []);
   useEffect(() => {
     const container = host.current;
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
     catch { setStatus('unsupported'); return; }
-    let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasExploring = live.current.exploring;
+    let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasView = live.current.activeChapter||(live.current.exploring?'atlas':'home');
     const sectional = revealMode(location.search)==='section';
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0);
@@ -31,9 +33,10 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     container.prepend(canvas);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 50);
     const start = new THREE.Vector3(2.1, 1.3, 6.7); camera.position.copy(start);
-    if(wasExploring)camera.position.set(4.7,1.3,3.4);
+    const initialView=sectionById[live.current.activeChapter]?.view||(live.current.exploring?overviewView:null);
+    if(initialView)camera.position.fromArray(initialView.position);
     const controls = new OrbitControls(camera, canvas);
-    controls.target.set(0, wasExploring ? .7 : .55, 0); controls.enableDamping = true; controls.dampingFactor = 0.075;
+    controls.target.fromArray(initialView?.target||[0,.55,0]); controls.enableDamping = true; controls.dampingFactor = 0.075;
     controls.enablePan = false; controls.minDistance = 2.5; controls.maxDistance = 10;
     controls.minPolarAngle = Math.PI * .18; controls.maxPolarAngle = Math.PI * .82;
     controls.rotateSpeed = .55; controls.zoomSpeed = .65; controls.autoRotateSpeed = .28; controls.update();
@@ -91,20 +94,21 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     })).then(() => { if(!cancelled){ setStatus('ready'); live.current.onReady(); } }).catch(e => {
       if(!cancelled){ console.error('Anatomy loading failed', e); setStatus('error'); }
     });
-    const anchors = { research:[.7,1.15,.05], roots:[.47,.92,-.59], making:[.49,1.35,.55], setup:[.67,.43,.05], stories:[.24,.62,-.8] };
-    for(const [id,anchor] of Object.entries(anchors))anchors[id]=registerAnatomyPoint(...anchor);
+    const anchors=Object.fromEntries(sections.map(section=>[section.id,registerAnatomyPoint(...section.anchor)]));
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
     let needsRender=true,drawnReveal=-1;
     const resize = () => { const {width,height} = container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
-    const reset = () => { destination = { camera:start.clone(), target:new THREE.Vector3(0,.55,0) }; };
+    const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
+    const reset = () => flyTo({position:start.toArray(),target:[0,.55,0]});
+    const focusSection=id=>{const view=sectionById[id]?.view;if(view)flyTo(view);};
     const rotate = d => { destination=null; live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0), d*.16); camera.position.copy(controls.target).add(offset); controls.update(); };
     const zoom = d => { destination=null; live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).multiplyScalar(d>0?.9:1.1).clampLength(2.5,10); camera.position.copy(controls.target).add(offset); controls.update(); };
     const keydown = e => {
       if(['ArrowLeft','ArrowRight','+','=','-','Home'].includes(e.key))e.preventDefault();
       if(e.key==='ArrowLeft')rotate(-1); if(e.key==='ArrowRight')rotate(1);
-      if(e.key==='+'||e.key==='=')zoom(1); if(e.key==='-')zoom(-1); if(e.key==='Home')reset();
+      if(e.key==='+'||e.key==='=')zoom(1); if(e.key==='-')zoom(-1); if(e.key==='Home')live.current.onReset();
     };
     const stopMotion=()=>{
       destination=null;controls.autoRotate=false;
@@ -114,12 +118,26 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       camera.position.copy(position);controls.target.copy(target);controls.update(0);
       controls.enableDamping=true;
     };
-    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion};
+    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection};
     const render = time => {
       if(cancelled)return; frame=requestAnimationFrame(render); if(time-last<1000/60-1)return;
       const elapsed=Math.max(0,(time-last)/1000),dt=Math.min(elapsed,.1);last=time;const p=live.current;
-      if(p.exploring!==wasExploring){ wasExploring=p.exploring; if(p.exploring)destination={target:new THREE.Vector3(0,.7,0),camera:new THREE.Vector3(4.7,1.3,3.4)};else reset(); }
-      if(destination){ const blend=reduced?1:1-Math.exp(-elapsed/.22);camera.position.lerp(destination.camera,blend);controls.target.lerp(destination.target,blend);if(camera.position.distanceTo(destination.camera)<.012)destination=null; }
+      const viewKey=p.activeChapter||(p.exploring?'atlas':'home');
+      if(viewKey!==wasView){
+        wasView=viewKey;
+        if(p.activeChapter)focusSection(p.activeChapter);else if(p.exploring)flyTo(overviewView);else reset();
+      }
+      const description=p.activeChapter?`Selected view: ${sectionById[p.activeChapter].region}`:'Whole-person overview';
+      if(canvas.getAttribute('aria-description')!==description)canvas.setAttribute('aria-description',description);
+      if(destination){
+        const blend=reduced?1:1-Math.exp(-elapsed/.18);
+        const from=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
+        const to=new THREE.Spherical().setFromVector3(destination.camera.clone().sub(destination.target));
+        from.theta+=Math.atan2(Math.sin(to.theta-from.theta),Math.cos(to.theta-from.theta))*blend;
+        from.phi=THREE.MathUtils.lerp(from.phi,to.phi,blend);from.radius=THREE.MathUtils.lerp(from.radius,to.radius,blend);
+        controls.target.lerp(destination.target,blend);camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(from));
+        if(camera.position.distanceTo(destination.camera)<.012&&controls.target.distanceTo(destination.target)<.012){camera.position.copy(destination.camera);controls.target.copy(destination.target);destination=null;}
+      }
       controls.autoRotate=p.spinning&&!reduced&&!destination;controls.update(dt);
       currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,elapsed);
       const state=revealState(currentReveal);cutUniform.value=state.cut;
@@ -132,17 +150,20 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
           name==='bone'?state.cut<max.y+.025&&state.boneCut>min.y-.025:
           (name==='arteries'?state.boneCut:state.brainCut)<max.y+.025;
       }
-      const positions=[];
-      for(const [id,anchor] of Object.entries(anchors)){
-        const marker=markers.current[id];if(!marker)continue;
-        projected.fromArray(anchor).project(camera);const w=container.clientWidth,h=container.clientHeight;
-        let x=Math.max(38,Math.min(w-(marker.offsetWidth||100)-12,(projected.x*.5+.5)*w)),y=Math.max(25,Math.min(h-90,(-projected.y*.5+.5)*h));
-        if(p.exploring)positions.forEach(prev=>{if(Math.abs(x-prev.x)<105&&Math.abs(y-prev.y)<48)y=prev.y+49;});
-        positions.push({x,y});marker.style.transform=`translate(${x}px,${y}px)`;
+      const viewChanged=needsRender || completed<4 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12;
+      const labelsNeedLayout=sections.some(section=>markers.current[section.id]&&!markers.current[section.id].style.transform);
+      if(viewChanged||labelsNeedLayout)for(const section of sections){
+        const id=section.id,marker=markers.current[id],dot=dots.current[id],leader=leaders.current[id];if(!marker||!dot||!leader)continue;
+        projected.fromArray(anchors[id]).project(camera);
+        const w=container.clientWidth,h=container.clientHeight,label=calloutPosition(section,w,h);
+        const x=THREE.MathUtils.clamp((projected.x*.5+.5)*w,16,w-16),y=THREE.MathUtils.clamp((-projected.y*.5+.5)*h,16,h-16);
+        marker.style.width=`${label.width}px`;marker.style.transform=`translate(${label.x}px,${label.y}px)`;
+        dot.style.transform=`translate(${x-label.x}px,${y-label.y}px)`;
+        leader.setAttribute('x1',label.x+(section.callout.side==='left'?label.width:0));leader.setAttribute('y1',label.y+22);
+        leader.setAttribute('x2',x);leader.setAttribute('y2',y);
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
-      const viewChanged=needsRender || completed<4 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12;
       if(viewChanged || Math.abs(drawnReveal-currentReveal)>.0001){
         if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
         else renderer.render(scene,camera);
@@ -155,7 +176,11 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
   return <div className="anatomy-canvas" ref={host}>
     {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}
     {status==='error'&&<div className="model-loading" role="alert"><p>The anatomy couldn’t load.</p><button onClick={()=>location.reload()}>Try again</button></div>}
-    {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href={routeHref('/research',location.search)} onClick={event=>followLink(event,routeHref('/research',location.search),props.onNavigate)}>Explore the work</a></div>}
-    {status==='ready'&&props.reveal>=32&&<div className="model-markers">{Object.entries({research:'Research',roots:'Roots',making:'Making',setup:'Setup',stories:'Stories'}).map(([id,name])=><a href={routeHref('/'+id,location.search)} key={id} ref={el=>{markers.current[id]=el;}} className={`model-marker ${props.activeChapter===id?'selected':''} ${!props.exploring&&id!=='research'?'is-hidden':''}`} aria-label={`Explore ${name}`} onClick={event=>followLink(event,routeHref('/'+id,location.search),props.onNavigate)}><span className="marker-dot"/><span className="marker-name">{name}</span></a>)}</div>}
+    {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href={routeHref('/projects',location.search)} onClick={event=>followLink(event,routeHref('/projects',location.search),props.onNavigate)}>Explore the work</a></div>}
+    {status==='ready'&&<div className="model-markers" aria-label="Explore portfolio sections">
+      <svg className="marker-leaders" aria-hidden="true">{sections.map(section=><line key={section.id} ref={el=>{leaders.current[section.id]=el;}}/>)}</svg>
+      {sections.map((section,index)=><a href={routeHref('/'+section.id,location.search)} key={section.id} ref={el=>{markers.current[section.id]=el;}} className={`model-marker ${props.activeChapter===section.id?'selected':''}`} aria-current={props.activeChapter===section.id?'page':undefined} aria-label={`Open ${section.label} — ${section.region}`} onClick={event=>followLink(event,routeHref('/'+section.id,location.search),props.onNavigate)}><span className="marker-label"><span className="marker-number">{String(index+1).padStart(2,'0')}</span><span>{section.label}</span></span><span className="marker-dot" ref={el=>{dots.current[section.id]=el;}}/></a>)}
+    </div>}
+
   </div>;
 });

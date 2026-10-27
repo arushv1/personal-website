@@ -14,7 +14,7 @@ Current work adds Arush's requested real 3D avatar and internal-layer reveal to 
 
 Arush selected the first cloud task: (1) shareable chapter URLs with direct Research links, refresh support, and natural browser Back/Forward, and (2) polish of the actual 3D avatar/reveal. He reports that the current avatar does not blend convincingly into the bone/vessel layers and that scrubbing from You to Within looks choppy. Treat that feedback as open work despite the earlier implementation QA pass. The detailed task and launch prompt are in `CLOUD-TASK.md`; they are a handoff, not proof that implementation or cloud execution has begun. Account-side cloud environment creation/publication must be completed separately.
 
-Latest release decision: Arush requested the sectional transition with corrected eye/jaw alignment and explicitly asked to push it to `main` and Vercel production. Make the aligned sectional reveal the default; preserve the whole-model fade at `?reveal=blend`. Both use the same registration and keep the chapter/history improvements. This instruction authorizes merging and the Git-connected production release.
+Latest UI task: build seven portfolio sections (About Me, Education, Experience, Projects, Awards, Courses, Publications), with all hotspots visible before any chapter is opened and distributed on both sides. Each section has a distinct structure/camera/layer preset. Use larger text-labeled controls; Reset and keyboard Home restore slider 0 and the whole-person camera without closing section text. Build a compact item index/reader that scrolls natively without moving the camera or page, and make new items editable in one content file. Arush supplied `Vyas_Arush_Resume.pdf` and said the browsing window is the priority; more content can follow. Courses remain empty until provided. The aligned sectional reveal remains the default and the whole-model fade stays at `?reveal=blend`.
 
 ## User context and content boundaries
 
@@ -27,7 +27,7 @@ Personal interests explicitly supplied by Arush:
 - Desk setups, multiple monitors, setting up computers, and tinkering with configurations.
 - Story-driven games, including Ghost of Tsushima, Onimusha, and Assassin's Creed.
 
-The site currently links to `arushv@bu.edu`, https://github.com/arushv1, and https://www.linkedin.com/in/arush-vyas. The supplied resume is `public/arush-vyas-resume.pdf`. Update these only from user-provided information. Do not invent favorite locations, hardware, personal stories, project outcomes, or photographs.
+The site currently links to `arushv16@gmail.com` (from the updated résumé), https://github.com/arushv1, and https://www.linkedin.com/in/arush-vyas. The supplied resume is `public/arush-vyas-resume.pdf`. Update these only from user-provided information. Do not invent favorite locations, hardware, personal stories, project outcomes, or photographs.
 
 ## Design decisions and rationale
 
@@ -52,7 +52,11 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | Path | Responsibility |
 | --- | --- |
 | `src/main.jsx` | React entry point |
-| `src/App.jsx` | Personal copy, chapter order, navigation, reveal/rotation state, contact and credits dialogs |
+| `src/App.jsx` | Route/section state, labeled controls/reset, contact and credits dialogs |
+| `src/content/portfolio.mjs` | All seven sections, item content, hotspot anchors and section camera/layer presets |
+| `src/SectionReader.jsx` | Native scrolling item reader, side/mobile item index, previous/next and item hashes |
+| `src/hotspots.mjs` | Stable two-sided label layout |
+| `CONTENT.md` | GitHub editing guide and item schema |
 | `src/AnatomyScene.jsx` | Renderer, camera, orbit controls, model loading, animation, keyboard controls, and projected chapter markers |
 | `src/styles.css` | Typography, colors, layout, responsive breakpoints, focus, and reduced-motion rules |
 | `index.html` | HTML entry and browser metadata |
@@ -80,7 +84,7 @@ The app needs no API keys, patient data, account integration, database, or appli
 
 ## Interaction model
 
-`App.jsx` owns the URL route, `reveal`, `spinning`, `ready`, and `dialog`. Exploring/chapter state is derived from the route. `navigation.mjs` defines `/`, `/atlas`, `/research`, `/roots`, `/making`, `/setup`, `/stories`, and `/about`. Initial load and `popstate` read the URL; ordinary navigation pushes once; native anchors preserve modified clicks/new tabs. Chapter titles and focus track the route. Unknown Vite/Sites paths show an in-app not-found view; Vercel returns its native 404 for unknown paths. Vercel rewrites only the seven known non-home app routes, preserving asset requests. The optional Sites worker excludes file paths and asset/API prefixes from HTML fallback.
+`App.jsx` owns the URL route, `reveal`, `spinning`, `ready`, and `dialog`. Exploring/chapter state is derived from the route. `navigation.mjs` derives `/about`, `/education`, `/experience`, `/projects`, `/awards`, `/courses`, and `/publications` from the section definitions, alongside `/` and `/atlas`. Legacy `/research` resolves to `/projects`; `/roots`, `/making`, `/setup`, `/stories` resolve to `/about`. Vercel supplies matching permanent redirects, and the local client canonicalizes legacy paths. Initial load and `popstate` read the URL; ordinary navigation pushes once; native anchors preserve modified clicks/new tabs. Chapter titles and focus track the route. Unknown Vite/Sites paths show an in-app not-found view; Vercel returns its native 404 for unknown paths. Vercel rewrites only known section/atlas routes, preserving asset requests. The optional Sites worker excludes file paths and asset/API prefixes from HTML fallback.
 
 The scene ref exposes `reset()`, `zoom(direction)`, and `stopMotion()`. Manual reveal pauses automatic rotation, cancels camera easing, and drains orbit inertia while preserving the viewing angle. `reveal.mjs` uses exponential damping with a 45 ms time constant and uncapped elapsed time, so delayed frames do not prolong input lag. Camera easing is time-based too.
 
@@ -90,21 +94,15 @@ Default: the top-to-bottom sectional reveal is selected with no query or `?revea
 
 Registration: `registration.mjs` provides the single `registerAnatomyPoint()` mapping used by bone, arteries, cortex and hotspot anchors. It retains the original lower-neck compression and shoulder fitting, lifts the head by up to .42 units using a gradual neck transition, narrows head X by up to 8%, fits depth by up to 18% with a small forward adjustment, and settles the crown by .10 units. These values were checked against front/side eye sockets and jaw overlays. All internal layers use the same mapping; the textured avatar and source GLBs are unchanged. This fits generic illustrative anatomy to a stylized character and is not a personal medical reconstruction.
 
-- Home: three-line “Take a closer look.” headline, red “Explore within” action, personal 3D avatar, reveal initially 0.
-- Rotation begins gently unless reduced motion is requested. Pointer or keyboard manipulation pauses automatic rotation.
-- Explore within: reveal rises to 100, rotation pauses, camera moves inward, and five chapter choices appear.
-- Chapters: `research`, `roots`, `making`, `setup`, `stories`. `about` is also available from the header.
-- Chapter selection raises reveal to 100, opens readable content, and focuses its heading. On the stacked mobile layout, the article scrolls into view so a hotspot opened from below does not leave its heading offscreen. Chapter navigation remains available alongside the 3D scene.
-- Returning home resets the camera and reveal, and returns focus to the primary action. Escape returns from atlas exploration when no dialog is open.
-- Contact and Model credits use native dialogs. Email is a `mailto:` link; nothing sends automatically.
-- Pointer drag orbits, wheel/pinch zooms, arrow-left/right rotate, plus/minus zoom, and Home resets the focused canvas. Buttons provide pause/play, reset, and zoom alternatives.
-- On mobile, `touch-action: pan-y` preserves vertical page scrolling while sideways drag rotates the model. Keep this behavior and the mobile-specific gesture hint.
-- Range controls, buttons, focus indicators, reduced-motion behavior, loading/retry states, and the unavailable-WebGL path must stay usable.
-- Layer shortcuts select You (0), Bone (34), Vessels (68), and Within (100). The outer avatar fades away to reveal the registered inner models. Camera orbit remains free at every stage; the slider alone does not reset the viewing angle.
-
-`AnatomyScene.jsx` uses `GLTFLoader`, `DRACOLoader`, and `OrbitControls`. It projects marker anchors into screen coordinates every frame. Automatic camera easing must be cancelled when manual interaction begins. Dispose of scene resources, observers, and animation frames on unmount.
-
-When adding a chapter, update `chapters` and `order` in `App.jsx`, plus `anchors` and marker labels in `AnatomyScene.jsx`. The IDs must agree. There is no separate content CMS yet.
+- Home retains the accepted black/white/red direction and real textured avatar at reveal 0. All seven hotspot labels appear after loading, on both sides with leader lines to distinct 3D anchors.
+- Atlas overview exposes all seven section links. Selecting a section applies its `view` preset in `portfolio.mjs`; direct loads use the same preset. Reselecting the current hotspot restores it without adding history. Spherical camera easing avoids flying through the model; manual pointer/keyboard/zoom input cancels it. Reduced-motion views move immediately.
+- About Me uses the face; Education the cortex; Experience the vascular tree; Projects the frontal cortex; Awards the crown; Courses the cervical spine; Publications the posterior cortex. These are symbolic navigation locations, not functional brain claims.
+- Section items are flat, reusable data. `SectionReader` provides a side index on desktop and a horizontal item strip on mobile, with a bounded native-scroll reader and previous/next controls. IntersectionObserver tracks the reading position. Changing an item updates only reader state, not the 3D scene. Item clicks scroll the reader itself, leaving body/camera position intact. Stable item hashes support copied links, e.g. `/projects#threshold`.
+- Mobile has View 3D / Back to reading links, plus `touch-action: pan-y` on the canvas. No scroll-wheel or touch gesture is hijacked by the item reader.
+- Pause/Rotate, Reset, Zoom out and Zoom in have visible word labels and >=44 px targets. Layer buttons use readable text and >=44 px targets. Reset and Home with the canvas focused restore reveal 0 and the initial whole-person camera, retaining section text. Entering another section restores its preset.
+- Contact and Model credits remain native dialogs. The current résumé/contact details were updated from the newly supplied PDF. Email is a mailto link; no message is sent automatically.
+- Add projects/other items in `src/content/portfolio.mjs` only; index, counters, navigation and reader content update automatically. Follow `CONTENT.md`. Adding a new section also requires updating the known-route pattern in `vercel.json` and keeping callout ranks consecutive.
+- Dispose of scene resources, render targets, observers, event listeners and animation frames on unmount. Retain the shared alignment, source models and model credits.
 
 ## Assets and provenance
 
@@ -112,7 +110,7 @@ The browser loads `avatar.glb`, `bone.glb`, `arteries.glb`, and `brain.glb`, app
 
 Avatar: actual Meshy 6 Lite image-to-3D output, then textured using the same generated likeness reference, licensed CC BY 4.0. Both generations used free credits; the official UI permitted downloading the textured GLB while the account showed Free. No paid subscription was purchased. Future export eligibility must be checked in the current UI rather than assumed from this result. Preserve Meshy attribution. The renderer retains its original materials and maps; replacing those with generic or projected-color materials degrades the facial features.
 
-`npm run prepare:avatar` simplifies geometry while preserving UVs/normals, resizes/compresses original textures to WebP, registers the bust at scale 1.7 with Y offset .55, and Draco-compresses the result. The scene applies a shared lower-neck registration to internal geometry below Y .15: new Y = .15 + (old Y - .15) × .55. This fits the cartoon bust's shorter neck while leaving the head/cortex unchanged. All four layers remain real geometry in one world/camera; no portrait plane or limited fake orbit is used.
+`npm run prepare:avatar` simplifies geometry while preserving UVs/normals, resizes/compresses original textures to WebP, registers the bust at scale 1.7 with Y offset .55, and Draco-compresses the result. The scene applies a shared lower-neck registration to internal geometry below Y .15: new Y = .15 + (old Y - .15) × .55. This fits the cartoon bust's shorter neck with the shared head fit described above. All four layers remain real geometry in one world/camera; no portrait plane or limited fake orbit is used.
 
 Bones/arteries: Z-Anatomy / BodyParts3D via https://github.com/nqwrc/3d-anatomy/tree/master/public/models. Preprocessing flattens world transforms before selection so structures remain registered, selects head/neck/upper thorax, removes irrelevant fragments, merges, simplifies, and Draco-compresses geometry.
 
@@ -179,3 +177,5 @@ October 27, 2026 cloud implementation: chapter routing and the sectional reveal 
 October 27, 2026 follow-up: restored whole-model blending as the default and retained sectional mode as a comparison backup. Added shared eye/jaw/head/neck registration for all internal layers and markers. The full-model compositor reuses opaque layer views during scrubbing. The measured warmed avatar/bone scrub improved from about 2 to 27 browser callbacks/second under matching 1366×768 SwiftShader conditions; physical GPU/phone performance remains separately unverified. Current evidence is `qa/global-reveal/`, with verification notes in `design-qa.md`. Continue updating PR #1 and its branch preview; production has not been changed.
 
 October 27, 2026 release selection: Arush selected the aligned sectional transition and explicitly authorized pushing to main and Vercel. Sectional mode is the default with no query; `?reveal=section` remains compatible, and `?reveal=blend` retains the whole-model alternative. The shared eye/jaw registration, chapter routes/history and source assets are retained. Production verification must use the merge commit's Vercel status, not the earlier preview result.
+
+October 27, 2026 portfolio UI update: added the seven requested sections, data-driven item reader, distinct camera/layer presets, stable two-sided hotspots on every reveal layer, labeled/touch-sized controls, and full camera/slider reset. Seeded concise copy from the new supplied résumé, retained SymptomAI from the previously supplied résumé, and left Courses empty. `CONTENT.md` documents adding items through GitHub. Current work is on `codex/portfolio-sections`; new browser evidence and release status must be recorded separately from earlier passes.
