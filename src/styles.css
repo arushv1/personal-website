@@ -26,3 +26,36 @@
 @media(min-width:1600px){.is-exploring .section-browser{grid-template-columns:150px minmax(0,1fr)}}
 @media(min-width:761px) and (max-width:1100px){.is-exploring .hero{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr)}.is-exploring .section-browser{grid-template-columns:105px minmax(0,1fr);gap:16px}}
 @media(max-width:760px){.marker-label{font-size:13px;padding:6px 8px;min-height:28px}.is-exploring .section-browser{grid-template-columns:1fr;gap:12px}}
+
+/* Keep the portrait primary and the controls visually light. */
+.site-shell:not(.is-exploring) .view-caption{display:none}
+.site-shell:not(.is-exploring) .hero-copy{padding-top:clamp(64px,16svh,240px)}
+.site-shell:not(.is-exploring) .hero-copy h1{font-size:clamp(84px,8.8vw,170px);line-height:.83}
+.site-shell:not(.is-exploring) .hero-subtitle{max-width:none;white-space:nowrap}
+.anatomy-canvas{height:clamp(370px,calc(100svh - 300px),980px)}
+.portrait-bottom{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px}
+.gesture-hint{order:0;font-size:11px;min-height:22px;margin-bottom:4px;color:#888}
+.layer-control{order:1;border:0;background:none;border-radius:0;padding:0 8px;gap:0}
+.layer-heading label{font-size:14px;font-weight:500}.layer-heading>span{font-size:11px;letter-spacing:.04em}
+.layer-stops{gap:0}.layer-stops button{font-size:13px;padding:4px 0;min-height:44px;background:none!important}
+.scene-actions{order:2;display:flex;justify-content:center;align-items:center;gap:8px}
+.scene-actions button{width:auto;min-height:44px;padding:4px 9px;background:none;border:0;border-radius:5px;font-size:13px;color:#a6a6a6;gap:6px}
+.scene-actions button svg{width:16px;height:16px}.scene-actions button:hover:not(:disabled){background:#ffffff0a;border:0;color:white}
+.marker-label{padding:6px 10px;background:#0a0a0aeb}.marker-leaders line{stroke-opacity:.3}
+.model-marker:hover:not(.selected) .marker-label{background:#222;border-color:#777}
+@media(min-width:761px) and (max-width:1100px){.anatomy-canvas{height:clamp(350px,calc(100svh - 300px),700px)}.scene-actions{gap:2px}.scene-actions button{padding:4px 6px;font-size:12px}}
+@media(max-width:760px){
+ .site-shell:not(.is-exploring) .hero-copy{padding:28px 0 0}
+ .site-shell:not(.is-exploring) .hero-copy h1{font-size:clamp(74px,18vw,116px);line-height:.9}
+ .site-shell:not(.is-exploring) .hero-subtitle{white-space:normal;max-width:310px}
+ .anatomy-canvas{height:490px}.scene-actions{gap:2px}.scene-actions button{font-size:12px;padding:4px 6px}
+ .layer-control{padding:0 4px}.gesture-hint{font-size:10px}.layer-stops button{font-size:13px}
+}
+@media(max-width:360px){
+ .anatomy-canvas{height:450px}.scene-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+ .scene-actions button{flex-direction:column;gap:2px;padding:4px 1px;font-size:12px;min-height:44px}.scene-actions button svg{width:15px;height:15px}
+}
+.portrait-bottom{width:92%;max-width:600px;margin-inline:auto}
+.is-exploring .anatomy-canvas{height:clamp(340px,calc(100svh - 330px),680px)}
+@media(max-width:760px){.is-exploring .anatomy-canvas{height:490px}}
+@media(max-width:360px){.is-exploring .anatomy-canvas{height:450px}}

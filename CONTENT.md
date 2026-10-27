@@ -28,9 +28,9 @@ The same structure works for **Education**, **Experience**, **Awards**, **Course
 
 ## Section locations and camera views
 
-Every section has an `anchor`, a preferred `callout` side, and a `view` with camera `position`, `target`, and `reveal` (0–100). These define the hotspot, its label’s preferred placement beside the projected dot and the camera/layer preset when opened. The positions are a storytelling index, not a claim about where activities occur in the brain. The shared anatomy registration is applied automatically to the anchors.
+Every section has an `anchor`, a preferred `callout` side, and a `view` with camera `position`, `target`, and `reveal` (0–100). These define the hotspot, its label’s preferred side of the head and the camera/layer preset when opened. The positions are a storytelling index, not a claim about where activities occur in the brain. The shared anatomy registration is applied automatically to the anchors.
 
-Adding items does **not** require changing these values. When adding an entirely new section, add its complete definition and update the known-route pattern in `vercel.json`; existing sections and their routes are derived automatically. Labels are placed automatically near their anchors and separated to avoid overlap. The seven approved sections should remain recognizable.
+Adding items does **not** require changing these values. When adding an entirely new section, add its complete definition and update the known-route pattern in `vercel.json`; existing sections and their routes are derived automatically. Labels are placed automatically in compact gutters beside the head, with connectors to their projected anchors and vertical spacing to avoid overlap. The seven approved sections should remain recognizable.
 
 ## Résumé and sources
 

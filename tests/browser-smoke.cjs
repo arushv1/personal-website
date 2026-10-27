@@ -32,10 +32,13 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   await page.getByRole('button',{name:'Within',exact:true}).click();assert.equal(await page.locator('.model-marker').count(),0);await page.getByRole('button',{name:'Reset view and layers'}).click();
   assert.equal(await page.locator('#reveal').inputValue(),'0');const home=await modelImage();
   await shot('home');
+  assert.equal(await page.locator('.hero-copy>.eyebrow,.home-hint,.view-caption').count(),0);
+  assert(await page.locator('.portrait-bottom').evaluate(e=>e.getBoundingClientRect().height<180&&e.getBoundingClientRect().width<=601));
+  assert.equal(await page.locator('.layer-control').evaluate(e=>getComputedStyle(e).borderTopWidth),'0px');
   for(const button of await page.locator('.scene-actions button').all()){
-   const info=await button.evaluate(e=>({text:e.textContent.trim(),height:e.getBoundingClientRect().height,font:parseFloat(getComputedStyle(e).fontSize)}));assert(info.text&&info.height>=44&&info.font>=14);
+   const info=await button.evaluate(e=>({text:e.textContent.trim(),height:e.getBoundingClientRect().height,font:parseFloat(getComputedStyle(e).fontSize)}));assert(info.text&&info.height>=44&&info.font>=12);
   }
-  for(const button of await page.locator('.layer-stops button').all()){assert(await button.evaluate(e=>e.getBoundingClientRect().height>=44&&parseFloat(getComputedStyle(e).fontSize)>=14));}
+  for(const button of await page.locator('.layer-stops button').all()){assert(await button.evaluate(e=>e.getBoundingClientRect().height>=44&&parseFloat(getComputedStyle(e).fontSize)>=13));}
   await page.getByRole('link',{name:'Explore the atlas',exact:true}).click();await route('/atlas','The atlas');await ready();await visibleHotspots();await shot('atlas-entry');
   check('home and manual reveal hide hotspots; Explore the atlas reveals seven compact hotspots; controls retain 44px targets');
   const views=[];

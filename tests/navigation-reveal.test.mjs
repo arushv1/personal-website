@@ -127,7 +127,7 @@ test('portfolio sections, items, views and legacy links remain consistent', asyn
   for(const [old,destination] of Object.entries(legacyRoutes))assert.equal(readRoute(old),destination);
 });
 
-test('compact labels stay near anchors, inside the viewer and non-overlapping', async () => {
+test('compact side gutters stay bounded, separated and clear of the feature dots', async () => {
   const {sections}=await import('../src/content/portfolio.mjs');
   const {layoutHotspots}=await import('../src/hotspots.mjs');
   for(const [width,height] of [[288,410],[350,440],[510,398],[650,600]]){
@@ -138,8 +138,12 @@ test('compact labels stay near anchors, inside the viewer and non-overlapping', 
       for(const point of points){
         const box=labels[point.id];assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=height);
         const closestX=Math.max(box.x,Math.min(point.x,box.x+box.width));
-        assert(Math.hypot(closestX-point.x,box.y+22-point.y)<140);
+        assert(Math.hypot(closestX-point.x,box.y+22-point.y)<Math.min(210,width*.34+32));
       }
+      const left=points.filter(p=>p.side==='left').map(p=>labels[p.id].x+labels[p.id].width);
+      const right=points.filter(p=>p.side==='right').map(p=>labels[p.id].x);
+      assert(Math.max(...left)-Math.min(...left)<.01&&Math.max(...right)-Math.min(...right)<.01);
+      assert(Math.min(...right)-Math.max(...left)>40);
       for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
         const a=boxes[i],b=boxes[j];assert(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y);
       }
