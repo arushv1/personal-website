@@ -67,6 +67,7 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `.github/workflows/ci.yml` | Installs, tests, and builds on pushes/PRs; no deployment |
 | `reference/selected-option.png` | Selected design target |
 | `design-qa.md`, `qa/` | Completed QA report and visual evidence |
+| `CLOUD-SETUP.md` | Cloud environment setup prompt and task handoff; account-side publication is required |
 
 The app needs no API keys, patient data, account integration, database, or application backend. Fonts load from Google Fonts, with a system fallback. Models and decoder are served locally.
 

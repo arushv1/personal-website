@@ -35,6 +35,8 @@ To add a chapter, update `chapters` and `order` in `App.jsx`, then add its ancho
 
 [AGENTS.md](AGENTS.md) contains the full project context, design rationale, architecture, verification procedure, and remaining work for future agents.
 
+[CLOUD-SETUP.md](CLOUD-SETUP.md) contains the Codex Cloud environment settings, setup prompt, and task handoff instructions. The environment must be created and published in the signed-in Codex account; adding this file does not start cloud work.
+
 ## Commands
 
 ```bash
