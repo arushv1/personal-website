@@ -13,3 +13,4 @@ coverage/
 # Exploration downloads not used by the served models.
 source-assets/nervous.glb
 source-assets/*.tar.bz2
+source-assets/avatar/meshy-avatar-original.glb

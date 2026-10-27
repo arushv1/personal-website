@@ -8,7 +8,7 @@ Build a distinctive, immersive personal website for Arush Vyas. The experience s
 
 Canonical repository: https://github.com/arushv1/personal-website, default branch `main`. Arush explicitly asked to put this prototype in that existing repository and authorized replacing its previous contents. Preserve normal Git history; do not force-push. The prior Next.js implementation is available at commit `7d7557c`.
 
-The current task is repository preparation and customization support. Uploading source to this repository is authorized. Publishing a website, changing hosting accounts, or changing repository visibility needs a corresponding user request. The repository was already public; preserve that visibility. Do not assume a GitHub push confirms a live deployment.
+Current work adds Arush's requested real 3D avatar and internal-layer reveal to the existing personal website. Uploading source to this repository and updating the existing Git-connected Vercel website are authorized by the ongoing requests. Preserve the repository's existing public visibility. Changing hosting accounts or visibility needs a corresponding user request. Do not assume a GitHub push confirms a live deployment.
 
 ## User context and content boundaries
 
@@ -31,9 +31,11 @@ The site currently links to `arushv@bu.edu`, https://github.com/arushv1, and htt
 4. Arush rejected overly detailed, cinematic scan portraits. The supplied reference was a simple educational anatomy animation with ivory bones, red arteries, and a black background.
 5. On October 26, 2026, Arush selected revised visual option 1. The portable visual reference is `reference/selected-option.png`. Preserve its large white sans-serif headline, black surface, red action, and restrained educational 3D style.
 6. Use actual 3D geometry. A static raster image, CSS rotation, or decorative particles would not provide the orbit/reveal behavior Arush requested.
-7. Use generic, coherently registered anatomy for this iteration. No personal scan or custom likeness was supplied. A custom head can be a future asset project; do not imply this is Arush's anatomy.
+7. The first iteration used generic, coherently registered anatomy. Arush later supplied a headshot for a stylized outer avatar. The internal anatomy remains generic and illustrative; do not imply it is reconstructed from his photo or scan.
 8. Real sourced anatomy differs in contour and vessel distribution from the generated illustration. Preserve coherent 3D and the chosen composition instead of distorting anatomy to match every image pixel.
 9. Chapter markers are a storytelling device. Their locations do not claim that hobbies or personality reside in those anatomical regions.
+10. Portrait follow-up: Arush supplied a headshot and explicitly rejected a photo cutout, curved photo plane, and 2.5D/parallax interpretation. He wants an actual stylized 3D cartoon avatar resembling him, following `reference/3d-avatar-style.png`. The character must occupy the same rotatable 3D space as the skull, arteries, and brain. Start with the avatar's outer surface and reveal internal layers with the slider. Preserve his curly dark hair, clean-shaven face, smile, earrings, and blue collared shirt; the sample avatar's beard and spiky hair are style-reference details, not Arush's features. Do not reintroduce a raster portrait as the model.
+11. A raster avatar concept is only a reference for mesh creation. The final outer avatar needs real geometry, preferably a textured GLB, with its head/neck registered to the existing internal anatomy. Keep the avatar, skull, vessels, and cortex under a shared world transform and camera; use per-layer opacity or clipping for the reveal. Generic internal anatomy remains illustrative, not a reconstruction of Arush's actual vessels or brain. Verify front, three-quarter, side, and back views before claiming a complete 3D integration.
 
 For routine changes, preserve the selected direction and working interactions. A substantial redesign should start with a clear user brief and visual target, using the available Product Design workflow when applicable. Do not silently redesign the site during a content edit.
 
@@ -48,12 +50,14 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `src/AnatomyScene.jsx` | Renderer, camera, orbit controls, model loading, animation, keyboard controls, and projected chapter markers |
 | `src/styles.css` | Typography, colors, layout, responsive breakpoints, focus, and reduced-motion rules |
 | `index.html` | HTML entry and browser metadata |
-| `public/models/` | Three served GLBs, manifest, attribution, and original notices |
+| `public/models/` | Four served GLBs, manifests, attribution, and original notices |
 | `public/draco/` | Local Draco decoder and license notices |
 | `public/arush-vyas-resume.pdf` | Downloadable resume |
 | `source-assets/` | Retained preprocessing inputs and upstream notices |
 | `scripts/prepare-anatomy.mjs` | Selects and compresses bones and arteries |
 | `scripts/prepare-brain.mjs` | Registers and compresses the directly sourced cortex |
+| `scripts/prepare-avatar.mjs` | Optimizes the legitimate textured Meshy GLB, preserving UVs, normals, and PBR maps |
+| `source-assets/avatar/meshy-avatar-textured.glb` | Original textured avatar export; retain for reversible optimization |
 | `vite.config.mjs` | Vite configuration; client output is `dist/client` |
 | `vercel.json` | Overrides the previous Next.js hosting preset with Vite, `npm ci`, `npm run build`, and `dist/client` |
 | `worker/index.js` | Optional Sites worker entry |
@@ -70,16 +74,17 @@ The app needs no API keys, patient data, account integration, database, or appli
 
 `App.jsx` owns `reveal`, `exploring`, `chapter`, `spinning`, `ready`, and `dialog`. It calls the scene through a ref exposing `reset()` and `zoom(direction)`.
 
-- Home: three-line “Take a closer look.” headline, red “Explore within” action, generic head/neck, reveal initially 28.
+- Home: three-line “Take a closer look.” headline, red “Explore within” action, personal 3D avatar, reveal initially 0.
 - Rotation begins gently unless reduced motion is requested. Pointer or keyboard manipulation pauses automatic rotation.
-- Explore within: reveal rises to 86, rotation pauses, camera moves inward, and five chapter choices appear.
+- Explore within: reveal rises to 100, rotation pauses, camera moves inward, and five chapter choices appear.
 - Chapters: `research`, `roots`, `making`, `setup`, `stories`. `about` is also available from the header.
-- Chapter selection raises reveal to 89, opens readable content, and focuses its heading. Chapter navigation remains available alongside the 3D scene.
+- Chapter selection raises reveal to 100, opens readable content, and focuses its heading. On the stacked mobile layout, the article scrolls into view so a hotspot opened from below does not leave its heading offscreen. Chapter navigation remains available alongside the 3D scene.
 - Returning home resets the camera and reveal, and returns focus to the primary action. Escape returns from atlas exploration when no dialog is open.
 - Contact and Model credits use native dialogs. Email is a `mailto:` link; nothing sends automatically.
 - Pointer drag orbits, wheel/pinch zooms, arrow-left/right rotate, plus/minus zoom, and Home resets the focused canvas. Buttons provide pause/play, reset, and zoom alternatives.
 - On mobile, `touch-action: pan-y` preserves vertical page scrolling while sideways drag rotates the model. Keep this behavior and the mobile-specific gesture hint.
 - Range controls, buttons, focus indicators, reduced-motion behavior, loading/retry states, and the unavailable-WebGL path must stay usable.
+- Layer shortcuts select You (0), Bone (34), Vessels (68), and Within (100). The outer avatar fades away to reveal the registered inner models. Camera orbit remains free at every stage; the slider alone does not reset the viewing angle.
 
 `AnatomyScene.jsx` uses `GLTFLoader`, `DRACOLoader`, and `OrbitControls`. It projects marker anchors into screen coordinates every frame. Automatic camera easing must be cancelled when manual interaction begins. Dispose of scene resources, observers, and animation frames on unmount.
 
@@ -87,7 +92,11 @@ When adding a chapter, update `chapters` and `order` in `App.jsx`, plus `anchors
 
 ## Assets and provenance
 
-The browser loads only `bone.glb`, `arteries.glb`, and `brain.glb`. They total approximately 1.5 MB. The current manifest records 136,392 bone triangles, 233,689 artery triangles, and 115,804 cortex triangles. Pixel ratio is capped at 1.65, and rendering is throttled to roughly 50 frames per second to limit cost. Avoid adding large full-body geometry or unbounded device pixel ratios without measuring the effect.
+The browser loads `avatar.glb`, `bone.glb`, `arteries.glb`, and `brain.glb`, approximately 2.4 MB total. The anatomy manifest records 136,392 bone triangles, 233,689 artery triangles, and 115,804 cortex triangles. The avatar manifest records 124,180 triangles. Its web GLB is about 867 KB, reduced from a 20 MB source. Pixel ratio is capped at 1.65, and rendering is throttled to roughly 50 frames per second to limit cost. Avoid adding large full-body geometry or unbounded device pixel ratios without measuring the effect.
+
+Avatar: actual Meshy 6 Lite image-to-3D output, then textured using the same generated likeness reference, licensed CC BY 4.0. Both generations used free credits; the official UI permitted downloading the textured GLB while the account showed Free. No paid subscription was purchased. Future export eligibility must be checked in the current UI rather than assumed from this result. Preserve Meshy attribution. The renderer retains its original materials and maps; replacing those with generic or projected-color materials degrades the facial features.
+
+`npm run prepare:avatar` simplifies geometry while preserving UVs/normals, resizes/compresses original textures to WebP, registers the bust at scale 1.7 with Y offset .55, and Draco-compresses the result. The scene applies a shared lower-neck registration to internal geometry below Y .15: new Y = .15 + (old Y - .15) × .55. This fits the cartoon bust's shorter neck while leaving the head/cortex unchanged. All four layers remain real geometry in one world/camera; no portrait plane or limited fake orbit is used.
 
 Bones/arteries: Z-Anatomy / BodyParts3D via https://github.com/nqwrc/3d-anatomy/tree/master/public/models. Preprocessing flattens world transforms before selection so structures remain registered, selects head/neck/upper thorax, removes irrelevant fragments, merges, simplifies, and Draco-compresses geometry.
 
@@ -114,6 +123,7 @@ npm run dev
 npm run build
 npm run test:sites
 npm run preview
+npm run prepare:avatar # Only when modifying avatar source or optimization
 ```
 
 Start and inspect the local preview yourself when tools permit. Keep `node_modules/`, `dist/`, caches, environment files, and credentials out of Git. Commit the lockfile when dependencies change. Never copy unrelated files from neighboring personal/recruitment directories into this repository.
@@ -126,8 +136,8 @@ Existing QA passed for the selected prototype: actual orbit/wheel zoom, layer re
 
 ## Limits and remaining work
 
-- Generic anatomy, not Arush's face or medical scan.
-- Draft copy; detailed case studies, personal photographs, exact setup specifications, and richer personal stories have not been supplied.
+- The outer avatar is an approximate artistic likeness, not a face scan. Its internal anatomy remains generic.
+- Draft copy; detailed case studies, exact setup specifications, and richer personal stories have not been supplied. A headshot was supplied for the avatar.
 - Real anatomical contours differ from the generated illustration; a custom art-directed model is possible later.
 - Physical phone GPU performance and two-finger gestures were not directly measured. Mobile viewport/layout, computed touch action, and button alternatives were checked.
 - Reduced-motion handling is implemented; an OS preference toggle was not directly exercised in the initial QA run.
@@ -139,3 +149,9 @@ Existing QA passed for the selected prototype: actual orbit/wheel zoom, layer re
 October 26, 2026: Built the selected anatomy direction locally; sourced, reduced, and attributed models; implemented orbit/zoom/reveal and personal chapters; corrected short-viewport controls, headline spacing, scapular crop fragments, mobile scrolling, and camera/manual-interaction conflicts; completed visual and interaction QA. Arush accepted it as a good start, requested source control, selected the existing `personal-website` repository, authorized replacement, and requested this all-in-one agent context. Repository preparation adds portable setup/customization documentation, ignore rules, Node selection, and CI while keeping the approved website behavior intact.
 
 Vercel follow-up: commit `b6ce647` passed GitHub CI, but its Vercel status reported a failed deployment. The project was previously Next.js, and the replacement initially had no Vercel-specific config. Added explicit, version-controlled Vite settings so the deployment does not inherit the old framework preset or output directory. Verify the subsequent deployment result rather than assuming this config change succeeded. The Vercel plugin was available but not connected when diagnosis began; GitHub's commit status exposed the deployment failure.
+
+The Vercel fix at `c19fa87` subsequently deployed successfully; the new atlas was verified at https://personal-website-brown-psi-69.vercel.app. GitHub CI also passed. Vercel's plugin was installed, but the first direct API inspection lacked authorization for the project's team; GitHub status and the public production website were sufficient to verify the deployment.
+
+Avatar work: a local photographic depth-plane experiment was rejected before any commit or deployment. Its code/assets were removed from the active project and archived outside the repository. Meshy and Tripo were investigated for actual image-to-3D generation. No matching generator plugin was found in the available directory. Arush chose the recommended Meshy workflow by signing in and asking the agent to continue. The concept artwork was uploaded, and a Meshy 6 Lite mesh and image-guided texture were generated for 10 free credits each. Front, side, and back geometry were inspected. The official UI allowed both untextured and textured GLB exports on the Free account, despite stricter published help text; no payment or subscription was needed. The optimized textured avatar is integrated with the anatomy reveal. Preserve originals and source notices; check current export rights before starting future tasks or assuming free access.
+
+October 27, 2026: Completed joint visual comparisons and browser QA of the real avatar, all four reveal stages, orbit/zoom/reset, keyboard alternatives, atlas navigation, and dialogs. Desktop, short laptop, 390 px, and 320 px layouts were inspected. Fixed mobile hotspot navigation so the newly opened chapter scrolls into view. Clean installation, final production build, all four packaging tests, and whitespace checks passed; browser warning/error logs were empty. The current `design-qa.md` and `qa/avatar-*` evidence cover this update, while `qa/anatomy-design-qa.md` retains the original atlas report. Check GitHub CI and the Vercel commit status after publication; local verification alone does not establish production readiness.

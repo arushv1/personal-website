@@ -1,0 +1,13 @@
+{
+  "source": "Meshy 6 Lite, generated and textured by Arush from the supplied avatar concept",
+  "license": "CC BY 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": "Arush Vyas / Meshy",
+  "sourceUrl": "https://www.meshy.ai/",
+  "date": "2026-10-26",
+  "triangles": 124180,
+  "modifications": "Geometry reduction preserving UVs/normals, WebP texture resizing/compression, scale/position registration and Draco compression.",
+  "original": "source-assets/avatar/meshy-avatar-textured.glb",
+  "likenessReference": "reference/arush-avatar-concept-v1.png",
+  "export": "Downloaded through the official Meshy UI while the account showed Free; no paid subscription was purchased."
+}

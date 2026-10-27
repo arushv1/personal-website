@@ -1,5 +1,19 @@
 # Model attribution and selected assets
 
+## avatar.glb
+
+Stylized avatar generated and textured by Arush Vyas using Meshy 6 Lite from an original likeness reference. Meshy output is licensed under CC BY 4.0.
+
+Source: https://www.meshy.ai/
+
+License: https://creativecommons.org/licenses/by/4.0/
+
+The reference artwork was generated from Arush's supplied headshot and cartoon style reference using the built-in image-generation tool. The actual mesh and PBR textures were generated in Meshy and downloaded through its official GLB export. The account showed Free at export; no paid subscription was purchased.
+
+Modifications: geometry reduction preserving UVs and normals, WebP texture resizing/compression, Draco compression, and position/scale registration to the illustrative internal atlas. The original textured export is retained in `source-assets/avatar/meshy-avatar-textured.glb`. Asset details are recorded in `avatar-manifest.json`.
+
+The avatar is an artistic likeness. The skull, vessels, and brain are generic illustrative models, not a reconstruction of Arush's internal anatomy.
+
 ## bone.glb and arteries.glb
 
 BodyParts3D - The Database Center for Life Science - CC-BY-SA 2.1 Japan

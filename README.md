@@ -1,8 +1,8 @@
 # Arush Vyas: A closer look
 
-An interactive personal website built with React, Vite, and Three.js. A rotating anatomical head and neck introduces an atlas of research, Bay Area roots, making, desk setups, and story games.
+An interactive personal website built with React, Vite, and Three.js. A real, textured 3D avatar reveals an anatomical head and neck, introducing an atlas of research, Bay Area roots, making, desk setups, and story games.
 
-![Desktop preview](qa/desktop-final.jpg)
+![Desktop preview](qa/avatar-home-final.jpg)
 
 ## Run locally
 
@@ -27,7 +27,8 @@ Open the local URL printed by Vite, usually http://localhost:5173. Changes in `s
 | Camera, orbit limits, lighting, materials, and reveal animation | `src/AnatomyScene.jsx` |
 | Position of the interactive chapter markers | `anchors` in `src/AnatomyScene.jsx` |
 | Resume PDF | Replace `public/arush-vyas-resume.pdf` |
-| 3D models | `public/models/`; keep the attributions with the assets |
+| 3D models and avatar | `public/models/`; keep the attributions with the assets |
+| Rebuild the avatar from its original textured GLB | `scripts/prepare-avatar.mjs` (`npm run prepare:avatar`) |
 | Browser metadata | `index.html` and the document title in `src/App.jsx` |
 
 To add a chapter, update `chapters` and `order` in `App.jsx`, then add its anchor and marker label in `AnatomyScene.jsx`. Keep chapter IDs consistent across those locations.
@@ -42,6 +43,7 @@ npm run build          # Production client and optional Sites worker packaging
 npm run test:sites     # Run after building: four worker / packaging contract tests
 npm run preview        # Preview the production client
 npm run prepare:models # Optional: rebuild the compressed anatomy assets
+npm run prepare:avatar # Optional: rebuild the optimized textured avatar
 ```
 
 The production frontend is in `dist/client/`. The build also emits `dist/server/index.js` and `dist/.openai/hosting.json` for a future Sites deployment. Build before running `test:sites`: its packaging check reads those generated files. The included GitHub Actions workflow runs these steps in that order; it does not deploy.
@@ -51,15 +53,15 @@ This replaces the previous Next.js implementation. `vercel.json` explicitly sele
 ## Experience
 
 - Real 3D pointer orbit, wheel/pinch zoom, keyboard alternatives, zoom buttons, pause/play, and reset.
-- Bone opacity reveals vessels and cortex; Explore within opens five personal chapters.
+- The slider progresses through You, Bone, Vessels, and Within, with all layers sharing one rotatable 3D scene. Explore within opens five personal chapters.
 - Work, About, Contact, resume, GitHub, LinkedIn, and email links.
 - Responsive layouts, semantic controls, visible keyboard focus, and reduced-motion handling.
 
-Copy is a draft grounded in Arush's supplied interests and resume. Personal photographs, exact desk hardware, and detailed project case studies still need Arush's input.
+Copy is a draft grounded in Arush's supplied interests and resume. The avatar uses the supplied headshot as a likeness reference; exact desk hardware, personal stories, and detailed project case studies still need Arush's input.
 
 ## Anatomy and provenance
 
-This is a generic anatomical model, not a personal scan or likeness. Chapter locations are symbolic navigation, not statements about functional brain anatomy.
+The outer avatar is an artistic likeness of Arush, generated and textured with Meshy 6 Lite and licensed CC BY 4.0. Its original textured GLB is retained in `source-assets/avatar/meshy-avatar-textured.glb`. The internal anatomy is generic, not a personal medical scan. Chapter locations are symbolic navigation, not statements about functional brain anatomy.
 
 Bone and artery geometry comes from Z-Anatomy / BodyParts3D, through [nqwrc's web exports](https://github.com/nqwrc/3d-anatomy/tree/master/public/models). The cortex is directly sourced from [Brain for Blender by Anderson Winkler](https://brainder.org/research/brain-for-blender/), CC BY-SA 3.0.
 
@@ -70,7 +72,7 @@ The required attribution strings are:
 
 Original notices, source links, modifications, and model-specific terms live in [public/models/ATTRIBUTION.md](public/models/ATTRIBUTION.md), `UPSTREAM-LICENSE.txt`, and `NOTICE.txt`. The site exposes them through Model credits. Model terms apply separately from the interface code.
 
-Selected preprocessing inputs are retained in `source-assets/`, so `npm run prepare:models` works after installation without downloading data. The unused exploratory nervous-system export and duplicate archive are excluded. The application uses only the three optimized GLBs in `public/models/`, approximately 1.5 MB in total.
+Selected preprocessing inputs are retained in `source-assets/`, so `npm run prepare:models` works after installation without downloading data. The unused exploratory nervous-system export and duplicate archive are excluded. The application uses four optimized GLBs in `public/models/`, approximately 2.4 MB in total. The avatar preserves real geometry, UVs, and PBR textures; it does not use a photographic plane. Its original GLB is about 20 MB, while the web derivative is under 1 MB. The internal neck/upper-thorax geometry is registered to the cartoon bust’s shorter neck.
 
 ## Verification and design reference
 

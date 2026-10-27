@@ -14,3 +14,7 @@ dialog{padding:0;width:min(570px,calc(100% - 32px));background:#101010;color:#f5
 @media(pointer:coarse){.icon-action{width:44px;height:44px}.site-header nav button,.chapter-pager button{min-height:44px}}
 
 .mobile-gesture{display:none}@media(max-width:760px){.anatomy-canvas>canvas{touch-action:pan-y!important}.desktop-gesture{display:none}.mobile-gesture{display:inline}.site-footer,.site-footer button{font-size:10px}}
+
+.layer-control{width:80%;max-width:430px;display:grid;gap:11px}.layer-heading{display:flex;align-items:center;justify-content:space-between;gap:15px}.layer-heading label{font-size:15px;font-weight:500}.layer-heading>span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#aaa}.layer-control input{accent-color:var(--red);width:100%;height:6px;margin:4px 0;cursor:ew-resize}.layer-control input:disabled{opacity:.35;cursor:wait}.layer-stops{display:flex;justify-content:space-between;align-items:center;gap:12px}.layer-stops button{font-size:11px;color:#999;padding:4px 0;min-height:26px;transition:color .15s}.layer-stops button[aria-pressed=true]{color:#ff625c}.layer-stops button:hover{color:#fff}.portrait-bottom{gap:17px}
+@media(max-width:760px){.layer-control{width:85%;max-width:370px;gap:8px}.layer-heading label{font-size:14px}.layer-stops button{min-height:36px}.portrait-bottom{gap:13px}.scene-actions{margin-top:0}.anatomy-canvas{bottom:170px}}
+@media(pointer:coarse){.layer-stops button{min-height:44px}}

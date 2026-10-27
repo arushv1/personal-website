@@ -1,81 +1,76 @@
-# Design QA — Arush's personal atlas
-
-## Source and implementation
-
-- Source visual truth: `reference/selected-option.png`, revised option 1 selected by the user. Source pixels: 1536 × 1024.
-- Implementation: http://127.0.0.1:5173/.
-- Final implementation screenshot: `qa/desktop-final.jpg`.
-- Final state: introduction, reveal 28, camera near its starting side view, rotation paused for comparison, page scroll 0.
-- Desktop CSS viewport: 1536 × 1024. The browser capture service returned a 1521 × 1014 JPEG. The reference was normalized to the same pixel dimensions with its aspect ratio preserved; both panels use the same scale. No browser chrome or device frame is included.
-- The anatomy is real sourced geometry rather than the generated illustration. Exact contours and vessel distribution differ intentionally; bone, arteries, and cortex must register and remain coherent during free orbit and reveal. This is a generic model, not Arush's likeness or scan.
-
-## Comparison evidence
-
-- Full-view joint comparison: `qa/comparison-final.jpg`, containing the normalized source and implementation in the same image.
-- Focused type/action comparison: `qa/typography-comparison.jpg`, source and implementation crops in the same image.
-- Reveal evidence: `qa/reveal-final.jpg` (the directly sourced final cortex, full reveal).
-- Hotspot-to-chapter evidence: `qa/chapter-final.jpg`.
-- Direct manipulation evidence: `qa/orbit-and-zoom.jpg`.
-- Mobile evidence: `qa/mobile-home.jpg`, `qa/mobile-chapter.jpg`, and `qa/minimum-320.jpg`.
-- Short desktop evidence: `qa/laptop-1366.jpg`.
-
-## Required fidelity surfaces
-
-**Fonts and typography:** Inter loaded successfully (verified through the browser font API). Bold sans-serif display hierarchy, three-line title, white/red punctuation, navigation scale, supporting text, and action hierarchy match the selected direction. Tracking, display line-height, and left inset were adjusted after the initial comparison. Copy remains editable HTML.
-
-**Spacing and layout rhythm:** Header, left copy, right anatomy, action, gesture hint, and reveal controls retain the reference's proportions and grouping. The source has an illustrated head with different anatomical proportions; the actual mesh is kept unwarped. The controls remain within a 1366 × 768 viewport (bottom 755px), and the action ends at 667.7px. Mobile reflows into copy then model without horizontal overflow.
-
-**Colors and tokens:** Black background, ivory matte bone, red vessels/action, and white/gray typography retain the reference palette. Button and selected-state red were darkened slightly for readable white text. Model tone varies naturally with lighting/orbit. No decorative raster background or cinematic effects were substituted.
-
-**Image/model quality:** Real attributed 3D assets are used, with no CSS/div/SVG anatomy approximations and no flat hero picture rotated to mimic 3D. Head/neck skeletal and arterial meshes are selected from the source atlas and registered together. The cortical mesh is directly sourced from Brainder with its license/attribution recorded. Final assets: bone 136,392 triangles, arteries 233,689, cortex 115,804. Three compressed GLBs total approximately 1.5 MB. Crops retain the head and relevant upper thorax, and no placeholder imagery remains.
-
-**Copy and content:** Title, supporting line, action, navigation, hint, and reveal labels follow the selected mock. Additional chapter copy uses the user's supplied interests and résumé. No invented project metrics, hardware, favorite places, or personal photographs are presented as facts. Generic anatomy and symbolic chapter locations are explained in Model credits.
-
-**Icons and controls:** Phosphor icons provide the arrow, mouse hint, pause/play, reset, zoom, close, and contact glyphs. Native range and buttons provide keyboard access. Focus, pressed/selected chapter states, loading, retry, unavailable-WebGL fallback, and dialog states are implemented. Core navigation is functional.
-
-## Interaction verification
-
-- Initial anatomy loads and automatic motion can be paused/resumed.
-- Pointer drag changes the orbit. Wheel/orbit controls and zoom buttons work; keyboard arrows and plus/minus provide alternatives. Reset returns to the starting view.
-- Range endpoints 0 and 100 are keyboard reachable; full reveal exposes cortex and vessels and fades the bone. Visible value and accessible state update.
-- Explore within moves to the atlas and exposes all five hotspots/chapters.
-- Making hotspot opens its chapter. Research, Roots, Making, Setup, Stories, and About each render the expected heading and content.
-- Back-to-atlas and return-home navigation work; focus moves to the chapter heading and returns to the main action on exit.
-- Contact opens a native modal with email and LinkedIn links. Close works. Model credits opens with attribution and source-notice links. No email is sent automatically.
-- Résumé and public profile links have verified destinations in rendered DOM.
-- Browser console checked after a fresh load of the final model: no warnings or errors.
-- Responsive checks: 1536 × 1024, 1366 × 768, 390 × 844, and 320 × 800. No horizontal overflow at the narrow or laptop checks.
-- Mobile computed touch action is `pan-y`, preserving vertical page scrolling while allowing sideways orbit. Zoom buttons remain available.
-- Production build succeeds. The supplied four Sites worker/packaging tests pass. No deployment was performed.
-
-## Comparison history and resolved findings
-
-1. **P2 — Reveal controls below the fold on short desktop windows.** Initial fixed minimum scene height caused this. Fixed scene height and copy padding to follow viewport height. Post-fix laptop capture and measured control bounds confirm the correction.
-2. **P2 — Initial intro type too tight/small and left inset too small.** Increased display size, corrected tracking/line-height, restored the reference inset, and matched the wider action. Joint final and focused comparisons show the corrected hierarchy.
-3. **P2 — Scapular fragments at the lower model crop.** Removed those structures from the export and reloaded the assets. Final side-view evidence shows a cleaner upper-thorax crop.
-4. **P2 — Mobile canvas could intercept vertical scrolling.** Applied mobile `pan-y` and a mobile-specific gesture hint. Verified computed touch action and full-page readable mobile captures.
-5. **P2 — Camera easing could compete with a new pointer interaction.** Cancelled pending camera movement when orbit/zoom begins. Direct manipulation and keyboard/zoom checks were repeated after the fix.
-6. Final captures were normalized to the source viewport/state, including page scroll 0; earlier scrolled captures were not used to judge vertical alignment.
+# Design QA — Arush's real 3D avatar
 
 ## Findings
 
-No actionable P0/P1/P2 findings remain for this prototype's scope.
+No actionable P0/P1/P2 findings remain for this update. A mobile chapter navigation issue found during verification was corrected and checked again. The internal anatomy remains generic and illustrative; the outer avatar is an artistic likeness, not a face or medical scan.
+
+## Source, state, and normalization
+
+- Layout source: the previously accepted implementation, `qa/desktop-final.jpg`, grounded in `reference/selected-option.png`. The earlier anatomy QA report is retained as `qa/anatomy-design-qa.md`.
+- Character art direction: the user's `reference/3d-avatar-style.png` and the generated likeness concept, `reference/arush-avatar-concept-v1.png` (1122 × 1402 RGBA). The latter was the actual Meshy generation input.
+- Implementation: http://127.0.0.1:5173/; home, reveal 0 / You, rotation paused, reset camera, page scroll 0. Final screenshot: `qa/avatar-home-final.jpg`.
+- Desktop CSS viewport 1536 × 1024. Both baseline and new browser captures are 1521 × 1014 pixels. The browser capture service scales the viewport; the comparison uses equal-sized captures directly, with a 16 px separator and no browser chrome.
+- Full-view comparison: `qa/avatar-layout-comparison.jpg`, accepted baseline on the left and new avatar implementation on the right. Avatar subject, frontal three-quarter camera, shorter-neck registration, and the four layer shortcuts intentionally replace the old generic side-profile opening.
+- Focused typography/action comparison: `qa/avatar-typography-comparison.jpg`, identical 510 × 540 crops from both browser captures.
+- Focused character comparison: `qa/avatar-likeness-comparison.jpg`, concept on the left and actual front-facing browser model on the right. The concept was trimmed to its transparent subject; the model was cropped from `qa/avatar-front-final.jpg`. Each subject was fitted proportionally into 512 × 640 on black. This compares stylization and identity cues rather than identical camera/lighting pixels.
+- All three joint comparison images were opened and visually reviewed together with the actual browser states. Separate source and output images were not treated as a joint comparison.
+
+## Required fidelity surfaces
+
+**Fonts and typography:** The focused comparison preserves the accepted display font, three-line wrapping, bold weight, tracking, line height, red period, supporting copy, and red action. Navigation and small controls retain the existing hierarchy. The new layer labels remain readable at narrow widths; no text truncation or horizontal overflow was observed.
+
+**Spacing and layout rhythm:** The full-view comparison preserves header, left copy, action, right scene, and bottom-control grouping. The avatar fits the scene as a complete head/neck/shoulder bust. At 1366 × 768, the action ends at 667.7 CSS px and scene controls at 755 px. Mobile stacks copy, model, and controls in a vertically scrollable page. At 390 and 320 CSS px, the avatar and controls fit the width without overlap or horizontal overflow. Model zoom is intentionally user-controlled and may enlarge geometry beyond its viewport.
+
+**Colors and tokens:** Black, white, gray, and red interface tokens match the baseline. The avatar adds the requested dark curls, warm skin, silver studs, and blue polo. PBR materials and source texture maps are retained. Scene lighting differs from the concept's studio lighting, so skin highlights and shirt saturation vary; this is a rendered 3D likeness with a different light rig, not a pixel copy of the reference.
+
+**Image/model quality:** The frontend loads an actual textured Meshy GLB, with sculpted head, hair, ears, neck, and collar. Rotation reveals real side/back geometry; no raster portrait plane, projection-color substitute, or portrait-only orbit limit is used. The original textured model is retained. Its web derivative has 124,180 triangles and is 867,268 bytes, preserving UVs, normals, base color, normal, and metallic/roughness maps. Four compressed GLBs total about 2.4 MB. Internal layers share the same world/camera and shorter-neck registration. Slider reversal retains the viewing angle. The normalized character comparison retains the smile, clean-shaven face, curls, earrings, and polo; exact facial proportions remain approximate.
+
+**Copy and content:** Existing headline, subtitle, chapters, and supplied personal details remain intact. Slider labels now describe You → Bone → Vessels → Within. Model credits identify Meshy, its CC BY 4.0 license, optimization, illustrative internal anatomy, and existing anatomical sources. No claims of actual personal scan data or invented project metrics were added.
+
+**Icons and accessibility:** Phosphor controls remain consistent. The range has a descriptive name and changing value text, shortcut buttons expose pressed state, and disabled loading states remain. Canvas keyboard instructions now describe the avatar. Contact and credits remain native dialogs. Chapter headings receive focus; on mobile, newly opened chapter content is also brought into view. Reduced-motion initialization is preserved.
+
+## Browser and interaction evidence
+
+- `qa/avatar-home-final.jpg`: reset three-quarter avatar opening.
+- `qa/avatar-front-final.jpg`: front geometry after two keyboard rotation steps.
+- `qa/avatar-orbit-final.jpg`: pointer-rotated avatar showing another viewing angle.
+- `qa/avatar-bone-final.jpg`, `qa/avatar-vessels-final.jpg`, `qa/avatar-within-final.jpg`: settled reveal stages. Temporary interpolation frames were not used as stage evidence.
+- `qa/meshy-textured-preview.jpg`: legitimate textured source in Meshy's 3D viewer, where front, side, and back were inspected before export.
+- `qa/avatar-mobile-home.jpg`, `qa/avatar-mobile-controls.jpg`: 390 × 844 CSS viewport; 375 × 812 captures. Vertical scrolling reaches the lower controls. Computed canvas touch action is `pan-y`.
+- `qa/avatar-minimum-320.jpg`: 320 × 800 CSS viewport; 305 × 763 capture, no horizontal overflow.
+- `qa/avatar-mobile-chapter.jpg`: 390 × 844 CSS viewport; 375 × 812 capture, corrected chapter opening.
+- `qa/avatar-laptop-1366.jpg`: 1366 × 768 CSS viewport; 1351 × 760 capture, all scene controls accessible.
+
+Verified avatar loading, automatic rotation/pause, pointer orbit, keyboard rotation, zoom in/out, keyboard Home reset, all four layer shortcuts, range Home/End, reveal reversal, Explore within, Making hotspot, chapter back, About, return home, Contact, and updated Model credits. Browser warning/error log returned an empty array. The frontend serves static models/decoder and has no application API, database, or secret configuration to verify.
+
+## Comparison history and resolved findings
+
+1. **P2 — Mobile hotspot navigation could leave the new chapter heading above the viewport.** The previous focus effect deliberately prevented scrolling on every screen size. A hotspot opened from the lower model changed content above the current scroll position. Fix: preserve desktop focus behavior and scroll the new article into view only on the stacked layout (max-width 760 px). Repeated the hotspot flow after the change: article top 0, heading top 91 px, heading bottom 186.9 px, no overflow. `qa/avatar-mobile-chapter.jpg` shows the post-fix heading and readable content.
+2. Final joint layout and focused comparisons show the intended avatar/slider changes with the accepted typography and structure intact. No additional P0/P1/P2 visual finding was identified.
+
+## Build and code verification
+
+- Clean `npm ci --no-audit --no-fund` succeeded with the committed package/lockfile changes.
+- Final `npm run build` succeeded; client and optional Sites packaging were emitted.
+- Final `npm run test:sites` passed all four tests after that build.
+- React review: model requests load in parallel; transient animation values stay in refs; the renderer is not recreated by slider updates; observers, controls, frame callbacks, and loaded scene resources have cleanup. Native controls, accessible value text, loading/retry, and unsupported-WebGL paths remain.
+- Vite reports the existing large-JavaScript-chunk advisory (about 226 KB gzip). No build failure. Splitting the initial Three.js scene would not eliminate its required first-view download.
+- Publication is verified separately after pushing; a local QA pass alone does not prove deployment.
 
 ## Follow-up polish and limits
 
-- P3: The sourced anatomical mesh has a narrower cranial contour and different superficial branches than the generated illustration. A custom art-directed or personal likeness can refine this later; the current model preserves coherent real 3D anatomy.
-- P3: Small footer text may wrap to multiple lines at the narrowest width, while links remain reachable.
-- Physical phone GPU performance and two-finger gestures were not measured; mobile viewport, layout, touch-action, and accessible alternatives were checked in the in-app browser.
-- Reduced-motion handling is implemented in CSS and scene initialization; an OS-level preference toggle was not emulated during this run.
-- Personal copy is a draft; photos, detailed case studies, and actual desk specifications were not supplied.
+- P3: The generated mesh's gaze points slightly upward, and facial proportions/lighting differ from the concept. Further likeness sculpting, eye correction, or an actual facial rig can refine this. Current animation is scene rotation/reveal; no blink or lip rig is claimed.
+- Physical phone GPU performance and two-finger gestures were not measured. Browser viewport layout, computed touch behavior, scrolling, and control alternatives were checked.
+- Reduced-motion handling remains implemented; an OS preference change was not emulated in this run.
 
 ## Implementation checklist
 
-- [x] Match selected visual direction and exact top-level copy.
-- [x] Use real 3D models and working navigation/layer controls.
-- [x] Optimize and attribute selected assets.
-- [x] Check responsive layouts and primary interactions.
-- [x] Compare the actual implementation to the selected visual in a joint input.
-- [x] Preserve the Product Design / Sites-ready runtime and verify build output.
+- [x] Actual textured 3D avatar with complete rotatable geometry.
+- [x] Shared avatar, bone, vessel, and cortex reveal in one scene.
+- [x] Preserve original model, reproducible optimization, and attribution.
+- [x] Match accepted layout and compare source/implementation in joint inputs.
+- [x] Check desktop, short laptop, mobile, keyboard, navigation, and console.
+- [x] Repair and recheck the mobile chapter issue.
+- [x] Build and run the four packaging tests.
 
 final result: passed
