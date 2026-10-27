@@ -6,8 +6,35 @@
   "outputDirectory": "dist/client",
   "rewrites": [
     {
-      "source": "/:chapter(atlas|research|roots|making|setup|stories|about)",
+      "source": "/:chapter(atlas|about|education|experience|projects|awards|courses|publications|research|roots|making|setup|stories)",
       "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/research",
+      "destination": "/projects",
+      "permanent": true
+    },
+    {
+      "source": "/roots",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/making",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/setup",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/stories",
+      "destination": "/about",
+      "permanent": true
     }
   ]
 }

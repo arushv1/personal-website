@@ -1,7 +1,9 @@
-export const paths = ['/', '/atlas', '/research', '/roots', '/making', '/setup', '/stories', '/about'];
-export function readRoute(pathname) {
-  const path = pathname.replace(/\/+$/, '') || '/';
-  return paths.includes(path) ? path : 'not-found';
+import {sections} from './content/portfolio.mjs';
+export const paths=['/','/atlas',...sections.map(section=>'/'+section.id)];
+export const legacyRoutes={'/research':'/projects','/roots':'/about','/making':'/about','/setup':'/about','/stories':'/about'};
+export function readRoute(pathname){
+ const path=pathname.replace(/\/+$/,'')||'/';
+ return legacyRoutes[path]||(paths.includes(path)?path:'not-found');
 }
 // Let the browser handle new tabs, downloads, and non-primary clicks.
 export function followLink(event, path, navigate) {

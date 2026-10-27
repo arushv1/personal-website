@@ -106,3 +106,47 @@ test('production uses the aligned sectional reveal and retains the blend alterna
   assert.equal(revealMode('?reveal=unknown'),'section');
   assert.equal(routeHref('/research','?reveal=blend'),'/research?reveal=blend');
 });
+
+test('portfolio sections, items, views and legacy links remain consistent', async () => {
+  const {sections,sectionById}=await import('../src/content/portfolio.mjs');
+  const {legacyRoutes}=await import('../src/navigation.mjs');
+  assert.deepEqual(sections.map(s=>s.label),['About Me','Education','Experience','Projects','Awards','Courses','Publications']);
+  assert.equal(new Set(sections.map(s=>s.id)).size,7);
+  assert.equal(new Set(sections.map(s=>s.anchor.join(','))).size,7);
+  assert.equal(new Set(sections.map(s=>s.view.position.join(','))).size,7);
+  for(const section of sections){
+    assert.equal(readRoute('/'+section.id),'/'+section.id);
+    assert.equal(sectionById[section.id],section);
+    assert.equal(new Set(section.items.map(i=>i.id)).size,section.items.length);
+    assert(section.view.position.every(Number.isFinite)&&section.view.target.every(Number.isFinite));
+    assert(Math.hypot(...section.view.position.map((v,i)=>v-section.view.target[i]))>=2.5);
+    assert(section.view.reveal>=0&&section.view.reveal<=100);
+    for(const item of section.items){assert(item.id&&item.title&&item.summary);}
+  }
+  assert.deepEqual(sectionById.projects.items.map(i=>i.id),['symptomai','threshold','vascupath']);
+  for(const [old,destination] of Object.entries(legacyRoutes))assert.equal(readRoute(old),destination);
+});
+
+test('compact side gutters stay bounded, separated and clear of the feature dots', async () => {
+  const {sections}=await import('../src/content/portfolio.mjs');
+  const {layoutHotspots}=await import('../src/hotspots.mjs');
+  for(const [width,height] of [[288,410],[350,440],[510,398],[650,600]]){
+    for(const spread of [0,.11]){
+      const points=sections.map((section,index)=>({id:section.id,side:section.callout.side,width:Math.max(64,section.label.length*6.5+18),x:width*(.5+Math.sin(index)*spread),y:height*(.22+index*.08)}));
+      const labels=layoutHotspots(points,width,height),boxes=Object.values(labels);
+      assert.equal(boxes.length,7);
+      for(const point of points){
+        const box=labels[point.id];assert(box.x>=0&&box.x+box.width<=width&&box.y>=0&&box.y+box.height<=height);
+        const closestX=Math.max(box.x,Math.min(point.x,box.x+box.width));
+        assert(Math.hypot(closestX-point.x,box.y+22-point.y)<Math.min(210,width*.34+32));
+      }
+      const left=points.filter(p=>p.side==='left').map(p=>labels[p.id].x+labels[p.id].width);
+      const right=points.filter(p=>p.side==='right').map(p=>labels[p.id].x);
+      assert(Math.max(...left)-Math.min(...left)<.01&&Math.max(...right)-Math.min(...right)<.01);
+      assert(Math.min(...right)-Math.max(...left)>40);
+      for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
+        const a=boxes[i],b=boxes[j];assert(a.x+a.width<=b.x||b.x+b.width<=a.x||a.y+a.height<=b.y||b.y+b.height<=a.y);
+      }
+    }
+  }
+});
