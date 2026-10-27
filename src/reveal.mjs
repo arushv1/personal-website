@@ -11,3 +11,15 @@ export function revealState(value) {
     brainCut: 2.65 - smooth(value, 76, 100) * 4.2,
   };
 }
+
+// Smooth, global transfer between whole model views; no spatial wipe.
+// The final view renders vessels and cortex together with normal 3D occlusion.
+export function layerBlend(value) {
+  let from,to,weight;
+  if(value<34){from=0;to=1;weight=smooth(value,4,32);}
+  else if(value<68){from=1;to=2;weight=smooth(value,38,68);}
+  else {from=2;to=3;weight=smooth(value,76,98);}
+  if(weight===0)return {from,to:from,weight:0};
+  if(weight===1)return {from:to,to,weight:0};
+  return {from,to,weight};
+}

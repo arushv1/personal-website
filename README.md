@@ -87,7 +87,9 @@ The previous website remains available in Git history, including commit `7d7557c
 
 Share `/research`, `/roots`, `/making`, `/setup`, `/stories`, or `/about`. `/atlas` opens the overview; `/` opens home. Links support new tabs, refresh and browser history. `vercel.json` rewrites only known chapter/atlas routes to the app shell. Unknown Vercel paths retain a 404; local Vite and Sites show the app’s not-found view. Static asset paths are preserved.
 
-The reveal uses moving anatomical sections with a narrow feathered boundary, preserving real meshes/textures and consistent depth. Manual scrubbing pauses rotation without changing the camera. The anatomy remains illustrative.
+The default reveal changes the whole model together by blending complete, depth-correct 3D layer views. It preserves the avatar’s original textures, responds using time-based smoothing, and reuses cached layer views while scrubbing. Manual scrubbing pauses rotation without changing the camera. The eyes/jaw, head depth, and neck are fitted using one shared mapping for bones, vessels, cortex and markers; the anatomy remains illustrative.
+
+Append `?reveal=section` to use the top-to-bottom sectional backup. That choice is retained in chapter links and new tabs. The previous sectional implementation is also preserved on `codex/sectional-reveal-backup`.
 
 Optional browser acceptance suite (requires Playwright and Chromium in the test environment):
 

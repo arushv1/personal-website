@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import * as THREE from 'three';
-import { damp, revealState } from './reveal.mjs';
-import { followLink } from './navigation.mjs';
+import { damp, revealState, layerBlend } from './reveal.mjs';
+import { followLink, routeHref } from './navigation.mjs';
+import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
+import { registerAnatomyPoint } from './registration.mjs';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -17,6 +19,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
     catch { setStatus('unsupported'); return; }
     let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasExploring = live.current.exploring;
+    const sectional = new URLSearchParams(location.search).get('reveal')==='section';
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.65));
@@ -52,7 +55,8 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     // Complementary section masks avoid blending two differently shaped faces.
     // Alpha hashing feathers only the narrow boundary and keeps depth-writing on.
     const section = (material, name) => {
-      material.transparent=false; material.alphaHash=true; material.depthWrite=true;
+      material.transparent=false; material.alphaHash=sectional; material.depthWrite=true;
+      if(!sectional)return;
       material.onBeforeCompile=shader=>{
         shader.uniforms.revealCut=name==='arteries'?boneCut:name==='brain'?brainCut:cutUniform;
         shader.uniforms.exitCut=boneCut;
@@ -64,20 +68,15 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     for(const name of ['bone','arteries','brain']){section(materials[name],name);materials[name].opacity=1;}
     const models = {}, draco = new DRACOLoader().setDecoderPath('/draco/');
     const loader = new GLTFLoader().setDRACOLoader(draco); let completed = 0;
+    const blender=sectional?null:new LayerBlendRenderer(renderer,scene,camera,models);
     Promise.all(Object.keys(materials).map(async name => {
       const gltf = await loader.loadAsync(`/models/${name}.glb`);
       if(cancelled){ gltf.scene.traverse(o => o.geometry?.dispose()); return; }
       gltf.scene.traverse(o => { if(o.isMesh){
-        // The cartoon bust has a shorter neck. Apply the same registration to
-        // every internal layer, preserving the head and shared 3D coordinates.
+        // Register every internal layer using the same coordinates/landmarks.
         if(name !== 'avatar'){
           const positions=o.geometry.attributes.position;
-          for(let i=0;i<positions.count;i++){
-            const y=positions.getY(i);
-            // Keep the head registered; tuck the generic thorax inside the bust.
-            const lower=1-THREE.MathUtils.smoothstep(y,-.8,.15);
-            positions.setXYZ(i,positions.getX(i)*(1-.14*lower),y<.15?.15+(y-.15)*.55:y,positions.getZ(i)*(1-.12*lower));
-          }
+          for(let i=0;i<positions.count;i++)positions.setXYZ(i,...registerAnatomyPoint(positions.getX(i),positions.getY(i),positions.getZ(i)));
           positions.needsUpdate=true;o.geometry.computeVertexNormals();o.geometry.computeBoundingSphere();o.geometry.computeBoundingBox();
         }
         if(name === 'avatar'){
@@ -93,6 +92,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       if(!cancelled){ console.error('Anatomy loading failed', e); setStatus('error'); }
     });
     const anchors = { research:[.7,1.15,.05], roots:[.47,.92,-.59], making:[.49,1.35,.55], setup:[.67,.43,.05], stories:[.24,.62,-.8] };
+    for(const [id,anchor] of Object.entries(anchors))anchors[id]=registerAnatomyPoint(...anchor);
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
     let needsRender=true,drawnReveal=-1;
@@ -117,16 +117,16 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion};
     const render = time => {
       if(cancelled)return; frame=requestAnimationFrame(render); if(time-last<1000/60-1)return;
-      const dt=Math.min((time-last)/1000,.1);last=time;const p=live.current;
+      const elapsed=Math.max(0,(time-last)/1000),dt=Math.min(elapsed,.1);last=time;const p=live.current;
       if(p.exploring!==wasExploring){ wasExploring=p.exploring; if(p.exploring)destination={target:new THREE.Vector3(0,.7,0),camera:new THREE.Vector3(4.7,1.3,3.4)};else reset(); }
-      if(destination){ const blend=reduced?1:1-Math.exp(-dt/.22);camera.position.lerp(destination.camera,blend);controls.target.lerp(destination.target,blend);if(camera.position.distanceTo(destination.camera)<.012)destination=null; }
+      if(destination){ const blend=reduced?1:1-Math.exp(-elapsed/.22);camera.position.lerp(destination.camera,blend);controls.target.lerp(destination.target,blend);if(camera.position.distanceTo(destination.camera)<.012)destination=null; }
       controls.autoRotate=p.spinning&&!reduced&&!destination;controls.update(dt);
-      currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,dt);
+      currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,elapsed);
       const state=revealState(currentReveal);cutUniform.value=state.cut;
       boneCut.value=state.boneCut;brainCut.value=state.brainCut;
       // Cull only when a whole mesh is outside its section, including the
       // feather margin. This saves vertex work without a visible cutoff/pop.
-      for(const [name,model] of Object.entries(models)){
+      if(sectional)for(const [name,model] of Object.entries(models)){
         const {min,max}=model.userData.sectionBounds;
         model.visible=name==='avatar'?state.cut>min.y-.025:
           name==='bone'?state.cut<max.y+.025&&state.boneCut>min.y-.025:
@@ -142,17 +142,20 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
-      if(needsRender || completed<4 || Math.abs(drawnReveal-currentReveal)>.0001 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12){
-        renderer.render(scene,camera);needsRender=false;drawnReveal=currentReveal;
+      const viewChanged=needsRender || completed<4 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12;
+      if(viewChanged || Math.abs(drawnReveal-currentReveal)>.0001){
+        if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
+        else renderer.render(scene,camera);
+        needsRender=false;drawnReveal=currentReveal;
         drawnPosition.copy(camera.position);drawnRotation.copy(camera.quaternion);
       }
     };frame=requestAnimationFrame(render);
-    return () => { cancelled=true;cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());renderer.dispose();canvas.remove();engine.current=null; };
+    return () => { cancelled=true;cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
   },[]);
   return <div className="anatomy-canvas" ref={host}>
     {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}
     {status==='error'&&<div className="model-loading" role="alert"><p>The anatomy couldn’t load.</p><button onClick={()=>location.reload()}>Try again</button></div>}
-    {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href="/research" onClick={event=>followLink(event,'/research',props.onNavigate)}>Explore the work</a></div>}
-    {status==='ready'&&props.reveal>=32&&<div className="model-markers">{Object.entries({research:'Research',roots:'Roots',making:'Making',setup:'Setup',stories:'Stories'}).map(([id,name])=><a href={'/'+id} key={id} ref={el=>{markers.current[id]=el;}} className={`model-marker ${props.activeChapter===id?'selected':''} ${!props.exploring&&id!=='research'?'is-hidden':''}`} aria-label={`Explore ${name}`} onClick={event=>followLink(event,'/'+id,props.onNavigate)}><span className="marker-dot"/><span className="marker-name">{name}</span></a>)}</div>}
+    {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href={routeHref('/research',location.search)} onClick={event=>followLink(event,routeHref('/research',location.search),props.onNavigate)}>Explore the work</a></div>}
+    {status==='ready'&&props.reveal>=32&&<div className="model-markers">{Object.entries({research:'Research',roots:'Roots',making:'Making',setup:'Setup',stories:'Stories'}).map(([id,name])=><a href={routeHref('/'+id,location.search)} key={id} ref={el=>{markers.current[id]=el;}} className={`model-marker ${props.activeChapter===id?'selected':''} ${!props.exploring&&id!=='research'?'is-hidden':''}`} aria-label={`Explore ${name}`} onClick={event=>followLink(event,routeHref('/'+id,location.search),props.onNavigate)}><span className="marker-dot"/><span className="marker-name">{name}</span></a>)}</div>}
   </div>;
 });

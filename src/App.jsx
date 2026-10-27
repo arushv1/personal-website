@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, ArrowLeft, MouseSimple, ArrowsClockwise, Pause, Play, X, Minus, Plus, EnvelopeSimple, GithubLogo } from '@phosphor-icons/react';
 import { AnatomyScene } from './AnatomyScene';
-import { readRoute, followLink } from './navigation.mjs';
+import { readRoute, followLink, routeHref } from './navigation.mjs';
 
 function RouteLink({to, navigate, children, ...props}) {
- return <a {...props} href={to} onClick={event=>followLink(event,to,navigate)}>{children}</a>;
+ const href=routeHref(to,location.search);
+ return <a {...props} href={href} onClick={event=>followLink(event,href,navigate)}>{children}</a>;
 }
 
 const chapters = {
@@ -23,7 +24,7 @@ export function App(){
  const [reveal,setReveal]=useState(()=>exploring?100:0),[spinning,setSpinning]=useState(()=>route==='/'&&!matchMedia('(prefers-reduced-motion: reduce)').matches),[ready,setReady]=useState(false),[dialog,setDialog]=useState(null);
  const scene=useRef(null),dialogRef=useRef(null),chapterHeading=useRef(null),atlasHeading=useRef(null),previousRoute=useRef(route);
  function navigate(path){
-  const next=readRoute(path);
+  const next=readRoute(new URL(path,location.origin).pathname);
   if(next===route)return;
   history.pushState(null,'',path);setRoute(next);
  }

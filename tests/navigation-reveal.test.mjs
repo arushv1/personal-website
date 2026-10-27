@@ -41,3 +41,58 @@ test('Vercel rewrite covers every app route without swallowing asset paths', asy
   for(const path of paths.filter(p=>p!=='/'))assert(pattern.test(path));
   for(const path of ['/models/avatar.glb','/draco/draco_decoder.wasm','/arush-vyas-resume.pdf','/assets/main.js'])assert(!pattern.test(path));
 });
+
+test('whole-model reveal blends adjacent complete views with stable shortcuts', async () => {
+  const {layerBlend}=await import('../src/reveal.mjs');
+  for(const [value,stage] of [[0,0],[34,1],[68,2],[100,3]])assert.deepEqual(layerBlend(value),{from:stage,to:stage,weight:0});
+  for(let value=0;value<=100;value+=.125){
+    const state=layerBlend(value);
+    assert(state.to===state.from||state.to===state.from+1);
+    assert(state.weight>=0&&state.weight<1);
+  }
+  assert(layerBlend(18).weight>0&&layerBlend(18).weight<1);
+  assert(layerBlend(50).weight>0&&layerBlend(50).weight<1);
+  assert(layerBlend(85).weight>0&&layerBlend(85).weight<1);
+});
+
+test('sectional backup is retained when copying or opening chapter links', async () => {
+  const {routeHref}=await import('../src/navigation.mjs');
+  assert.equal(routeHref('/research','?reveal=section'),'/research?reveal=section');
+  assert.equal(routeHref('/atlas','?source=shared&reveal=section'),'/atlas?reveal=section');
+  assert.equal(routeHref('/research'),'/research');
+});
+
+test('whole-model scrubbing reuses opaque views; camera and size changes redraw them', async () => {
+  const {LayerBlendRenderer}=await import('../src/LayerBlendRenderer.mjs');
+  const {layerBlend}=await import('../src/reveal.mjs');
+  const models=Object.fromEntries(['avatar','bone','arteries','brain'].map(name=>[name,{visible:true}]));
+  const scene={},camera={},draws=[];let target=null,size=256;
+  const renderer={
+    capabilities:{maxSamples:2},extensions:{has:()=>true},
+    getDrawingBufferSize:v=>v.set(size,size),
+    setRenderTarget:t=>{target=t;},
+    render:s=>draws.push(s===scene?Object.keys(models).filter(name=>models[name].visible).join('+'):'output'),
+  };
+  const blend=new LayerBlendRenderer(renderer,scene,camera,models);
+  blend.render(layerBlend(15));assert.deepEqual(draws,['avatar','bone','output']);
+  draws.length=0;blend.render(layerBlend(25));assert.deepEqual(draws,['output'],'Scrubbing the same layer pair should only blend cached views');
+  draws.length=0;blend.render(layerBlend(50));assert.deepEqual(draws,['arteries','output'],'The shared bone view should be retained');
+  draws.length=0;blend.render(layerBlend(100));assert.deepEqual(draws,['arteries+brain','output']);
+  draws.length=0;blend.invalidate();blend.render(layerBlend(100));assert.deepEqual(draws,['arteries+brain','output']);
+  draws.length=0;size=512;blend.render(layerBlend(100));assert.deepEqual(draws,['arteries+brain','output']);
+  assert.equal(blend.targets.length,2);assert.equal(target,null);
+  let disposed=0;blend.targets.forEach(s=>s.target.addEventListener('dispose',()=>disposed++));blend.dispose();assert.equal(disposed,2);
+});
+
+test('shared head/neck registration stays continuous and does not fold or mirror anatomy', async () => {
+  const {registerAnatomyPoint}=await import('../src/registration.mjs');
+  let previous=-Infinity;
+  for(let y=-2;y<=2.3;y+=.01){
+    const point=registerAnatomyPoint(.5,y,.5);
+    assert(point.every(Number.isFinite));assert(point[1]>previous);previous=point[1];
+    assert(point[0]>0);assert.equal(registerAnatomyPoint(-.5,y,.5)[0],-point[0]);
+    assert(registerAnatomyPoint(0,y,1)[2]>registerAnatomyPoint(0,y,-1)[2]);
+  }
+  assert(registerAnatomyPoint(0,.6,0)[1]>.95,'Head landmarks should move up toward the avatar');
+  assert(registerAnatomyPoint(0,-1,0)[1]<-.4,'Shoulder base must remain low rather than following the head lift');
+});

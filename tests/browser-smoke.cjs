@@ -54,6 +54,15 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   const fps=1000*(times.length-1)/(times.at(-1)-times[0]);
   for(const [i,frame] of frames.entries())fs.writeFileSync(`${out}/motion-${String(i).padStart(2,'0')}.png`,frame);
   assert.equal(await page.getByRole('button',{name:'Start rotation'}).count(),1);checks.push('full-motion slow/fast/reverse scrubbing; automatic rotation stays paused');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto(base+'/?reveal=section',{waitUntil:'domcontentloaded'});await ready();
+  await setReveal(15);await page.waitForTimeout(150);
+  await page.locator('.anatomy-canvas').screenshot({path:`${out}/sectional-backup.png`});
+  assert.equal(await page.getByRole('link',{name:'Work',exact:true}).getAttribute('href'),'/research?reveal=section');
+  await page.getByRole('link',{name:'Work',exact:true}).click();await page.waitForURL(base+'/research?reveal=section',{waitUntil:'domcontentloaded'});
+  await page.reload({waitUntil:'domcontentloaded'});await ready();
+  await page.getByRole('heading',{name:'Making the invisible visible.'}).waitFor();
+  checks.push('sectional backup, chapter link retains comparison mode, refresh');
   assert.deepEqual(errors,[]);
   fs.writeFileSync(`${out}/report.json`,JSON.stringify({checks,errors,observedBrowserRafFps:fps,frameCount:times.length},null,2));console.log(JSON.stringify({checks,errors,observedBrowserRafFps:fps},null,2));
  }finally{await browser.close();}

@@ -40,6 +40,10 @@ Direct downloaded source: https://s3.us-east-2.amazonaws.com/brainder/software/b
 
 Modifications: left and right pial hemispheres merged, reorientation and registration to the generic atlas, smooth normals, geometry reduction, and Draco compression. Preserve attribution and applicable ShareAlike terms when redistributing this model or a derivative.
 
+## Display registration
+
+The runtime applies the same illustrative head/neck registration to bone, arteries, cortex and their navigation markers. Adaptations include lower-neck compression, shoulder fitting, head elevation to match the avatar's jaw/eye landmarks, horizontal/depth fitting and a small crown adjustment. Source GLBs and the textured avatar remain intact. These changes fit a generic atlas to a stylized character; they do not reconstruct Arush's personal anatomy.
+
 ## Decoder
 
 The bundled Draco decoder is from the Three.js distribution and is licensed under Apache-2.0. Three.js is MIT licensed.

@@ -1,0 +1,19 @@
+{
+  "renderer": "Chromium SwiftShader",
+  "viewport": "1366x768",
+  "scenario": "3.5 seconds of continuously varying reveal 12–24, after warming the avatar/bone pair; callback timing is not a physical GPU measurement",
+  "results": [
+    {
+      "label": "previous",
+      "callbacks": 7,
+      "durationMs": 3033.199999999999,
+      "callbackFps": 1.9781089278649617
+    },
+    {
+      "label": "whole-model",
+      "callbacks": 97,
+      "durationMs": 3516.5999999999985,
+      "callbackFps": 27.29909571745437
+    }
+  ]
+}
