@@ -46,7 +46,7 @@ npm run prepare:models # Optional: rebuild the compressed anatomy assets
 
 The production frontend is in `dist/client/`. The build also emits `dist/server/index.js` and `dist/.openai/hosting.json` for a future Sites deployment. Build before running `test:sites`: its packaging check reads those generated files. The included GitHub Actions workflow runs these steps in that order; it does not deploy.
 
-This replaces the previous Next.js implementation. Any existing hosting integration should use Vite settings: build command `npm run build`, static output directory `dist/client`. Publishing and hosting configuration are separate from this repository update.
+This replaces the previous Next.js implementation. `vercel.json` explicitly selects Vite, installs with `npm ci`, builds with `npm run build`, and serves `dist/client`. These values override the old framework and build/output settings in Vercel. The existing Git integration triggers a deployment when `main` changes; check its Vercel status separately from GitHub Actions. A successful GitHub build alone does not confirm publication.
 
 ## Experience
 

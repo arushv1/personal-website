@@ -55,6 +55,7 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `scripts/prepare-anatomy.mjs` | Selects and compresses bones and arteries |
 | `scripts/prepare-brain.mjs` | Registers and compresses the directly sourced cortex |
 | `vite.config.mjs` | Vite configuration; client output is `dist/client` |
+| `vercel.json` | Overrides the previous Next.js hosting preset with Vite, `npm ci`, `npm run build`, and `dist/client` |
 | `worker/index.js` | Optional Sites worker entry |
 | `scripts/prepare-sites-build.mjs` | Copies worker and hosting metadata into build output |
 | `.openai/hosting.json` | Sites-compatible configuration, currently no project ID |
@@ -131,8 +132,10 @@ Existing QA passed for the selected prototype: actual orbit/wheel zoom, layer re
 - Physical phone GPU performance and two-finger gestures were not directly measured. Mobile viewport/layout, computed touch action, and button alternatives were checked.
 - Reduced-motion handling is implemented; an OS preference toggle was not directly exercised in the initial QA run.
 - The app has no production analytics, form backend, CMS, or custom domain configuration.
-- This repository now uses Vite. An existing hosting integration configured for Next.js may need its framework preset changed. Use `npm run build` and static directory `dist/client`; check the provider before making deployment claims.
+- This repository now uses Vite. `vercel.json` explicitly overrides the old Vercel framework/build/output settings. The existing Git integration is connected: the first replacement commit triggered a failed Vercel deployment despite passing GitHub CI. Always check the Vercel status separately before claiming the live website updated. The production branch is `main`; repair of this existing deployment is within Arush's request that the Vercel website update.
 
 ## Work record
 
 October 26, 2026: Built the selected anatomy direction locally; sourced, reduced, and attributed models; implemented orbit/zoom/reveal and personal chapters; corrected short-viewport controls, headline spacing, scapular crop fragments, mobile scrolling, and camera/manual-interaction conflicts; completed visual and interaction QA. Arush accepted it as a good start, requested source control, selected the existing `personal-website` repository, authorized replacement, and requested this all-in-one agent context. Repository preparation adds portable setup/customization documentation, ignore rules, Node selection, and CI while keeping the approved website behavior intact.
+
+Vercel follow-up: commit `b6ce647` passed GitHub CI, but its Vercel status reported a failed deployment. The project was previously Next.js, and the replacement initially had no Vercel-specific config. Added explicit, version-controlled Vite settings so the deployment does not inherit the old framework preset or output directory. Verify the subsequent deployment result rather than assuming this config change succeeded. The Vercel plugin was available but not connected when diagnosis began; GitHub's commit status exposed the deployment failure.
