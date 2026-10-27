@@ -10,6 +10,10 @@ Canonical repository: https://github.com/arushv1/personal-website, default branc
 
 Current work adds Arush's requested real 3D avatar and internal-layer reveal to the existing personal website. Uploading source to this repository and updating the existing Git-connected Vercel website are authorized by the ongoing requests. Preserve the repository's existing public visibility. Changing hosting accounts or visibility needs a corresponding user request. Do not assume a GitHub push confirms a live deployment.
 
+### Latest requested follow-up — October 27, 2026
+
+Arush selected the first cloud task: (1) shareable chapter URLs with direct Research links, refresh support, and natural browser Back/Forward, and (2) polish of the actual 3D avatar/reveal. He reports that the current avatar does not blend convincingly into the bone/vessel layers and that scrubbing from You to Within looks choppy. Treat that feedback as open work despite the earlier implementation QA pass. The detailed task and launch prompt are in `CLOUD-TASK.md`; they are a handoff, not proof that implementation or cloud execution has begun. Account-side cloud environment creation/publication must be completed separately.
+
 ## User context and content boundaries
 
 Arush studies biomedical engineering at Boston University and works with medical imaging and AI. Supplied professional context includes VascuPath, Tian Lab, and Boston Scientific. Current research copy is intentionally concise and should be checked with Arush before adding specific claims, metrics, publications, or timelines.
@@ -68,6 +72,7 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `reference/selected-option.png` | Selected design target |
 | `design-qa.md`, `qa/` | Completed QA report and visual evidence |
 | `CLOUD-SETUP.md` | Cloud environment setup prompt and task handoff; account-side publication is required |
+| `CLOUD-TASK.md` | User-selected first cloud task: chapter URLs/history and a seamless 3D reveal, with acceptance checks |
 
 The app needs no API keys, patient data, account integration, database, or application backend. Fonts load from Google Fonts, with a system fallback. Models and decoder are served locally.
 

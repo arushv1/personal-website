@@ -54,18 +54,16 @@ build result, and all four test results before I publish it.
 
 ## Starting a work task
 
-Choose one specific outcome and give it to the published environment. For example:
+Arush selected two workstreams: shareable chapter URLs/browser history and a smoother avatar-to-anatomy reveal. The complete scope and acceptance checks are in `CLOUD-TASK.md`. Give the published environment this prompt:
 
 ```text
-Read AGENTS.md, CLOUD-SETUP.md, and design-qa.md. Audit the avatar/reveal
-implementation for concrete interaction, accessibility, resource-cleanup,
-and responsive-layout bugs. Preserve the accepted design and real 3D
-assets. Fix issues supported by evidence, without inventing personal
-content or regenerating the avatar. Run npm run build followed by
-npm run test:sites. Verify affected browser interactions if available;
-otherwise clearly state what still needs visual review. Return a concise
-change summary and a reviewable branch or pull request. Do not merge or
-publish the changes automatically.
+Read AGENTS.md, CLOUD-SETUP.md, and CLOUD-TASK.md in arushv1/personal-website.
+Implement both requested workstreams in CLOUD-TASK.md: shareable chapter
+URLs with correct direct-load/refresh and browser Back/Forward behavior,
+and a substantially smoother, better-aligned You-to-Within 3D reveal.
+Preserve the accepted design and real 3D assets. Complete the acceptance
+checks, report any unavailable visual verification, and return reviewable
+changes with results. Work through implementation, not just a proposal.
 ```
 
 A task continues toward its assigned outcome; publishing an environment alone does not start work. Cloud availability and permissions depend on the signed-in account/workspace.
