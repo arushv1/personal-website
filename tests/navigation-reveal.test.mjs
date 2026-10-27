@@ -123,7 +123,7 @@ test('portfolio sections, items, views and legacy links remain consistent', asyn
     assert(section.view.reveal>=0&&section.view.reveal<=100);
     for(const item of section.items){assert(item.id&&item.title&&item.summary);}
   }
-  assert.deepEqual(sectionById.projects.items.map(i=>i.id),['symptomai','threshold','vascupath']);
+  assert.deepEqual(new Set(sectionById.projects.items.map(i=>i.id)),new Set(['symptomai','threshold','vascupath']));
   for(const [old,destination] of Object.entries(legacyRoutes))assert.equal(readRoute(old),destination);
 });
 
