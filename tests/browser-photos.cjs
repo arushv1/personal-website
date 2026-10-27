@@ -19,14 +19,14 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   await context.route('**/src/content/portfolio.mjs*',async route=>{
    const response=await route.fetch();
    const photos=[{src:photoUrl+'/landscape.svg',alt:'Landscape test image',caption:'Landscape QA fixture; not portfolio content.'},{src:photoUrl+'/portrait.svg',alt:'Portrait test image',caption:'Portrait QA fixture; full frame retained.'}];
-   await route.fulfill({response,body:await response.text()+`\nsectionById.projects.items[0].photos=${JSON.stringify(photos)};sectionById.awards.items[0].photos=${JSON.stringify(photos.slice(1))};`});
+   await route.fulfill({response,body:await response.text()+`\nfor(const section of sections)for(const item of section.items)item.photos=[];sectionById.projects.items.find(i=>i.id==='symptomai').photos=${JSON.stringify(photos)};sectionById.awards.items[0].title='Health and Biotech Hack';sectionById.awards.items[0].photos=${JSON.stringify(photos.slice(1))};`});
   });
   const page=await context.newPage(),errors=[],checks=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('response',r=>{if(r.url().includes(photoUrl))assert.equal(r.status(),200);});
   async function ready(){await page.waitForFunction(()=>document.querySelector('#reveal')?.disabled===false,null,{timeout:60000});}
   async function photoReady(){await page.waitForFunction(()=>[...document.querySelectorAll('#symptomai .entry-photos img:first-child, #health-biotech-hack .entry-photos img:first-child')].some(i=>i.complete&&i.naturalWidth>0));}
-  await page.goto(base+'/projects');await ready();await photoReady();
+  await page.goto(base+'/projects#symptomai');await ready();await photoReady();
   const gallery=page.getByRole('group',{name:'SymptomAI photos'});
   assert.equal(await page.locator('.entry-photos').count(),1,'Empty arrays must render no gallery');
   assert.equal(await gallery.locator('img').first().getAttribute('loading'),'lazy');

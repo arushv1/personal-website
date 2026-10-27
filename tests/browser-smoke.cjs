@@ -59,8 +59,10 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
    await page.waitForFunction(id=>document.querySelector('.item-index [aria-current]')?.getAttribute('href')==='#'+id,id);
    assert.equal(await page.evaluate(()=>scrollY),scrollBefore);await sameImage(before,await modelImage());
   }
-  await page.getByRole('button',{name:'Next Projects item'}).click();await page.waitForFunction(()=>document.querySelector('.item-index [aria-current]')?.hash==='#threshold');
-  await page.getByRole('button',{name:'Previous Projects item'}).click();await page.waitForFunction(()=>document.querySelector('.item-index [aria-current]')?.hash==='#symptomai');
+  const projectIds=await page.locator('.item-index a').evaluateAll(links=>links.map(a=>a.hash));
+  await page.locator('.item-index a').first().click();
+  await page.getByRole('button',{name:'Next Projects item'}).click();await page.waitForFunction(hash=>document.querySelector('.item-index [aria-current]')?.hash===hash,projectIds[1]);
+  await page.getByRole('button',{name:'Previous Projects item'}).click();await page.waitForFunction(hash=>document.querySelector('.item-index [aria-current]')?.hash===hash,projectIds[0]);
   const reader=page.getByRole('region',{name:'Projects entries'});await reader.hover();await page.mouse.wheel(0,500);await page.waitForFunction(()=>document.querySelector('.item-reader').scrollTop>100);await sameImage(before,await modelImage());
   await shot('projects-scrolled');check('project index, previous/next and native wheel scroll preserve page and camera');
   await page.getByRole('button',{name:'Within',exact:true}).click();assert.equal(await page.locator('#reveal').inputValue(),'100');

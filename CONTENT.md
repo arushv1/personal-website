@@ -24,7 +24,7 @@ Only `id`, `title`, and `summary` are required. `subtitle`, `period`, `tags`, `b
 
 The order in the array is the reading order. A new entry automatically appears in the side index (horizontal on mobile), reader, item count and previous/next controls. No React edits are necessary. The reader uses native scrolling and renders off-screen entries efficiently, without rerunning the 3D scene. An item can be linked directly, e.g. `/projects#threshold`.
 
-The same structure works for **Education**, **Experience**, **Awards**, **Courses**, **Publications**, and **About Me**. Add courses to the currently empty `courses.items` array to replace its empty state. Do not change existing item IDs casually: their direct links use those IDs.
+The same structure works for **Education**, **Experience**, **Awards**, **Courses**, **Publications**, and **About Me**. Add courses to the `courses.items` array, using the subtitle for the course code and the summary for the associated university. Do not change existing item IDs casually: their direct links use those IDs.
 
 ## Add photos to a project or award
 
@@ -59,7 +59,7 @@ Adding items does **not** require changing these values. When adding an entirely
 
 ## Résumé and sources
 
-The served résumé is `public/arush-vyas-resume.pdf`, updated from the résumé supplied for this task. Project/experience/publication/award copy is a concise adaptation of the supplied résumés, with personal context from the existing site. SymptomAI uses the previous supplied résumé because it is not in the newer one. Course names have not been supplied; none are invented. Add richer case-study text as it becomes available.
+The served résumé is `public/arush-vyas-resume.pdf`, updated from the résumé supplied for this task. Project/experience/publication/award copy is a concise adaptation of the supplied résumés, with personal context from the existing site. SymptomAI uses the previous supplied résumé because it is not in the newer one. The six course titles, codes, and university associations were supplied directly by Arush. Project screenshots and award photos were supplied by Arush in `Archive.zip`: Threshold, SymptomAI, MedAI, DS + X, and Hackathon for Public Health Equity. The last photo belongs to the existing May 2024, 1st Place Overall award. Add richer case-study text as it becomes available.
 
 ## Check your change
 
