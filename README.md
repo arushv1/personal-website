@@ -1,75 +1,79 @@
-# Arush Vyas: Personal Website
+# Arush Vyas: A closer look
 
-A single long page personal website for Arush Vyas, built with Next.js and React.
-It covers both audiences in one arc: employers and researchers.
+An interactive personal website built with React, Vite, and Three.js. A rotating anatomical head and neck introduces an atlas of research, Bay Area roots, making, desk setups, and story games.
 
-## Sections, in order
+![Desktop preview](qa/desktop-final.jpg)
 
-1. **Intro**: headline, subhead, and contact links.
-2. **Education**: Boston University, BS Biomedical Engineering, expected May 2027, GPA 3.83.
-3. **Experiences**: Boston Scientific (Health AI Engineering Intern), Tian Lab
-   (Undergraduate Deep Learning Researcher), and BTEC Lab (Lab Assistant).
-4. **Projects**: VascuPath, the Boston Scientific 3D CTA segmentation pipeline,
-   the BTEC AI knowledge base, and Threshold, one project per scroll section.
-5. **Awards**: recognition shown as a graphic collage, not a plain list.
-6. **Publications**: the published paper, a placeholder for the planned
-   VascuPath manuscript, and research direction.
-7. **Courses**: entirely placeholders for Arush to fill in. No course list is
-   on record, so no course names are shown.
-8. **Contact**: email, LinkedIn, GitHub, and location, with a resume download
-   slot once a PDF is added.
+## Run locally
 
-The header navigation links to each section. The design uses Arush's imaging
-work as its visual language: vessel lines, whole slide tiles, and CTA volumes,
-in a strict two color system (dark by default, with a light mode toggle).
-Motion follows the same idea: a vessel line draws itself as its section
-scrolls into view, and slide tiles scale up tile by tile, like zooming into
-a slide. Motion uses transform, opacity, and stroke only, so it never reflows
-the readable central column, and it is disabled entirely for visitors who
-prefer reduced motion.
-
-## Run it locally
+Use Node.js 22.12 or newer. `.nvmrc` selects Node 22 for nvm users and CI.
 
 ```bash
-npm install
+git clone https://github.com/arushv1/personal-website.git
+cd personal-website
+npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. For a production check, run `npm run build`
-followed by `npm run start`.
+Open the local URL printed by Vite, usually http://localhost:5173. Changes in `src/` update the preview automatically. No API keys or backend services are required.
 
-## Edit the content
+## Customize it
 
-All copy lives in one file: `src/content.ts`.
+| What you want to change | Where to edit |
+| --- | --- |
+| Chapter titles, introductions, and stories | The `chapters` object in `src/App.jsx` |
+| Homepage headline, navigation, contact information, profile links | `src/App.jsx` |
+| Colors, typography, layout, and responsive behavior | `src/styles.css`; `:root` includes `--red` and `--muted` |
+| Camera, orbit limits, lighting, materials, and reveal animation | `src/AnatomyScene.jsx` |
+| Position of the interactive chapter markers | `anchors` in `src/AnatomyScene.jsx` |
+| Resume PDF | Replace `public/arush-vyas-resume.pdf` |
+| 3D models | `public/models/`; keep the attributions with the assets |
+| Browser metadata | `index.html` and the document title in `src/App.jsx` |
 
-Edit that file to change education, experiences, projects, awards,
-publications, courses, and links. You do not need to touch layout code in
-`src/app` or `src/components` to change copy. Motion components live in
-`src/components/`: `VesselTrace` (the self drawing vessel line) and
-`TileGrid` (the zooming slide tiles).
+To add a chapter, update `chapters` and `order` in `App.jsx`, then add its anchor and marker label in `AnatomyScene.jsx`. Keep chapter IDs consistent across those locations.
 
-Anything only Arush can supply is marked "To add" in that file: tagline,
-headshot, what he is looking for next, manuscript and poster links,
-Threshold demo and repo links, resume PDF download, contact preferences,
-and every Courses slot. To add a headshot or a resume PDF, place the file in
-`public/` and put its path in `src/content.ts`.
+[AGENTS.md](AGENTS.md) contains the full project context, design rationale, architecture, verification procedure, and remaining work for future agents.
 
-To fill in Courses, replace the placeholder strings in the `courses`
-section of `src/content.ts` with real course names, and add or remove slots
-as needed. To fill in Publications, replace the planned VascuPath manuscript
-placeholder with the real link when the manuscript is available. It is kept
-as a placeholder on purpose: it must not be presented as published before it
-is.
+## Commands
 
-Writing rule for this site: never use em dashes in copy. Use commas, colons,
-or separate sentences instead.
+```bash
+npm run dev            # Local development with hot reload
+npm run build          # Production client and optional Sites worker packaging
+npm run test:sites     # Run after building: four worker / packaging contract tests
+npm run preview        # Preview the production client
+npm run prepare:models # Optional: rebuild the compressed anatomy assets
+```
 
-## Deploy on Vercel
+The production frontend is in `dist/client/`. The build also emits `dist/server/index.js` and `dist/.openai/hosting.json` for a future Sites deployment. Build before running `test:sites`: its packaging check reads those generated files. The included GitHub Actions workflow runs these steps in that order; it does not deploy.
 
-No special config is needed.
+This replaces the previous Next.js implementation. Any existing hosting integration should use Vite settings: build command `npm run build`, static output directory `dist/client`. Publishing and hosting configuration are separate from this repository update.
 
-1. Push this repo to GitHub.
-2. In Vercel, import the GitHub repo.
-3. Accept the default Next.js settings and deploy.
+## Experience
 
-Every push to the repo's default branch redeploys automatically.
+- Real 3D pointer orbit, wheel/pinch zoom, keyboard alternatives, zoom buttons, pause/play, and reset.
+- Bone opacity reveals vessels and cortex; Explore within opens five personal chapters.
+- Work, About, Contact, resume, GitHub, LinkedIn, and email links.
+- Responsive layouts, semantic controls, visible keyboard focus, and reduced-motion handling.
+
+Copy is a draft grounded in Arush's supplied interests and resume. Personal photographs, exact desk hardware, and detailed project case studies still need Arush's input.
+
+## Anatomy and provenance
+
+This is a generic anatomical model, not a personal scan or likeness. Chapter locations are symbolic navigation, not statements about functional brain anatomy.
+
+Bone and artery geometry comes from Z-Anatomy / BodyParts3D, through [nqwrc's web exports](https://github.com/nqwrc/3d-anatomy/tree/master/public/models). The cortex is directly sourced from [Brain for Blender by Anderson Winkler](https://brainder.org/research/brain-for-blender/), CC BY-SA 3.0.
+
+The required attribution strings are:
+
+- BodyParts3D - The Database Center for Life Science - CC-BY-SA 2.1 Japan
+- Z-Anatomy - The open source atlas of anatomy - CC-BY-SA 4.0
+
+Original notices, source links, modifications, and model-specific terms live in [public/models/ATTRIBUTION.md](public/models/ATTRIBUTION.md), `UPSTREAM-LICENSE.txt`, and `NOTICE.txt`. The site exposes them through Model credits. Model terms apply separately from the interface code.
+
+Selected preprocessing inputs are retained in `source-assets/`, so `npm run prepare:models` works after installation without downloading data. The unused exploratory nervous-system export and duplicate archive are excluded. The application uses only the three optimized GLBs in `public/models/`, approximately 1.5 MB in total.
+
+## Verification and design reference
+
+[design-qa.md](design-qa.md) records the completed interaction and responsive checks. Screenshots are in `qa/`; the selected visual target is `reference/selected-option.png`.
+
+The previous website remains available in Git history, including commit `7d7557c`.

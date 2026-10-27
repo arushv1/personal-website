@@ -1,0 +1,3 @@
+# Mesh source data is not useful as a line-by-line code diff.
+*.glb binary
+source-assets/**/*.obj binary

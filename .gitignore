@@ -1,5 +1,15 @@
-node_modules
-.next
-out
-.env*.local
+node_modules/
+dist/
+.vite/
+coverage/
 .DS_Store
+*.log
+.env
+.env.*
+!.env.example
+.vercel/
+.wrangler/
+
+# Exploration downloads not used by the served models.
+source-assets/nervous.glb
+source-assets/*.tar.bz2
