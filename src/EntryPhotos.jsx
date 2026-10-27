@@ -17,7 +17,7 @@ export function EntryPhotos({photos,title}) {
   return <div className="entry-photos" role="group" aria-label={`${title} photos`}>
     <div className="photo-track" ref={track} role="region" tabIndex={photos.length>1?0:undefined} aria-label={`${title} photo gallery`} onKeyDown={onKeyDown} onScroll={event=>setActive(Math.max(0,Math.min(photos.length-1,Math.round(event.currentTarget.scrollLeft/event.currentTarget.clientWidth))))}>
       {photos.map(photo=><figure className="entry-photo" key={photo.src}>
-        <a className="photo-frame" href={photo.src} target="_blank" rel="noreferrer" aria-label={`Open full-size photo: ${photo.alt} (new tab)`}><img src={photo.src} alt={photo.alt} loading="lazy" decoding="async"/><span className="photo-enlarge" aria-hidden="true">View full size <ArrowUpRight size={12}/></span></a>
+        <a className="photo-frame" href={photo.src} target="_blank" rel="noreferrer" aria-label={`Open full-size photo: ${photo.alt} (new tab)`}><img src={photo.src} alt={photo.alt} width={photo.width} height={photo.height} loading="lazy" decoding="async"/><span className="photo-enlarge" aria-hidden="true">View full size <ArrowUpRight size={12}/></span></a>
         {photo.caption&&<figcaption>{photo.caption}</figcaption>}
       </figure>)}
     </div>

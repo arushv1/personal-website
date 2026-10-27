@@ -35,6 +35,8 @@ The same structure works for **Education**, **Experience**, **Awards**, **Course
 photos: [
   {
     src: '/photos/projects/threshold/demo.webp',
+    width: 1411,                     // Original image dimensions, recommended.
+    height: 984,
     alt: 'Threshold showing trial eligibility criteria alongside a community map.',
     caption: 'Exploring trial eligibility.', // Optional.
   },
@@ -47,7 +49,7 @@ photos: [
 
 3. Commit the upload and content change to the same branch, then check its Vercel preview. The URL starts with `/photos/`, **without `public`**. Paths and filename capitalization must match exactly. The filenames above are examples; upload your own files before referencing them.
 
-Each photo needs a `src` and descriptive `alt` text; `caption` is optional. One photo appears on its own. Multiple photos create a compact, swipeable gallery with Previous/Next controls and a count. Photos preserve their full frame, including portrait award photos and screenshots, without cropping. Click a photo to open the full-size image in a new tab. Images load lazily and reserve their space to keep reading smooth. Use WebP or JPEG, ideally around 1600 pixels on the longest edge and under 500 KB each; avoid uploading full-resolution camera files.
+Each photo needs a `src` and descriptive `alt` text; `caption` is optional. Include its original pixel `width` and `height` to reserve the correct space before it loads. One photo appears on its own. Multiple photos create a compact, swipeable gallery with Previous/Next controls and a count. Each photo fills the reader width at its natural proportions, without empty side bars or cropping. Taller photos take more vertical room in the native scrolling reader. Click a photo to open the full-size image in a new tab. Images load lazily. Use WebP or JPEG, ideally around 1600 pixels on the longest edge and under 500 KB each; avoid uploading full-resolution camera files.
 
 Leave `photos: []` or omit `photos` to keep an entry text-only, with no empty image box. The same field also works for Experience and the other sections. No React edits, image service, or API keys are needed.
 

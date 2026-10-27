@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Data-only multiple-photo entry; real static-file loading, alt/caption, lazy decoding, Previous/Next and keyboard browsing; page/reader/camera unchanged",
+    "320px layout has no page overflow and retains 44px photo controls",
+    "Single award photo has no unnecessary gallery controls; text-only awards and item navigation remain intact"
+  ],
+  "errors": []
+}

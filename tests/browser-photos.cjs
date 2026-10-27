@@ -32,6 +32,12 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   assert.equal(await gallery.locator('img').first().getAttribute('loading'),'lazy');
   assert.equal(await gallery.locator('img').last().evaluate(i=>getComputedStyle(i).objectFit),'contain');
   assert(Math.abs((await gallery.locator('.photo-frame').first().boundingBox()).width-(await gallery.locator('.photo-track').boundingBox()).width)<1);
+  async function fitted(image){
+   const b=await image.evaluate(i=>{const image=i.getBoundingClientRect(),frame=i.parentElement.getBoundingClientRect();return {w:image.width,h:image.height,fw:frame.width,fh:frame.height,ratio:i.naturalWidth/i.naturalHeight};});
+   assert(Math.abs(b.w/b.h-b.ratio)<.01,'Photo proportions changed');
+   assert(Math.abs(b.fw-b.w-2)<1&&Math.abs(b.fh-b.h-2)<1,'Photo frame has filler');
+  }
+  await fitted(gallery.locator('img').first());
   assert(await gallery.getByRole('button',{name:'Previous SymptomAI photo'}).isDisabled());
   await gallery.locator('.photo-toolbar').scrollIntoViewIfNeeded();
   const before=await page.evaluate(()=>({body:scrollY,reader:document.querySelector('.item-reader').scrollTop,reveal:document.querySelector('#reveal').value}));
@@ -39,6 +45,7 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   await gallery.getByRole('button',{name:'Next SymptomAI photo'}).click();
   await page.waitForFunction(()=>document.querySelector('.photo-toolbar>span').textContent==='2 / 2');
   await page.waitForFunction(()=>{const i=document.querySelector('#symptomai .entry-photo:last-child img');return i.complete&&i.naturalWidth>0;});
+  await fitted(gallery.locator('img').last());
   assert(await gallery.getByRole('button',{name:'Next SymptomAI photo'}).isDisabled());
   assert.equal(await gallery.locator('img').last().getAttribute('alt'),'Portrait test image');
   assert.equal(await gallery.locator('.photo-frame').last().getAttribute('target'),'_blank');
