@@ -55,7 +55,7 @@ Verified avatar loading, automatic rotation/pause, pointer orbit, keyboard rotat
 - Final `npm run test:sites` passed all four tests after that build.
 - React review: model requests load in parallel; transient animation values stay in refs; the renderer is not recreated by slider updates; observers, controls, frame callbacks, and loaded scene resources have cleanup. Native controls, accessible value text, loading/retry, and unsupported-WebGL paths remain.
 - Vite reports the existing large-JavaScript-chunk advisory (about 226 KB gzip). No build failure. Splitting the initial Three.js scene would not eliminate its required first-view download.
-- Publication is verified separately after pushing; a local QA pass alone does not prove deployment.
+- Publication was verified separately for release `b6b8eaa`: GitHub Actions run `40447894676` passed; Vercel's commit status reported “Deployment has completed.” The public URL https://personal-website-brown-psi-69.vercel.app was reloaded in the browser, and the textured avatar, enabled controls, pause/reset, full reveal, and reverse reveal worked without warning/error logs. `qa/avatar-production-final.jpg` records the live opening at 1305 × 804 CSS px. A local QA pass alone does not prove later deployments.
 
 ## Follow-up polish and limits
 
