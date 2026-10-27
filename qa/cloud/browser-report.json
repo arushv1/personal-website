@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "direct Research, refresh, new tab",
+    "history Back twice/Forward twice, duplicate selection",
+    "hotspot, pager, atlas and home links",
+    "keyboard links, chapter focus, dialogs",
+    "Ctrl-click opens Research in a new tab",
+    "1536 desktop, 1366 short laptop, 390 and 320 mobile, chapter scrolling and pan-y",
+    "keyboard orbit/zoom, reset, layer shortcuts, identical camera after round trip",
+    "four models, decoder, resume",
+    "unknown route and home recovery",
+    "full-motion slow/fast/reverse scrubbing; automatic rotation stays paused"
+  ],
+  "errors": [],
+  "observedBrowserRafFps": 1.0425462252933777,
+  "frameCount": 122
+}

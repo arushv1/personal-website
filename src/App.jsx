@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, ArrowLeft, MouseSimple, ArrowsClockwise, Pause, Play, X, Minus, Plus, EnvelopeSimple, GithubLogo } from '@phosphor-icons/react';
 import { AnatomyScene } from './AnatomyScene';
+import { readRoute, followLink } from './navigation.mjs';
+
+function RouteLink({to, navigate, children, ...props}) {
+ return <a {...props} href={to} onClick={event=>followLink(event,to,navigate)}>{children}</a>;
+}
 
 const chapters = {
  research:{name:'Research',eyebrow:'THE WORK',title:'Making the invisible visible.',intro:'I study biomedical engineering at Boston University and build with medical imaging and AI.',sections:[['VascuPath','Exploring vascular changes in brain tissue through computer vision. An ongoing project connecting whole-slide imaging, vessel detection, and the questions behind neurodegenerative disease.'],['From images to understanding','My work at Tian Lab and Boston Scientific has taken me from tissue-scale patterns to three-dimensional vascular imaging. I’m interested in the decisions between a clinical question and a useful technical tool.']]},
@@ -13,9 +18,27 @@ const chapters = {
 const order=['research','roots','making','setup','stories'];
 const layers=[{value:0,name:'You'},{value:34,name:'Bone'},{value:68,name:'Vessels'},{value:100,name:'Within'}];
 export function App(){
- const [reveal,setReveal]=useState(0),[exploring,setExploring]=useState(false),[chapter,setChapter]=useState(null),[spinning,setSpinning]=useState(()=>!matchMedia('(prefers-reduced-motion: reduce)').matches),[ready,setReady]=useState(false),[dialog,setDialog]=useState(null);
- const scene=useRef(null),dialogRef=useRef(null),chapterHeading=useRef(null),returnFocus=useRef(null);
- useEffect(()=>{document.title='Arush Vyas — A closer look';document.documentElement.style.colorScheme='dark';},[]);
+ const [route,setRoute]=useState(()=>readRoute(location.pathname));
+ const exploring=route!=='/'&&route!=='not-found',chapter=chapters[route.slice(1)]?route.slice(1):null;
+ const [reveal,setReveal]=useState(()=>exploring?100:0),[spinning,setSpinning]=useState(()=>route==='/'&&!matchMedia('(prefers-reduced-motion: reduce)').matches),[ready,setReady]=useState(false),[dialog,setDialog]=useState(null);
+ const scene=useRef(null),dialogRef=useRef(null),chapterHeading=useRef(null),atlasHeading=useRef(null),previousRoute=useRef(route);
+ function navigate(path){
+  const next=readRoute(path);
+  if(next===route)return;
+  history.pushState(null,'',path);setRoute(next);
+ }
+ useEffect(()=>{const pop=()=>setRoute(readRoute(location.pathname));window.addEventListener('popstate',pop);return()=>window.removeEventListener('popstate',pop);},[]);
+ useEffect(()=>{
+  document.title=`Arush Vyas — ${chapter?chapters[chapter].name:route==='/atlas'?'The atlas':route==='not-found'?'Page not found':'A closer look'}`;
+  document.documentElement.style.colorScheme='dark';
+  setReveal(exploring?100:0);
+  if(exploring)setSpinning(false);
+  if(previousRoute.current!==route){
+   if(route==='/'){scene.current?.reset();document.querySelector('.primary-action')?.focus({preventScroll:true});}
+   if(route==='/atlas')atlasHeading.current?.focus({preventScroll:true});
+   previousRoute.current=route;
+  }
+ },[route,chapter,exploring]);
  useEffect(()=>{if(dialog&&!dialogRef.current.open)dialogRef.current.showModal();else if(!dialog&&dialogRef.current.open)dialogRef.current.close();},[dialog]);
  useEffect(()=>{
   if(!chapter)return;
@@ -23,24 +46,23 @@ export function App(){
   heading?.focus({preventScroll:true});
   if(matchMedia('(max-width: 760px)').matches)heading?.closest('article')?.scrollIntoView({block:'start',behavior:'instant'});
  },[chapter]);
- useEffect(()=>{const handler=e=>{if(e.key==='Escape'&&!dialog&&exploring)returnToWhole();};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[dialog,exploring]);
- function enterAtlas(){returnFocus.current=document.activeElement;setExploring(true);setReveal(100);setSpinning(false);setChapter(null);}
- function openChapter(id){returnFocus.current=document.activeElement;setChapter(id);setExploring(true);setReveal(100);setSpinning(false);}
- function returnToWhole(){setChapter(null);setExploring(false);setReveal(0);scene.current?.reset();requestAnimationFrame(()=>document.querySelector('.primary-action')?.focus({preventScroll:true}));}
+ useEffect(()=>{const handler=e=>{if(e.key==='Escape'&&!dialog&&exploring)navigate('/');};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[dialog,exploring,route]);
+ function changeReveal(value){setSpinning(false);scene.current?.stopMotion();setReveal(value);}
  const current=chapters[chapter];
  const layerIndex=reveal<17?0:reveal<51?1:reveal<84?2:3;
  const layerDescription=reveal<5?'Arush’s 3D avatar':reveal<32?'Revealing bone beneath the avatar':reveal<51?'Bone':reveal<80?'Vessels':'Within the atlas';
  return <div className={`site-shell ${exploring?'is-exploring':''} ${chapter?'has-chapter':''}`}>
-  <header className="site-header"><button className="wordmark" aria-label="Arush Vyas, return home" onClick={returnToWhole}>ARUSH VYAS</button><nav aria-label="Main navigation"><button onClick={()=>openChapter('research')}>Work</button><button onClick={()=>openChapter('about')}>About</button><button onClick={()=>setDialog('contact')}>Contact</button></nav></header>
+  <header className="site-header"><RouteLink className="wordmark" aria-label="Arush Vyas, return home" to="/" navigate={navigate}>ARUSH VYAS</RouteLink><nav aria-label="Main navigation"><RouteLink to="/research" navigate={navigate}>Work</RouteLink><RouteLink to="/about" navigate={navigate}>About</RouteLink><button onClick={()=>setDialog('contact')}>Contact</button></nav></header>
   <main className="hero">
-   <div className="portrait-region"><AnatomyScene ref={scene} reveal={reveal} exploring={exploring} activeChapter={chapter} spinning={spinning} onChapter={openChapter} onInteraction={()=>setSpinning(false)} onReady={()=>setReady(true)}/><div className="portrait-bottom">
+   <div className="portrait-region"><AnatomyScene ref={scene} reveal={reveal} exploring={exploring} activeChapter={chapter} spinning={spinning} onNavigate={navigate} onInteraction={()=>setSpinning(false)} onReady={()=>setReady(true)}/><div className="portrait-bottom">
     <div className="gesture-hint"><MouseSimple size={22} weight="light"/><span className="desktop-gesture">Drag to rotate<span className="hint-divider">·</span>Scroll to zoom</span><span className="mobile-gesture">Swipe sideways to rotate · Scroll to explore</span></div>
-    <div className="layer-control"><div className="layer-heading"><label htmlFor="reveal">Look within</label><span>{String(layerIndex+1).padStart(2,'0')} / {layers[layerIndex].name}</span></div><input id="reveal" type="range" min="0" max="100" value={reveal} onChange={e=>setReveal(Number(e.target.value))} disabled={!ready} aria-label="Reveal avatar and internal layers" aria-valuetext={layerDescription}/><div className="layer-stops" aria-label="Choose a layer">{layers.map((layer,index)=><button key={layer.name} aria-pressed={index===layerIndex} onClick={()=>setReveal(layer.value)} disabled={!ready}>{layer.name}</button>)}</div></div>
+    <div className="layer-control"><div className="layer-heading"><label htmlFor="reveal">Look within</label><span>{String(layerIndex+1).padStart(2,'0')} / {layers[layerIndex].name}</span></div><input id="reveal" type="range" min="0" max="100" value={reveal} onPointerDown={()=>{setSpinning(false);scene.current?.stopMotion();}} onKeyDown={()=>{setSpinning(false);scene.current?.stopMotion();}} onChange={e=>changeReveal(Number(e.target.value))} disabled={!ready} aria-label="Reveal avatar and internal layers" aria-valuetext={layerDescription}/><div className="layer-stops" aria-label="Choose a layer">{layers.map((layer,index)=><button key={layer.name} aria-pressed={index===layerIndex} onClick={()=>changeReveal(layer.value)} disabled={!ready}>{layer.name}</button>)}</div></div>
     <div className="scene-actions" aria-label="3D view controls"><button className="icon-action" aria-label={spinning?'Pause rotation':'Start rotation'} onClick={()=>setSpinning(!spinning)} disabled={!ready}>{spinning?<Pause size={16}/>:<Play size={16}/>}</button><button className="icon-action" aria-label="Reset view" onClick={()=>scene.current?.reset()} disabled={!ready}><ArrowsClockwise size={17}/></button><button className="icon-action" aria-label="Zoom out" onClick={()=>scene.current?.zoom(-1)} disabled={!ready}><Minus size={16}/></button><button className="icon-action" aria-label="Zoom in" onClick={()=>scene.current?.zoom(1)} disabled={!ready}><Plus size={16}/></button></div>
    </div></div>
-   {!exploring&&<section className="hero-copy" aria-label="Introduction"><h1 aria-label="Take a closer look.">Take a<br/>{' '}closer<br/>{' '}look<span className="red-period">.</span></h1><p className="hero-subtitle">Biomedical engineering. Building. Exploring.</p><button className="primary-action" onClick={enterAtlas}>Explore within <ArrowRight size={26}/></button></section>}
-   {exploring&&!current&&<section className="atlas-intro"><button className="back-action" onClick={returnToWhole}><ArrowLeft size={17}/> The whole picture</button><p className="eyebrow">AN ATLAS OF A PERSON</p><h1>Every branch,<br/>another story<span className="red-period">.</span></h1><p className="atlas-description">The work, the roots, and the things I keep coming back to. Pick a part of the story.</p><div className="chapter-list">{order.map((id,i)=><button key={id} onClick={()=>openChapter(id)}><span className="chapter-number">{String(i+1).padStart(2,'0')}</span><span>{chapters[id].name}</span><ArrowUpRight size={21}/></button>)}</div></section>}
-   {current&&<article className="chapter-content" aria-labelledby="chapter-title"><button className="back-action" onClick={()=>setChapter(null)}><ArrowLeft size={17}/> Back to the atlas</button><p className="eyebrow">WITHIN / {current.eyebrow}</p><h1 id="chapter-title" ref={chapterHeading} tabIndex={-1}>{current.title}</h1><p className="chapter-intro">{current.intro}</p><div className="chapter-sections">{current.sections.map(([title,body])=><section key={title}><h2>{title}</h2><p>{body}</p></section>)}</div>{(chapter==='research'||chapter==='about')&&<div className="chapter-links"><a href="/arush-vyas-resume.pdf" target="_blank" rel="noreferrer">Résumé <ArrowUpRight size={17}/></a><a href="https://github.com/arushv1" target="_blank" rel="noreferrer">GitHub <GithubLogo size={18}/></a></div>}<nav className="chapter-pager" aria-label="Personal chapters">{order.map(id=><button key={id} aria-current={chapter===id?'page':undefined} onClick={()=>openChapter(id)}>{chapters[id].name}</button>)}</nav></article>}
+   {route==='/'&&<section className="hero-copy" aria-label="Introduction"><h1 aria-label="Take a closer look.">Take a<br/>{' '}closer<br/>{' '}look<span className="red-period">.</span></h1><p className="hero-subtitle">Biomedical engineering. Building. Exploring.</p><RouteLink className="primary-action" to="/atlas" navigate={navigate}>Explore within <ArrowRight size={26}/></RouteLink></section>}
+   {exploring&&!current&&<section className="atlas-intro"><RouteLink className="back-action" to="/" navigate={navigate}><ArrowLeft size={17}/> The whole picture</RouteLink><p className="eyebrow">AN ATLAS OF A PERSON</p><h1 ref={atlasHeading} tabIndex={-1}>Every branch,<br/>another story<span className="red-period">.</span></h1><p className="atlas-description">The work, the roots, and the things I keep coming back to. Pick a part of the story.</p><div className="chapter-list">{order.map((id,i)=><RouteLink key={id} to={'/'+id} navigate={navigate}><span className="chapter-number">{String(i+1).padStart(2,'0')}</span><span>{chapters[id].name}</span><ArrowUpRight size={21}/></RouteLink>)}</div></section>}
+   {current&&<article className="chapter-content" aria-labelledby="chapter-title"><RouteLink className="back-action" to="/atlas" navigate={navigate}><ArrowLeft size={17}/> Back to the atlas</RouteLink><p className="eyebrow">WITHIN / {current.eyebrow}</p><h1 id="chapter-title" ref={chapterHeading} tabIndex={-1}>{current.title}</h1><p className="chapter-intro">{current.intro}</p><div className="chapter-sections">{current.sections.map(([title,body])=><section key={title}><h2>{title}</h2><p>{body}</p></section>)}</div>{(chapter==='research'||chapter==='about')&&<div className="chapter-links"><a href="/arush-vyas-resume.pdf" target="_blank" rel="noreferrer">Résumé <ArrowUpRight size={17}/></a><a href="https://github.com/arushv1" target="_blank" rel="noreferrer">GitHub <GithubLogo size={18}/></a></div>}<nav className="chapter-pager" aria-label="Personal chapters">{order.map(id=><RouteLink key={id} aria-current={chapter===id?'page':undefined} to={'/'+id} navigate={navigate}>{chapters[id].name}</RouteLink>)}</nav></article>}
+   {route==='not-found'&&<section className="atlas-intro"><h1>Page not found<span className="red-period">.</span></h1><p className="atlas-description">This part of the atlas doesn’t exist.</p><RouteLink className="back-action" to="/" navigate={navigate}>Return home <ArrowRight size={17}/></RouteLink></section>}
   </main>
   <footer className="site-footer"><span>A personal atlas. Always a work in progress.</span><div><a href="/arush-vyas-resume.pdf" target="_blank" rel="noreferrer">Résumé <ArrowUpRight size={13}/></a><button onClick={()=>setDialog('credits')}>Model credits</button></div></footer>
   <dialog ref={dialogRef} onCancel={()=>setDialog(null)} onClick={e=>{if(e.target===dialogRef.current)setDialog(null);}} aria-labelledby="dialog-heading"><div className="dialog-content"><button className="dialog-close icon-action" aria-label="Close dialog" onClick={()=>setDialog(null)}><X size={23}/></button>
