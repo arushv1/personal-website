@@ -43,6 +43,7 @@ To add a chapter, update `chapters` and `order` in `App.jsx`, then add its ancho
 npm run dev            # Local development with hot reload
 npm run build          # Production client and optional Sites worker packaging
 npm run test:sites     # Run after building: four worker / packaging contract tests
+npm run test:regression # Routing, link semantics, reveal timing, Vercel rewrites
 npm run preview        # Preview the production client
 npm run prepare:models # Optional: rebuild the compressed anatomy assets
 npm run prepare:avatar # Optional: rebuild the optimized textured avatar
@@ -81,3 +82,19 @@ Selected preprocessing inputs are retained in `source-assets/`, so `npm run prep
 [design-qa.md](design-qa.md) records the completed interaction and responsive checks. Screenshots are in `qa/`; the selected visual target is `reference/selected-option.png`.
 
 The previous website remains available in Git history, including commit `7d7557c`.
+
+## Chapter links and reveal
+
+Share `/research`, `/roots`, `/making`, `/setup`, `/stories`, or `/about`. `/atlas` opens the overview; `/` opens home. Links support new tabs, refresh and browser history. `vercel.json` rewrites only known chapter/atlas routes to the app shell. Unknown Vercel paths retain a 404; local Vite and Sites show the app’s not-found view. Static asset paths are preserved.
+
+The default reveal uses moving anatomical sections with a narrow feathered boundary. The eyes/jaw, head depth, and neck are fitted using one shared mapping for bones, vessels, cortex and markers. The original textured avatar and real anatomy are preserved. Manual scrubbing pauses rotation without changing the camera. The anatomy remains illustrative.
+
+Append `?reveal=blend` to use the alternative whole-model fade. The choice is retained in chapter links and new tabs. `?reveal=section` remains a supported explicit link to the default sectional mode. The previous pre-alignment sectional implementation is preserved on `codex/sectional-reveal-backup`.
+
+Optional browser acceptance suite (requires Playwright and Chromium in the test environment):
+
+```bash
+PREVIEW_URL=http://127.0.0.1:5173 node tests/browser-smoke.cjs
+```
+
+Set `CHROMIUM_PATH` if Chromium is elsewhere and `QA_DIR` to choose where screenshots and the report are saved. This suite uses system-font fallback for deterministic checks; typography from Google Fonts depends on network access.

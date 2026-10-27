@@ -3,5 +3,11 @@
   "framework": "vite",
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/client"
+  "outputDirectory": "dist/client",
+  "rewrites": [
+    {
+      "source": "/:chapter(atlas|research|roots|making|setup|stories|about)",
+      "destination": "/index.html"
+    }
+  ]
 }

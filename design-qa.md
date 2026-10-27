@@ -74,3 +74,56 @@ Verified avatar loading, automatic rotation/pause, pointer orbit, keyboard rotat
 - [x] Build and run the four packaging tests.
 
 final result: passed
+
+## October 27, 2026 — Cloud chapter routes and sectional reveal
+
+This supersedes the historical reveal pass above for the user's reported choppy/double-face transition.
+
+Implementation:
+
+- Native chapter/atlas/home links, initial URL state, meaningful document titles, pushState navigation and popstate restoration. Re-selecting the current route does not create another entry. Header, atlas list, hotspots and pager share the same destinations.
+- `/` is home; `/atlas` is the overview; `/research`, `/roots`, `/making`, `/setup`, `/stories`, `/about` are chapters. Unknown Vite/Sites URLs show a not-found view with home recovery. Vercel rewrites only known app routes; unknown paths retain Vercel's 404. Missing model/decoder/API files do not become HTML in the Sites worker.
+- Replaced full-surface transparent crossfades with top-to-bottom sections through the real meshes. Avatar/bone masks are complementary; bone/vessel sections share a second boundary; cortex has the final section. Only the narrow boundary is alpha-hashed. Consistent depth-writing eliminates the prior .98 depth and .005 visibility switches. No generated assets or dependency changes.
+- Exponential reveal damping (45 ms time constant) and time-based camera easing. Manual scrubbing/shortcuts pause automatic rotation and cancel camera easing. Lower-thorax compression is shared by internal layers; head placement and original avatar PBR textures stay intact. Idle scenes skip GPU rendering until invalidated.
+
+Verification:
+
+- Node 22.23.4: production build passed. The existing large-chunk advisory remains; the client is approximately 843 kB before gzip.
+- Four Sites worker/packaging tests passed, including missing model/decoder requests. Five new regression tests passed for routes, native link semantics, settling/reversal at simulated 20/30/60fps, section ordering, and asset-safe Vercel rewrites.
+- Chromium/SwiftShader acceptance suite: direct Research load, refresh, separate tab, home → atlas → Research → Roots → Back twice → Forward twice; no duplicate history on reselection; header, hotspot, pager, atlas/home recovery; keyboard links/focus; Contact and credits dialogs; Ctrl-click new tab; exact same camera/outer-avatar pixels after a 0 → 100 → 0 reveal; orbit/zoom/reset and four shortcuts; four GLBs, decoder and resume all return 200.
+- Research layout checked at 1536×1024, 1366×768, 390×844 and 320×800, with no horizontal overflow; mobile heading scroll/focus and `touch-action: pan-y` passed. New evidence lives in `qa/cloud/`.
+
+Visual conclusions and limits:
+
+- Baseline three-quarter frames show the old avatar/skull double-face blend and shoulder protrusion. The sectional approach replaces it with one moving boundary. After frames inspect front, three-quarter, side and rear orientations at reveal 0/15/25/34/50/68/85/100. Within remains cortex and vessels in the same 3D scene.
+- A visible anatomical section is intentional. The models have different contours, and the generic skull is not reconstructed from Arush's avatar or a medical scan. This change improves the transition without claiming personalized registration.
+- Cloud browser rendering uses software WebGL. Numerical timing checks cover 20/30/60fps; screenshots alone cannot establish motion quality on physical phone GPUs. Pinch gestures and physical phone performance remain unmeasured. Google Fonts is blocked by this environment's network policy; acceptance screenshots use system-font fallback. The pre-existing favicon omission remains.
+- The deliverable is a review branch/PR. No production release is claimed. Direct-route behavior on a Vercel preview must be checked separately when the preview is available and accessible.
+
+Motion evidence: `qa/cloud/motion-sequence.jpg` contains 17 real browser samples from slow changes, endpoint jumps and reversals; these are sampled states, not a real-time recording. `qa/cloud/browser-report.json` records no unexpected browser errors and approximately 1.04 browser animation callbacks/second during that software-rendered capture. That rate does **not** verify perceptual smoothness on hardware. After that run, fully section-masked meshes were also culled using geometric bounds plus the feather margin, avoiding the old opacity-threshold visibility switch. Build and regression checks were repeated after that optimization.
+
+Final targeted browser check after geometric culling and inertia handling: pointer drag and wheel zoom visibly changed the canvas; scrubbing drained residual orbit motion; 0 → 100 → 0 returned exactly the same camera/avatar image. The production build and all nine Node checks passed again on this final source state. Comparison sheets were regenerated from a separate original-source preview at the same camera angles; raw captures were kept outside the source tree to keep the review artifacts compact.
+
+Delivery: draft PR #1 (`https://github.com/arushv1/personal-website/pull/1`). GitHub's Vercel status reported success for implementation commit `5c65662b9d4a440da51739439577d95f73481483` (deployment `HPVoxpHF5JSiKs3B2mYZpwcyxsnR`). Vercel API inspection returned 403 because the connected app lacks the target team's grant; a team-access consent link was provided in chat. Deployed chapter refresh/assets verification remains pending that access. Local test success and the Vercel build status do not establish deployed route behavior or physical-GPU smoothness.
+
+## October 27, 2026 — Whole-model reveal and eye/jaw registration follow-up
+
+Arush asked to restore the earlier whole-model transition as the default, with smoother response similar to adjusting a 3D Slicer threshold. He retained the sectional transition as a backup and reported that the avatar's eyes/jaw sit above the bone/vessel landmarks.
+
+The default now blends complete opaque 3D views in linear light: avatar → bone → vessels → vessels+cortex. Each view has a normal depth buffer. `LayerBlendRenderer.mjs` maintains two reusable render targets; scrubbing an unchanged camera within a layer pair changes only the final blend. Camera/load/resize changes invalidate the views. Tone mapping/color conversion happen once after the blend. The meshes and avatar textures remain real and rotatable. Transition weights use continuous smoothstep windows, with the existing 45 ms damping; elapsed time is no longer capped for reveal smoothing after a delayed frame.
+
+`?reveal=section` keeps the sectional backup, with the selected mode retained through chapter links, refresh, and new tabs. The prior implementation is also preserved on `codex/sectional-reveal-backup` at `f15dbc9`. The comparison query uses the current registration so both reveal styles get the alignment fix.
+
+The new shared `registerAnatomyPoint()` mapping lifts the internal head while gradually extending the neck, fits the generic cranium's width/depth to the stylized head, and settles the crown inside the hair. Shoulder-base fitting is retained. Bone, vessels, cortex and hotspots use the same mapping. Frontal and side overlays show the jaw and eye sockets substantially closer to the avatar's features; this is an illustrative fit, not anatomical reconstruction or a claim of exact scan registration. Original avatar/model GLBs remain unchanged. New evidence is in `qa/global-reveal/`, including front/side before-and-after alignment sheets and intermediate 0/15/25/34/50/68/85/100 views from four angles.
+
+Performance evidence: `timing.json` compares 3.5 seconds of a continuously varying 12–24 reveal after warming the avatar/bone pair at 1366×768 in Chromium/SwiftShader. Browser animation callbacks increased from 1.98/s for the original transparent-mesh reveal to 27.30/s for the full-view compositor. This is a controlled cloud software-renderer comparison, not a physical GPU benchmark; cold layer changes still require rendering a view, and orbiting/zooming invalidates the cache. Physical-phone GPU smoothness and pinch gestures remain unmeasured.
+
+Validation: Node 22 production build passed with the existing chunk-size advisory. Four Sites/packaging checks and nine routing/reveal/compositor/registration checks passed. New coverage verifies whole-stage shortcuts, native comparison links, cache reuse across scrubbing/shared-stage changes, invalidation on camera/size changes, resource disposal, and continuous registration without folds/mirroring. Browser acceptance checks and their report are saved alongside the new evidence. The cloud environment still uses the system-font fallback because Google Fonts access is blocked. Production is unchanged; delivery remains the existing PR/branch preview.
+
+Final aligned-source browser run: all eleven acceptance groups passed with no unexpected errors, including direct chapter loads/history, four viewport sizes, exact camera/avatar restoration, slow/fast/reversed full-model scrubbing, and backup-mode chapter refresh. The sampled motion run recorded 18.53 browser callbacks/s across stage changes and screenshots in SwiftShader. A separate final pointer-drag/wheel-zoom test also passed and preserved the camera image through a reveal round trip. These observations complement the warmed-pair timing comparison; they do not establish performance on a physical phone.
+
+## October 27, 2026 — Selected sectional production release
+
+Arush requested the sectional transition with corrected eye/jaw alignment and authorized main/Vercel publication. Sectional mode is now the default for home and direct chapter URLs. `?reveal=section` remains supported; the whole-model alternative uses `?reveal=blend` and retains its mode in chapter links/new tabs/refresh. The shared registration and original model assets are unchanged from the verified aligned implementation.
+
+Release checks: Node 22 production build, four packaging/worker checks and ten regression checks passed. The full Chromium acceptance suite passed all eleven groups with no unexpected errors: direct routes/history/new tabs, modified links, keyboard focus, dialogs, four viewport sizes, asset responses, exact camera/avatar restoration, slow/fast/reversed sectional scrubbing, and the retained whole-model alternative. `qa/release-section/` records the report, default transition sequence and desktop/mobile chapter views. The software-rendered motion sample recorded 5.98 browser callbacks/s; physical GPU/phone performance remains unmeasured. Vercel production status is verified separately after the authorized merge.
