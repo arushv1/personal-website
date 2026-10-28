@@ -16,7 +16,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
   const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({}), leaders=useRef({}), dots=useRef({});
   const [status, setStatus] = useState('loading'), [progress, setProgress] = useState(0);
   live.current = props;
-  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id) }), []);
+  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id), getView:()=>engine.current?.getView() }), []);
   useEffect(() => {
     const container = host.current;
     let renderer;
@@ -138,7 +138,8 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       controls.enableDamping=true;
       if(completed===4)densityRenderer?.prime();
     };
-    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection};
+    const getView=()=>{const {left,top,width,height}=canvas.getBoundingClientRect();return {position:camera.position.toArray(),target:controls.target.toArray(),viewport:{left,top,width,height}};};
+    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection,getView};
     const render = time => {
       if(cancelled)return; frame=requestAnimationFrame(render); if(time-last<1000/60-1)return;
       const elapsed=Math.max(0,(time-last)/1000),dt=Math.min(elapsed,.1);last=time;const p=live.current;

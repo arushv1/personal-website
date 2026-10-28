@@ -55,12 +55,12 @@ export function sliceMaterial({z,half,role='context',uniforms}){
   shader.uniforms.sliceZ={value:z};shader.uniforms.sliceHalf={value:half};
   Object.assign(shader.uniforms,uniforms);
   shader.vertexShader='varying float sliceLocalZ;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nsliceLocalZ=position.z;');
-  shader.fragmentShader='varying float sliceLocalZ;uniform float sliceZ;uniform float sliceHalf;uniform float sliceHover;uniform float sliceExtract;\n'+shader.fragmentShader;
+  shader.fragmentShader='varying float sliceLocalZ;uniform float sliceZ;uniform float sliceHalf;uniform float sliceHover;uniform float sliceExtract;uniform float sliceHighlight;\n'+shader.fragmentShader;
   if(role==='slab')shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(abs(sliceLocalZ-sliceZ)>sliceHalf)discard;');
   else shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(sliceExtract>.001&&abs(sliceLocalZ-sliceZ)<sliceHalf*min(1.0,sliceExtract*3.0))discard;').replace('#include <opaque_fragment>',`float sliceBand=1.0-smoothstep(sliceHalf-.005,sliceHalf+.006,abs(sliceLocalZ-sliceZ));
    float sliceEdge=1.0-smoothstep(.003,.010,abs(abs(sliceLocalZ-sliceZ)-sliceHalf));
-   outgoingLight=mix(outgoingLight,vec3(.95,.025,.015),sliceBand*.76);
-   outgoingLight+=vec3(.72,.012,.008)*sliceEdge*(.8+.2*sliceHover);
+   outgoingLight=mix(outgoingLight,vec3(.95,.025,.015),sliceBand*.76*sliceHighlight);
+   outgoingLight+=vec3(.72,.012,.008)*sliceEdge*(.8+.2*sliceHover)*sliceHighlight;
    #include <opaque_fragment>`);
  };
  material.customProgramCacheKey=()=>`vascupath-coronal-${role}-v1`;
@@ -70,7 +70,7 @@ export function sliceMaterial({z,half,role='context',uniforms}){
 // Use the existing baked structural proxy to retain the larger sourced
 // vessels. This is a display threshold, never a clinical caliber measurement.
 export function majorVesselMaterial(threshold=.4){
- const material=new THREE.MeshStandardMaterial({color:'#b60c08',roughness:.38});
+ const material=new THREE.MeshStandardMaterial({color:'#b60c08',roughness:.38,transparent:true,depthWrite:false});
  material.onBeforeCompile=shader=>{
   shader.uniforms.vesselThreshold={value:threshold};
   shader.vertexShader='attribute float revealDensity;varying float vesselStructure;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvesselStructure=revealDensity;');
@@ -78,4 +78,27 @@ export function majorVesselMaterial(threshold=.4){
  };
  material.customProgramCacheKey=()=>`vascupath-major-vessels-v1`;
  return material;
+}
+
+// Match the surrounding viewport's CSS cubic-bezier(.22,.65,.3,1) flight.
+export function flightEase(value){
+ const t=THREE.MathUtils.clamp(value,0,1);if(t===0||t===1)return t;
+ let s=t;
+ for(let i=0;i<7;i++){
+  const k=1-s,x=3*k*k*s*.22+3*k*s*s*.3+s*s*s;
+  const derivative=3*k*k*.22+6*k*s*(.3-.22)+3*s*s*(1-.3);
+  if(derivative<1e-7)break;s=THREE.MathUtils.clamp(s-(x-t)/derivative,0,1);
+ }
+ const k=1-s;return 3*k*k*s*.65+3*k*s*s+s*s*s;
+}
+
+export function fitBrainDistance(bounds,target,direction,aspect,fov=34){
+ const right=new THREE.Vector3(direction.z,0,-direction.x).normalize(),up=new THREE.Vector3().crossVectors(direction,right).normalize();
+ const tangent=Math.tan(THREE.MathUtils.degToRad(fov/2)),margin=.9;
+ let distance=1.8;const point=new THREE.Vector3();
+ for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
+  point.set(x,y,z).sub(target);const depth=point.dot(direction);
+  distance=Math.max(distance,depth+Math.abs(point.dot(right))/(tangent*Math.max(.1,aspect)*margin),depth+Math.abs(point.dot(up))/(tangent*margin));
+ }
+ return distance;
 }

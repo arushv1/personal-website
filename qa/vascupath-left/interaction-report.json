@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "keyboard selects the coronal slice, pulls it to screen-left and focuses the research inspector",
+    "original/prediction views preserve zoom and pan; pointer and keyboard control the linked magnifier",
+    "attention keeps its complete source figure/legend and separate view state; full-figure links and image reset work",
+    "real 3D slice hit target works; Escape restores focus and preserves underlying atlas pose/layer",
+    "390px/320px layouts have no horizontal overflow, 44px controls, reachable Back/Close and automatic inspector focus",
+    "navigation restores the established atlas preset and unmounts the extra scene"
+  ],
+  "errors": [],
+  "evidence": "Browser acceptance output; reduced-motion and full-motion checks executed separately. See motion-report.json."
+}

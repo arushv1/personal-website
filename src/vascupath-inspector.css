@@ -5,7 +5,7 @@
 .vascu-image-tabs button[aria-pressed=true]{background:var(--red,#e22c25);border-color:var(--red,#e22c25);color:#fff}
 .vascu-image-viewport{position:relative;overflow:hidden;width:100%;aspect-ratio:1.6;min-height:230px;max-height:540px;background:#070707;cursor:crosshair;outline-offset:4px;user-select:none}
 .vascu-image-viewport.is-zoomed{cursor:grab}.vascu-image-viewport.is-zoomed:active{cursor:grabbing}
-.vascu-source-image{position:absolute;max-width:none;object-fit:fill;pointer-events:none;user-select:none}
+.vascu-source-image{position:absolute;max-width:none;object-fit:fill;image-rendering:auto;pointer-events:none;user-select:none}
 .vascu-region-target{position:absolute;color:#fff;filter:drop-shadow(0 1px 2px #000);transform:translate(-50%,-50%);pointer-events:none}
 .vascu-image-status{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:4px;color:#aaa;padding:20px;text-align:center;font-size:13px}
 .vascu-image-status a{color:#eee;text-underline-offset:3px}

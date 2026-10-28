@@ -255,3 +255,17 @@ Production build, packaging suites, existing regressions and two new geometry in
 **Implementation checklist:** selected reference captured; original media extracted and verified; core interactions exercised in the browser; initial P1/P2 findings fixed and recaptured; preview kept separate from production.
 
 **final result: passed**
+
+## October 28 — right-side brain focus and left-side research figures
+
+Arush requested keeping the interactive model on the right, placing figures on the left, focusing on the brain rather than the vessel tree, extracting the tissue toward the left, and smoothly reversing to the original Projects view. This explicit update supersedes the earlier mock’s column arrangement.
+
+`qa/vascupath-left/` records the new desktop, short-laptop and phone captures. Desktop highlight and Predictions/Attention captures were inspected directly, with an independent review. The camera flies from the stopped atlas pose/rectangle into a bounds-fitted cortex view while arteries fade away. The selected slab moves screen-left toward the figures. Close retracts it, restores the exact captured camera/target and vascular context, then dissolves back into the original atlas. The canvas flight uses its actual animated dimensions to preserve projection; the current atlas rectangle supplies the return destination after a resize. Word-labeled controls remain compact and reachable.
+
+The predictions source was re-audited: PPTX slides 1 and 3 reference the same 1400×870 JPEG, and there is no sharper duplicate or vector/embedded original. Its bytes remain unchanged. Image/magnifier placement and width are aligned to the device-pixel grid, with normal photographic interpolation, native proportions and a full-source link. No invented detail or artificial upscaling was added. Attention remains limited to 612×432.
+
+Verification passed: production build, packaging and regression suites; two additional invariants for projected framing and monotonic exact-ended flight timing; all nine existing atlas browser groups; six reduced-motion explorer groups plus three full-motion/resize/fallback groups. `interaction-report.json` records the reduced-motion results and `motion-report.json` records animated entry/return, viewport resize and unavailable-WebGL results. The animation test observes intermediate progress and vessel opacity and confirms both the private return camera and the underlying atlas exactly match a custom orbit/zoom snapshot with the slider at 72%. No unexpected browser warnings/errors were recorded in normal contexts. A separate loading-state check confirms native initial focus lands on visible Back, Tab reaches visible Close, and Escape closes even while the cortex request is held.
+
+Review found one P2: opacity-hidden chrome initially remained keyboard focusable. The header, figure and model regions now become inert until ready and during return, while visible Back/Close remain available during loading. The follow-up keyboard check passed. Final desktop/phone review found no remaining actionable P0/P1/P2 findings. Physical GPU/phone performance and pinch remain unmeasured; this evidence uses cloud Chromium/SwiftShader. Main/production remain separate from this preview.
+
+**final result: passed**

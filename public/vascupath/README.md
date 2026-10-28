@@ -12,6 +12,8 @@ Original and Predictions share the inspector's normalized viewing position. Atte
 
 The brain-slice position in the portfolio is an illustrative navigation device. These figures have not been spatially registered to that generic anatomy.
 
+Resolution audit: slides 1 and 3 both reference the same `image7.jpg`/`image8.jpg` media. The presentation contains no higher-resolution prediction duplicate, vector SVG/EMF/WMF alternative, or embedded original document. The 1920-pixel media are statistical figures rather than versions of the tile predictions. The inspector uses the source images directly, keeps their natural proportions and browser photographic interpolation, and aligns image positions/widths to the device-pixel grid to avoid an extra fractional positioning blur. Magnification is a closer view of these finite source pixels; no super-resolution, synthetic sharpening, or re-encoding has been applied.
+
 SHA-256:
 
 ```text

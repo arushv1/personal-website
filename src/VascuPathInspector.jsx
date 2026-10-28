@@ -10,20 +10,22 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 export function VascuPathInspector(){
  const id=useId(),viewport=useRef(null),drag=useRef(null);
  const [selected,setSelected]=useState('predictions'),[views,setViews]=useState(()=>Object.fromEntries(vascupathFigures.map(figure=>[figure.viewGroup||figure.id,initialView(figure)])));
- const [size,setSize]=useState({width:0,height:0}),[loaded,setLoaded]=useState(false),[failed,setFailed]=useState(false);
+ const [size,setSize]=useState({width:0,height:0,pixelRatio:1}),[loaded,setLoaded]=useState(false),[failed,setFailed]=useState(false);
  const figure=figures[selected],group=figure.viewGroup||selected,view=views[group]||initialView(figure);
- const baseWidth=Math.max(1,Math.min(size.width,size.height*figure.width/figure.height,figure.width));
+ const pixelSnap=value=>Math.round(value*size.pixelRatio)/size.pixelRatio;
+ const baseWidth=Math.max(1,pixelSnap(Math.min(size.width,size.height*figure.width/figure.height,figure.width)));
  const baseHeight=baseWidth*figure.height/figure.width;
- const maxX=Math.max(0,(baseWidth*view.scale-size.width)/2),maxY=Math.max(0,(baseHeight*view.scale-size.height)/2);
+ const imageWidth=pixelSnap(baseWidth*view.scale),imageHeight=imageWidth*figure.height/figure.width;
+ const maxX=Math.max(0,(imageWidth-size.width)/2),maxY=Math.max(0,(imageHeight-size.height)/2);
  const panX=clamp(view.x,-maxX,maxX),panY=clamp(view.y,-maxY,maxY);
- const imageWidth=baseWidth*view.scale,imageHeight=baseHeight*view.scale;
- const left=(size.width-imageWidth)/2+panX,top=(size.height-imageHeight)/2+panY;
+ const left=pixelSnap((size.width-imageWidth)/2+panX),top=pixelSnap((size.height-imageHeight)/2+panY);
  const point={x:left+view.u*imageWidth,y:top+view.v*imageHeight};
 
  useEffect(()=>{
   const node=viewport.current;
-  const resize=()=>{const box=node.getBoundingClientRect();setSize({width:box.width,height:box.height});};
-  resize();const observer=new ResizeObserver(resize);observer.observe(node);return()=>observer.disconnect();
+  const resize=()=>{const box=node.getBoundingClientRect();setSize({width:box.width,height:box.height,pixelRatio:Math.max(1,window.devicePixelRatio||1)});};
+  resize();const observer=new ResizeObserver(resize);observer.observe(node);window.addEventListener('resize',resize);
+  return()=>{observer.disconnect();window.removeEventListener('resize',resize);};
  },[]);
  function update(change){setViews(previous=>({...previous,[group]:typeof change==='function'?change(previous[group]||initialView(figure)):{...(previous[group]||initialView(figure)),...change}}));}
  function choose(key){if(key===selected)return;drag.current=null;setSelected(key);setLoaded(false);setFailed(false);}
@@ -66,13 +68,13 @@ export function VascuPathInspector(){
    update({u,v,x:clamp(panX+moveX,-maxX,maxX),y:clamp(panY+moveY,-maxY,maxY)});
   }
  }
- const magnifierWidth=baseWidth*3,magnifierHeight=baseHeight*3;
+ const magnifierWidth=pixelSnap(baseWidth*3),magnifierHeight=magnifierWidth*figure.height/figure.width;
  return <section className="vascu-inspector" aria-label="VascuPath research slide inspector">
   <div className="vascu-image-tabs" role="group" aria-label="Research image views">
    {Object.entries(figures).map(([key,item])=><button key={key} type="button" aria-pressed={selected===key} onClick={()=>choose(key)}>{item.label}</button>)}
   </div>
   <div ref={viewport} className={`vascu-image-viewport${view.scale>1?' is-zoomed':''}`} role="region" tabIndex={0} aria-label={`${figure.label} research image viewer`} aria-describedby={id+'-hint'} style={{touchAction:view.scale>1?'none':'pan-y'}} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd} onLostPointerCapture={pointerEnd} onKeyDown={keyDown}>
-   <img className="vascu-source-image" src={figure.src} width={figure.width} height={figure.height} alt={figure.alt} draggable={false} onLoad={()=>setLoaded(true)} onError={()=>{setFailed(true);setLoaded(false);}} style={{width:imageWidth,height:imageHeight,left,top}}/>
+   <img className="vascu-source-image" src={figure.src} width={figure.width} height={figure.height} alt={figure.alt} draggable={false} decoding="async" onLoad={()=>setLoaded(true)} onError={()=>{setFailed(true);setLoaded(false);}} style={{width:imageWidth,height:imageHeight,left,top}}/>
    {loaded&&<Crosshair className="vascu-region-target" size={30} weight="light" aria-hidden="true" style={{left:point.x,top:point.y}}/>}
    {!loaded&&!failed&&<span className="vascu-image-status" role="status">Loading research image…</span>}
    {failed&&<span className="vascu-image-status" role="alert">The figure could not load. <a href={figure.src} target="_blank" rel="noreferrer">Open the source image</a>.</span>}
@@ -85,12 +87,12 @@ export function VascuPathInspector(){
     <button type="button" disabled={view.scale>=6} onClick={()=>zoom(1.35)}><Plus size={17}/><span>Zoom in</span></button>
     <button type="button" onClick={reset}><ArrowsClockwise size={17}/><span>Reset image</span></button>
    </div>
-   <a href={figure.src} target="_blank" rel="noreferrer" aria-label={`Open full ${figure.label.toLowerCase()} figure in a new tab`}><ArrowSquareOut size={17}/><span>Open full figure</span></a>
+   <a href={figure.src} target="_blank" rel="noreferrer" title={`Original source: ${figure.width} × ${figure.height} pixels`} aria-label={`Open full ${figure.label.toLowerCase()} figure in a new tab`}><ArrowSquareOut size={17}/><span>Open full figure</span></a>
   </div>
   <p id={id+'-hint'} className="vascu-image-hint">Select a region · Zoom in, then drag to pan.<span className="vascu-sr-only"> With the image focused, use + / − to zoom, arrow keys to select a region, and Home to reset.</span></p>
   <div className="vascu-region-detail">
    <div className="vascu-magnifier" role="img" aria-label={`Three-times display magnification of the selected ${figure.label.toLowerCase()} image region`}>
-    <img src={figure.src} alt="" aria-hidden="true" draggable={false} style={{width:magnifierWidth,height:magnifierHeight,left:`calc(50% - ${view.u*magnifierWidth}px)`,top:`calc(50% - ${view.v*magnifierHeight}px)`}}/>
+    <img src={figure.src} alt="" aria-hidden="true" draggable={false} decoding="async" style={{width:magnifierWidth,height:magnifierHeight,left:`calc(50% - ${pixelSnap(view.u*magnifierWidth)}px)`,top:`calc(50% - ${pixelSnap(view.v*magnifierHeight)}px)`}}/>
    </div>
    <div><p className="vascu-detail-title">Selected region <span>· 3× view</span></p><p>Move across the image or use the arrow keys to inspect a region.</p><p className="vascu-figure-source">From the VascuPath research presentation.</p></div>
   </div>

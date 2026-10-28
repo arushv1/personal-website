@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "full-motion entry fades vessels and focuses the brain; Close retracts the slice and smoothly returns to the exact custom Projects pose and 72% layer",
+    "resizing the viewport during exploration keeps the return camera, layer and canvas handoff intact",
+    "without WebGL the original research figures remain accessible and Close still restores the reader"
+  ],
+  "errors": []
+}

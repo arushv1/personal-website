@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {coronalContour,sliceGeometry} from '../src/brainSlice.mjs';
+import {coronalContour,sliceGeometry,flightEase,fitBrainDistance} from '../src/brainSlice.mjs';
 
 test('coronal section uses the registered world position without modifying source vertices',()=>{
  const geometry=new THREE.BoxGeometry(2,4,2),original=geometry.attributes.position.array.slice();
@@ -32,4 +32,25 @@ test('illustrative cap has the requested thickness and preserves the image aspec
  assert(Math.abs(worldPerU/worldPerV-2)<1e-5,'The image must be cropped proportionally, never stretched');
  assert.equal(JSON.stringify(contour),snapshot);
  geometry.dispose();
+});
+
+
+test('brain and extracted-slice framing keep every bound inside wide and narrow viewports',()=>{
+ const bounds=new THREE.Box3(new THREE.Vector3(-2.5,.1,-.7),new THREE.Vector3(.9,1.8,.9));
+ const target=bounds.getCenter(new THREE.Vector3()),direction=new THREE.Vector3(-1.8,.8,5.3).normalize();
+ for(const aspect of [.55,1,1.7]){
+  const camera=new THREE.PerspectiveCamera(34,aspect,.05,50);
+  camera.position.copy(target).addScaledVector(direction,fitBrainDistance(bounds,target,direction,aspect));
+  camera.lookAt(target);camera.updateMatrixWorld();
+  for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z]){
+   const projected=new THREE.Vector3(x,y,z).project(camera);
+   assert(Math.abs(projected.x)<=.90001&&Math.abs(projected.y)<=.90001&&projected.z<1,'The fit should leave room for the full extracted group');
+  }
+ }
+});
+
+test('camera flights reach their exact endpoints and never reverse or overshoot',()=>{
+ const values=Array.from({length:101},(_,i)=>flightEase(i/100));
+ assert.equal(values[0],0);assert.equal(values.at(-1),1);
+ assert(values.every((v,i)=>Number.isFinite(v)&&v>=0&&v<=1&&(!i||v>=values[i-1])));
 });
