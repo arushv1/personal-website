@@ -1,0 +1,41 @@
+{
+  "description": "Synthetic geometric thickness proxies for mesh display. Not patient density or HU.",
+  "models": {
+    "bone": {
+      "sourceSHA256": "da5f54a53c3e634000a4000ad3625473ddebc9de07d56d2a5722b2df16cff0b2",
+      "vertexCounts": [
+        78559
+      ],
+      "stats": [
+        {
+          "vertices": 78559,
+          "inwardRayMissFraction": 0.011507274787102686,
+          "diameterQuantiles": [
+            0.01424,
+            0.0649,
+            0.1329,
+            0.24634
+          ]
+        }
+      ]
+    },
+    "arteries": {
+      "sourceSHA256": "cf70a2c2dbf0c68eb161093f6e0c8f6e52df39e7b4d70b15311891d678b5668e",
+      "vertexCounts": [
+        129527
+      ],
+      "stats": [
+        {
+          "vertices": 129527,
+          "inwardRayMissFraction": 0.0442147197109483,
+          "diameterQuantiles": [
+            0.00171,
+            0.00972,
+            0.0331,
+            0.16513
+          ]
+        }
+      ]
+    }
+  }
+}

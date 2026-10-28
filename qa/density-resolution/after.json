@@ -1,0 +1,19 @@
+{
+  "info": {
+    "css": [
+      510,
+      570
+    ],
+    "backing": [
+      1020,
+      1140
+    ],
+    "dpr": 2,
+    "composition": [
+      1020,
+      1140
+    ],
+    "needsRefinement": false
+  },
+  "errors": []
+}

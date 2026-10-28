@@ -24,7 +24,9 @@ export function layerBlend(value) {
   return {from,to,weight};
 }
 
-// The selected production experience is sectional; blending stays available.
+// Density is the preview's default. Both accepted earlier effects remain usable
+// as explicit comparisons; deployment of this branch is preview-only.
 export function revealMode(search='') {
-  return new URLSearchParams(search).get('reveal')==='blend'?'blend':'section';
+  const mode=new URLSearchParams(search).get('reveal');
+  return ['section','blend'].includes(mode)?mode:'density';
 }
