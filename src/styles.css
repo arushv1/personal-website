@@ -70,3 +70,6 @@
 .is-exploring .anatomy-canvas{height:clamp(340px,calc(100svh - 330px),680px)}
 @media(max-width:760px){.is-exploring .anatomy-canvas{height:490px}}
 @media(max-width:360px){.is-exploring .anatomy-canvas{height:450px}}
+
+/* Project entry controls must be styled before the explorer is lazy-loaded. */
+.experience-link{display:inline-flex;align-items:center;gap:12px;min-height:44px;margin-top:17px;padding:10px 17px;background:var(--red);border-radius:24px;font-size:13px;font-weight:550}.experience-link:hover{background:#bf241f}

@@ -283,3 +283,10 @@ Desktop/mobile screenshots were directly inspected and independently reviewed. A
 Main/production remain separate from this review preview.
 
 **final result: passed**
+
+
+## October 28 — first-visit Explore brain slice button
+
+The entry button’s existing base/hover styles were inside the lazy explorer stylesheet, so the first visit rendered an unstyled text button; returning from the explorer left that stylesheet loaded. Moved those exact rules into the main stylesheet. No reader markup, copy, spacing values or transition code changed. Fresh production-build browser contexts at 1536px and 390px verified the explorer CSS was not loaded initially and the button was already a red 44px pill with a 24px radius; after opening/closing the explorer its computed styling was identical. No page errors occurred. `qa/vascupath-entry/` contains captures/report. Production build and packaging checks passed.
+
+**final result: passed**
