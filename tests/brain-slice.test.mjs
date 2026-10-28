@@ -54,3 +54,43 @@ test('camera flights reach their exact endpoints and never reverse or overshoot'
  assert.equal(values[0],0);assert.equal(values.at(-1),1);
  assert(values.every((v,i)=>Number.isFinite(v)&&v>=0&&v<=1&&(!i||v>=values[i-1])));
 });
+
+// These use the real flight controller with preparation substituted, so timing
+// and restoration can be checked independently of software-GPU frame rate.
+async function flightFixture(){
+ const {BrainSliceController}=await import('../src/BrainSliceController.mjs');
+ const camera=new THREE.PerspectiveCamera(34,1,.05,50),target=new THREE.Vector3(0,1,.15);camera.position.set(-1.8,1.8,5.3);camera.lookAt(target);camera.updateMatrixWorld();
+ const controls={target,enabled:true,enableDamping:true,autoRotate:false,minDistance:2.5,maxDistance:10,minPolarAngle:.2,maxPolarAngle:2.9,addEventListener(){},removeEventListener(){},update(){}};
+ const density={uniforms:Object.fromEntries(['brainSliceZ','brainSliceHalf','brainSliceHighlight','brainSliceExtract'].map(key=>[key,{value:0}]))};
+ const densityRenderer={focus:0,invalidate(){},unregisterSlice(){}};
+ const controller=new BrainSliceController({renderer:{},scene:new THREE.Scene(),camera,controls,models:{},density,densityRenderer});
+ controller.prepare=async()=>{controller._ready=true;controller.brainBounds=new THREE.Box3(new THREE.Vector3(-.8,.5,-.6),new THREE.Vector3(.8,2,.7));controller.capBounds=controller.brainBounds.clone();controller.slab=new THREE.Group();return true;};
+ return {controller,camera,controls,densityRenderer};
+}
+
+test('one-camera flight fades context early, extracts left, and restores its exact source pose and controls',async()=>{
+ const {controller,camera,controls,densityRenderer}=await flightFixture(),position=camera.position.toArray(),quaternion=camera.quaternion.toArray(),target=controls.target.toArray();
+ let returned=0;await controller.enter();controller.update(0);controller.update(100);
+ assert(densityRenderer.focus>0&&densityRenderer.focus<1,'Vessels should fade continuously');
+ controller.update(280);assert.equal(densityRenderer.focus,1);assert(controller.entryProgress<1,'The tree should disappear before the zoom ends');
+ controller.update(900);assert.equal(controller.phase,'focused');
+ controller.extract(true);controller.update(1000);controller.update(1500);assert.equal(controller.progress,1);
+ const a=controls.target.clone().project(camera),b=controls.target.clone().add(controller.slab.position).project(camera);assert(b.x<a.x);
+ controller.close({onReturned:()=>returned++});controller.update(1600);controller.update(1920);controller.update(2000);controller.update(2470);
+ assert.equal(densityRenderer.focus,1,'Keep the tree hidden until the final part of the return');
+ controller.update(2750);assert.equal(returned,1);assert.equal(controller.phase,'returned');assert.equal(densityRenderer.focus,0);
+ assert.deepEqual(camera.position.toArray(),position);assert.deepEqual(camera.quaternion.toArray(),quaternion);assert.deepEqual(controls.target.toArray(),target);
+ assert.equal(controls.enabled,true);assert.equal(controls.minDistance,2.5);assert.equal(controls.maxDistance,10);controller.dispose();
+});
+
+test('closing while focus resources prepare cancels entry and restores controls without moving the camera',async()=>{
+ const {controller,camera,controls}=await flightFixture(),position=camera.position.toArray();let resolve,returned=0;
+ controller.prepare=()=>new Promise(ready=>{resolve=ready;});const entering=controller.enter();assert.equal(controls.enabled,false);
+ controller.close({onReturned:()=>returned++});resolve(false);assert.equal(await entering,false);assert.equal(returned,1);assert.equal(controls.enabled,true);assert.deepEqual(camera.position.toArray(),position);controller.dispose();
+});
+
+test('unavailable comparison-mode focus restores its source pose even after controls have been restored',async()=>{
+ const {controller,camera,controls}=await flightFixture(),position=camera.position.toArray(),target=controls.target.toArray(),quaternion=camera.quaternion.toArray();
+ controller.prepare=async()=>false;assert.equal(await controller.enter(),false);camera.position.x+=1;controls.target.y+=.2;
+ controller.close();assert.deepEqual(camera.position.toArray(),position);assert.deepEqual(controls.target.toArray(),target);assert.deepEqual(camera.quaternion.toArray(),quaternion);controller.dispose();
+});

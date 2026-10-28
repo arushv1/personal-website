@@ -16,7 +16,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
   const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({}), leaders=useRef({}), dots=useRef({});
   const [status, setStatus] = useState('loading'), [progress, setProgress] = useState(0);
   live.current = props;
-  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id), getView:()=>engine.current?.getView() }), []);
+  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id), getView:()=>engine.current?.getView(), getCanvas:()=>engine.current?.canvas, setFocusViewport:value=>engine.current?.setFocusViewport(value), startBrainSlice:options=>engine.current?.startBrainSlice(options), extractBrainSlice:value=>engine.current?.brainSlice?.extract(value), closeBrainSlice:options=>engine.current?.closeBrainSlice(options), abortBrainSlice:()=>engine.current?.abortBrainSlice(), focusZoom:direction=>engine.current?.brainSlice?.zoom(direction), focusReset:()=>engine.current?.brainSlice?.reset(), focusRotate:(x,y)=>engine.current?.brainSlice?.rotate(x,y), hitBrainSlice:(x,y)=>engine.current?.hitBrainSlice(x,y) }), []);
   useEffect(() => {
     const container = host.current;
     let renderer;
@@ -31,7 +31,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
     const canvas = renderer.domElement;
-    canvas.setAttribute('role', 'img'); canvas.tabIndex = 0;
+    canvas.setAttribute('role', 'img'); canvas.tabIndex = 0;canvas.dataset.atlasCanvas='true';
     canvas.setAttribute('aria-label', 'Interactive 3D avatar of Arush with illustrative internal anatomy. Drag to rotate; scroll or pinch to zoom. Arrow keys rotate, plus and minus zoom, Home resets.');
     container.prepend(canvas);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 50);
@@ -79,7 +79,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const loader = new GLTFLoader().setDRACOLoader(draco); let completed = 0;
     const blender=mode==='blend'?new LayerBlendRenderer(renderer,scene,camera,models):null;
     const densityRenderer=density?new DensityRenderer(renderer,scene,camera,models,density):null;
-    Promise.all(Object.keys(materials).map(async name => {
+    const modelReadiness=Promise.all(Object.keys(materials).map(async name => {
       const [gltf,weights]=await Promise.all([
         loader.loadAsync(`/models/${name}.glb`),
         density&&['bone','arteries'].includes(name)?fetch(`/models/density/${name}.bin`).then(async response=>{if(!response.ok)throw new Error('Density weights unavailable');return new Uint16Array(await response.arrayBuffer());}):null,
@@ -109,15 +109,15 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       if(weights&&offset!==weights.length)throw new Error('Unused density weights: model changed');
       gltf.scene.userData.sectionBounds=new THREE.Box3().setFromObject(gltf.scene);
       models[name] = gltf.scene; anatomy.add(gltf.scene); setProgress(++completed / 4);needsRender=true;
-    })).then(async () => { if(!cancelled){await densityRenderer?.prepare();if(!cancelled){needsRender=true;setStatus('ready');live.current.onReady();}} }).catch(e => {
-      if(!cancelled){ console.error('Anatomy loading failed', e); setStatus('error'); }
+    })).then(async () => { if(!cancelled){await densityRenderer?.prepare();if(!cancelled){needsRender=true;setStatus('ready');live.current.onReady();return true;}}return false; }).catch(e => {
+      if(!cancelled){ console.error('Anatomy loading failed', e); setStatus('error'); }return false;
     });
     const anchors=Object.fromEntries(sections.map(section=>[section.id,registerAnatomyPoint(...section.anchor)]));
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
-    let needsRender=true,drawnReveal=-1,lastRevealTarget=live.current.reveal;
-    if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;}};
-    const resize = () => { const {width,height} = container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
+    let needsRender=true,drawnReveal=-1,lastRevealTarget=live.current.reveal,brainSlice=null,focusViewport=null,focusGeneration=0;
+    if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;},get brainSlice(){return brainSlice;}};
+    const resize = () => { const {width,height} = focusViewport||container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
     const reset = () => flyTo({position:start.toArray(),target:[0,.55,0]});
@@ -125,6 +125,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const rotate = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0), d*.16); camera.position.copy(controls.target).add(offset); controls.update(); };
     const zoom = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).multiplyScalar(d>0?.9:1.1).clampLength(2.5,10); camera.position.copy(controls.target).add(offset); controls.update(); };
     const keydown = e => {
+      if(brainSlice)return;
       if(['ArrowLeft','ArrowRight','+','=','-','Home'].includes(e.key))e.preventDefault();
       if(e.key==='ArrowLeft')rotate(-1); if(e.key==='ArrowRight')rotate(1);
       if(e.key==='+'||e.key==='=')zoom(1); if(e.key==='-')zoom(-1); if(e.key==='Home')live.current.onReset();
@@ -138,8 +139,35 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       controls.enableDamping=true;
       if(completed===4)densityRenderer?.prime();
     };
-    const getView=()=>{const {left,top,width,height}=canvas.getBoundingClientRect();return {position:camera.position.toArray(),target:controls.target.toArray(),viewport:{left,top,width,height}};};
-    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection,getView};
+    const getView=()=>{const {left,top,width,height}=container.getBoundingClientRect();return {position:camera.position.toArray(),target:controls.target.toArray(),viewport:{left,top,width,height}};};
+    const abortBrainSlice=()=>{focusGeneration++;if(brainSlice){brainSlice.dispose();brainSlice=null;delete canvas.__brainSlice;densityRenderer?.invalidate();needsRender=true;}};
+    const startBrainSlice=async({onReady,onFocused}={})=>{
+      const generation=++focusGeneration;stopMotion();
+      const loaded=await modelReadiness;if(generation!==focusGeneration||cancelled)return;
+      if(!loaded){onReady?.(false);onFocused?.();return;}
+      try{
+        const {BrainSliceController}=await import('./BrainSliceController.mjs');
+        if(generation!==focusGeneration||cancelled)return;
+        const controller=new BrainSliceController({renderer,scene,camera,controls,models,density,densityRenderer,materials,markDirty:()=>{needsRender=true;}});
+        brainSlice=controller;
+        if(import.meta.env.DEV)canvas.__brainSlice=controller;
+        const supported=await controller.enter({onFocused});
+        if(generation!==focusGeneration||cancelled){if(brainSlice===controller)abortBrainSlice();return;}
+        onReady?.(supported);
+      }catch(error){if(generation===focusGeneration&&!cancelled){console.error('Brain slice preparation failed',error);abortBrainSlice();onReady?.(false);onFocused?.();}}
+    };
+    const closeBrainSlice=({onReturned}={})=>{
+      focusGeneration++;
+      if(brainSlice&&brainSlice.phase!=='preparing'&&brainSlice.phase!=='idle')brainSlice.close({onReturned:()=>{abortBrainSlice();onReturned?.();}});
+      else{abortBrainSlice();onReturned?.();}
+    };
+    const raycaster=new THREE.Raycaster(),slicePointer=new THREE.Vector2();
+    const hitBrainSlice=(x,y)=>{
+      if(brainSlice?.phase!=='focused')return false;
+      const rect=canvas.getBoundingClientRect();slicePointer.set((x-rect.left)/rect.width*2-1,-(y-rect.top)/rect.height*2+1);raycaster.setFromCamera(slicePointer,camera);
+      return Boolean(brainSlice.sliceTarget&&raycaster.intersectObject(brainSlice.sliceTarget,false).length||brainSlice.slab?.visible&&raycaster.intersectObject(brainSlice.slab,true).length);
+    };
+    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection,getView,canvas,startBrainSlice,closeBrainSlice,abortBrainSlice,hitBrainSlice,setFocusViewport:value=>{if(!value&&!focusViewport)return;if(value&&focusViewport&&value.width===focusViewport.width&&value.height===focusViewport.height)return;focusViewport=value;resize();},get brainSlice(){return brainSlice;}};
     const render = time => {
       if(cancelled)return; frame=requestAnimationFrame(render); if(time-last<1000/60-1)return;
       const elapsed=Math.max(0,(time-last)/1000),dt=Math.min(elapsed,.1);last=time;const p=live.current;
@@ -150,7 +178,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       }
       const description=p.activeChapter?`Selected view: ${sectionById[p.activeChapter].region}`:'Whole-person overview';
       if(canvas.getAttribute('aria-description')!==description)canvas.setAttribute('aria-description',description);
-      if(destination){
+      if(destination&&!brainSlice){
         const blend=reduced?1:1-Math.exp(-elapsed/.18);
         const from=new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target));
         const to=new THREE.Spherical().setFromVector3(destination.camera.clone().sub(destination.target));
@@ -159,8 +187,8 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
         controls.target.lerp(destination.target,blend);camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(from));
         if(camera.position.distanceTo(destination.camera)<.012&&controls.target.distanceTo(destination.target)<.012){camera.position.copy(destination.camera);controls.target.copy(destination.target);destination=null;}
       }
-      controls.autoRotate=p.spinning&&!reduced&&!destination;controls.update(dt);
-      currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,elapsed);
+      if(brainSlice)brainSlice.update(time);
+      else{controls.autoRotate=p.spinning&&!reduced&&!destination;controls.update(dt);currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,elapsed);}
       const state=revealState(currentReveal);cutUniform.value=state.cut;
       boneCut.value=state.boneCut;brainCut.value=state.brainCut;
       // Cull only when a whole mesh is outside its section, including the
@@ -197,7 +225,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       const revealMoving=Math.abs(drawnReveal-currentReveal)>.0001;
       const revealQualityMoving=p.reveal!==lastRevealTarget||Math.abs(currentReveal-p.reveal)>.005;
       lastRevealTarget=p.reveal;
-      const cameraMoving=Boolean(destination)||controls.autoRotate||camera.position.distanceToSquared(drawnPosition)>1e-8||1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-8;
+      const cameraMoving=Boolean(destination)||Boolean(brainSlice&&brainSlice.phase!=='focused')||controls.autoRotate||camera.position.distanceToSquared(drawnPosition)>1e-8||1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-8;
       if(viewChanged || revealMoving || densityRenderer?.needsRefinement){
         if(densityRenderer)densityRenderer.render(currentReveal,{moving:revealQualityMoving||cameraMoving});
         else if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
@@ -206,7 +234,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
         drawnPosition.copy(camera.position);drawnRotation.copy(camera.quaternion);
       }
     };frame=requestAnimationFrame(render);
-    return () => { cancelled=true;cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();densityRenderer?.dispose();density?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
+    return () => { cancelled=true;abortBrainSlice();cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();densityRenderer?.dispose();density?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
   },[]);
   return <div className="anatomy-canvas" ref={host}>
     {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}

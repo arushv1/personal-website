@@ -49,38 +49,7 @@ export function contourRing(contour,z,radius=.004){
  return new THREE.TubeGeometry(curve,Math.max(80,points.length*2),radius,5,true);
 }
 
-export function sliceMaterial({z,half,role='context',uniforms}){
- const material=new THREE.MeshStandardMaterial({color:'#bc796e',roughness:.72});
- material.onBeforeCompile=shader=>{
-  shader.uniforms.sliceZ={value:z};shader.uniforms.sliceHalf={value:half};
-  Object.assign(shader.uniforms,uniforms);
-  shader.vertexShader='varying float sliceLocalZ;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nsliceLocalZ=position.z;');
-  shader.fragmentShader='varying float sliceLocalZ;uniform float sliceZ;uniform float sliceHalf;uniform float sliceHover;uniform float sliceExtract;uniform float sliceHighlight;\n'+shader.fragmentShader;
-  if(role==='slab')shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(abs(sliceLocalZ-sliceZ)>sliceHalf)discard;');
-  else shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(sliceExtract>.001&&abs(sliceLocalZ-sliceZ)<sliceHalf*min(1.0,sliceExtract*3.0))discard;').replace('#include <opaque_fragment>',`float sliceBand=1.0-smoothstep(sliceHalf-.005,sliceHalf+.006,abs(sliceLocalZ-sliceZ));
-   float sliceEdge=1.0-smoothstep(.003,.010,abs(abs(sliceLocalZ-sliceZ)-sliceHalf));
-   outgoingLight=mix(outgoingLight,vec3(.95,.025,.015),sliceBand*.76*sliceHighlight);
-   outgoingLight+=vec3(.72,.012,.008)*sliceEdge*(.8+.2*sliceHover)*sliceHighlight;
-   #include <opaque_fragment>`);
- };
- material.customProgramCacheKey=()=>`vascupath-coronal-${role}-v1`;
- return material;
-}
-
-// Use the existing baked structural proxy to retain the larger sourced
-// vessels. This is a display threshold, never a clinical caliber measurement.
-export function majorVesselMaterial(threshold=.4){
- const material=new THREE.MeshStandardMaterial({color:'#b60c08',roughness:.38,transparent:true,depthWrite:false});
- material.onBeforeCompile=shader=>{
-  shader.uniforms.vesselThreshold={value:threshold};
-  shader.vertexShader='attribute float revealDensity;varying float vesselStructure;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvesselStructure=revealDensity;');
-  shader.fragmentShader='varying float vesselStructure;uniform float vesselThreshold;\n'+shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif(vesselStructure<vesselThreshold)discard;');
- };
- material.customProgramCacheKey=()=>`vascupath-major-vessels-v1`;
- return material;
-}
-
-// Match the surrounding viewport's CSS cubic-bezier(.22,.65,.3,1) flight.
+// Bounded cubic-bezier(.22,.65,.3,1) timing for the shared camera flight.
 export function flightEase(value){
  const t=THREE.MathUtils.clamp(value,0,1);if(t===0||t===1)return t;
  let s=t;
