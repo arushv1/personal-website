@@ -9,11 +9,11 @@ function RouteLink({to,navigate,children,...props}) {
  const href=routeHref(to,location.search);
  return <a {...props} href={href} onClick={event=>followLink(event,href,navigate)}>{children}</a>;
 }
-const layers=[{value:0,name:'You'},{value:34,name:'Bone'},{value:68,name:'Vessels'},{value:100,name:'Within'}];
+const layers=[{value:0,name:'You'},{value:34,name:'Bone'},{value:72,name:'Vessels'},{value:100,name:'Within'}];
 export function App(){
  const [route,setRoute]=useState(()=>readRoute(location.pathname));
  const chapter=route.slice(1),current=sectionById[chapter],exploring=route!=='/'&&route!=='not-found';
- const [reveal,setReveal]=useState(()=>current?.view.reveal??(exploring?100:0));
+ const [reveal,setReveal]=useState(()=>current?.view.reveal??(exploring?overviewView.reveal:0));
  const [spinning,setSpinning]=useState(()=>route==='/'&&!matchMedia('(prefers-reduced-motion: reduce)').matches),[ready,setReady]=useState(false),[dialog,setDialog]=useState(null);
  const scene=useRef(null),dialogRef=useRef(null),chapterHeading=useRef(null),atlasHeading=useRef(null),previousRoute=useRef(route);
  function resetView(){setReveal(0);setSpinning(false);scene.current?.reset();}
@@ -45,8 +45,8 @@ export function App(){
  },[current]);
  useEffect(()=>{const handler=event=>{if(event.key==='Escape'&&!dialog&&exploring)navigate('/');};window.addEventListener('keydown',handler);return()=>window.removeEventListener('keydown',handler);},[dialog,exploring,route]);
  function changeReveal(value){setSpinning(false);scene.current?.stopMotion();setReveal(value);}
- const layerIndex=reveal<17?0:reveal<51?1:reveal<84?2:3;
- const layerDescription=reveal<=15?'Arush’s 3D avatar':reveal<34?'Glassy avatar revealing internal anatomy':reveal<52?'Bone with emerging vessels':reveal<65?'Bone and vessels in a CTA-style view':reveal<82?'Vessels with receding bone':'Cortex and major vessels within the atlas';
+ const layerIndex=reveal<17?0:reveal<53?1:reveal<86?2:3;
+ const layerDescription=reveal<=15?'Arush’s 3D avatar':reveal<34?'Glassy avatar revealing internal anatomy':reveal<52?'Bone with emerging vessels':reveal<65?'Bone and vessels in a CTA-style view':reveal<72?'Vessels with receding bone':reveal<=74?'Vascular tree':'Cortex and major vessels within the atlas';
  return <div className={`site-shell ${exploring?'is-exploring':''} ${current?'has-chapter':''}`}>
   <header className="site-header"><RouteLink className="wordmark" aria-label="Arush Vyas, return home" to="/" navigate={navigate}>ARUSH VYAS</RouteLink><nav aria-label="Main navigation"><RouteLink to="/atlas" navigate={navigate}>Explore</RouteLink><RouteLink to="/projects" navigate={navigate}>Projects</RouteLink><button onClick={()=>setDialog('contact')}>Contact</button></nav></header>
   <main className="hero">

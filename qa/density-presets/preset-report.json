@@ -1,0 +1,82 @@
+{
+  "checks": [
+    "Explore the atlas opens at 50%",
+    "Vessels button selects 72% with the correct label",
+    "Experience opens at 72%",
+    "Education opens at 50% in a sagittal side view",
+    "Back and Forward restore the corresponding layer presets",
+    "Atlas/Education/Experience direct links and refresh use the same presets",
+    "Reset remains at 0% and reselecting Experience restores 72%"
+  ],
+  "shots": {
+    "atlas-50": {
+      "reveal": 50,
+      "camera": [
+        2.1,
+        1.6,
+        7.399999999999998
+      ],
+      "target": [
+        0,
+        0.8,
+        0
+      ],
+      "composition": [
+        1020,
+        1140
+      ]
+    },
+    "vessels-72": {
+      "reveal": 72,
+      "camera": [
+        2.1,
+        1.6,
+        7.399999999999998
+      ],
+      "target": [
+        0,
+        0.8,
+        0
+      ],
+      "composition": [
+        1020,
+        1140
+      ]
+    },
+    "experience-72": {
+      "reveal": 72,
+      "camera": [
+        3.6,
+        1.2,
+        4.7
+      ],
+      "target": [
+        0,
+        0.6,
+        0
+      ],
+      "composition": [
+        1020,
+        1140
+      ]
+    },
+    "education-50": {
+      "reveal": 50,
+      "camera": [
+        -6.2,
+        1.0000000000000004,
+        3.796405077356795e-16
+      ],
+      "target": [
+        0,
+        1,
+        0
+      ],
+      "composition": [
+        1020,
+        1140
+      ]
+    }
+  },
+  "errors": []
+}

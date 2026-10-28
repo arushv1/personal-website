@@ -44,11 +44,11 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   const views=[];
   for(let i=0;i<ids.length;i++){
    await page.getByRole('link',{name:new RegExp('^Open '+names[i]+' —')}).click();await route('/'+ids[i],names[i]);
-   await page.waitForFunction(region=>document.querySelector('canvas').getAttribute('aria-description')==='Selected view: '+region,['Face','Cortex','Vascular tree','Frontal cortex','Crown of the skull','Cervical spine','Posterior cortex'][i]);
+   await page.waitForFunction(region=>document.querySelector('canvas').getAttribute('aria-description')==='Selected view: '+region,['Face','Skull · sagittal view','Vascular tree','Frontal cortex','Crown of the skull','Cervical spine','Posterior cortex'][i]);
    await visibleHotspots();views.push(await modelImage());await shot(ids[i]);
    assert.equal(await page.locator('.model-marker[aria-current="page"]').count(),1);
   }
-  assert(!views[1].equals(views[3]),'Education and Projects should have different cortex views');
+  assert(!views[1].equals(views[3]),'Education and Projects should have different structure views');
   assert(!views[4].equals(views[5]),'Awards and Courses should have different bone views');
   check('all seven sections, distinct structure views, layer presets and selected hotspots');
   await page.getByRole('link',{name:/^Open Projects —/}).click();await route('/projects','Projects');

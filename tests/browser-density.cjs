@@ -33,7 +33,7 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
  try{
   const {c,p}=await context({width:1366,height:900});await p.goto(base);await ready(p);await p.locator('#reveal').dispatchEvent('pointerdown');
   const before=await snapshot(p),frames=new Map(),captures=await p.evaluate(()=>document.querySelector('canvas').__atlas.densityRenderer.captures);
-  for(const value of [0,15,20,26,34,56,60,68,76,85,100]){
+  for(const value of [0,15,20,26,34,56,60,72,76,85,100]){
    await set(p,value);const buffer=await image(p);frames.set(value,buffer);await sharp(buffer).jpeg({quality:90}).toFile(`${out}/${value}.jpg`);
    const pixels=await raw(buffer);let visible=0;for(let i=0;i<pixels.length;i+=3)if(pixels[i]+pixels[i+1]+pixels[i+2]>30)visible++;
    assert(visible>6000,'Empty anatomical state at '+value);
@@ -41,13 +41,13 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   }
   assert.equal(await p.evaluate(()=>document.querySelector('canvas').__atlas.densityRenderer.captures),captures,'Scrubbing rerendered geometry');
   check('required states render; slider leaves geometry/registration/camera/lighting fixed and reuses surface buffers');
-  for(const value of [85,68,60,56,34,26,20,15,0]){await set(p,value);assert(await difference(frames.get(value),await image(p))<.02,'Reverse path differs at '+value);}
+  for(const value of [85,72,60,56,34,26,20,15,0]){await set(p,value);assert(await difference(frames.get(value),await image(p))<.02,'Reverse path differs at '+value);}
   check('100→0 rebuilds the exact same appearance as 0→100');
-  metrics.stopDifferences={};for(const value of [15,34,68,74,100]){
+  metrics.stopDifferences={};for(const value of [15,34,72,74,100]){
    await p.evaluate(v=>document.querySelector('canvas').__atlas.densityRenderer.render(v),value-.15);const a=await image(p);await p.evaluate(v=>document.querySelector('canvas').__atlas.densityRenderer.render(v),Math.min(100,value+.15));const delta=await difference(a,await image(p));metrics.stopDifferences[value]=delta;assert(delta<3,'Abrupt change at '+value);
   }
   check('no abrupt switch at labeled stops or the bone/cortex window boundary');
-  for(const value of [20,56,68,85]){
+  for(const value of [20,56,72,85]){
    await set(p,value);const a=await image(p);
    for(let i=0;i<3;i++){await p.evaluate(v=>document.querySelector('canvas').__atlas.densityRenderer.render(v),value);assert(await difference(a,await image(p))<.02,'Temporal flicker at '+value);}
   }
@@ -58,7 +58,7 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
   await set(p,85);await p.screenshot({path:out+'/desktop.png'});await c.close();
   for(const viewport of [{width:390,height:844},{width:320,height:800}]){
    const {c,p}=await context(viewport);await p.goto(base+'/projects');await ready(p);
-   for(const value of [0,20,34,56,68,85,100]){await set(p,value);await image(p);}
+   for(const value of [0,20,34,56,72,85,100]){await set(p,value);await image(p);}
    assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await p.locator('.portrait-region').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/mobile-'+viewport.width+'.png'});await c.close();
   }

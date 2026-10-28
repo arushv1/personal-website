@@ -4,7 +4,7 @@ Branch: `codex/density-reveal`. The implementation follows [Arush’s brief](DEN
 
 ## Behavior
 
-The labels remain You (0), Bone (34), Vessels (68), Within (100). One continuous reveal value controls a stable synthetic field across all four registered meshes:
+The stops are You (0), Bone (34), Vessels (72), Within (100). Vessels and the Experience preset select 72 so bone has receded. Explore the atlas starts at 50; Education also selects 50 with a sagittal side view of the skull. These presets apply on navigation, refresh and browser history. One continuous reveal value controls a stable synthetic field across all four registered meshes:
 
 - **0–15:** the original opaque, textured avatar, rendered at full resolution.
 - **15–34:** a translucent/rim-lit avatar develops broad connected holes while bone and faint vessels emerge.

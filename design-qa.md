@@ -204,3 +204,16 @@ The same 510×570 CSS viewer at emulated DPR 2 improved from a 536×599 composit
 Validation: production build, four Sites/packaging checks and seventeen regression checks passed. All eight density browser acceptance groups passed without unexpected warnings/errors, including reversible images, unchanged transforms/camera/lighting, stop continuity, forced-frame stability, mobile layout, RGBA8 fallback and a new DPR-2 native-refinement check. A full-motion run confirmed that damped scrubbing switches to native detail and stays there without quality oscillation. The existing camera-interruption/orbit/zoom/reset browser test passed. Source geometry is not recaptured to refine resolution. Physical-device GPU performance and memory limits remain separate from emulated viewport/DPR checks. Production is unchanged; continue reviewing PR #4.
 
 Arush supplied the earlier Publications view as the sharpness target. A further same-camera, same-size comparison at 510×570 CSS pixels confirms the retained sectional renderer uses an 841×940 backing buffer (DPR 1.65) while the refined density view uses 1020×1140 (DPR 2). `qa/density-resolution/reference-comparison.png` records both at CSS size. The different surviving vascular branches follow the already approved density transfer; this follow-up changes sampling/filtering only.
+
+## October 28 — atlas, Education and vessel presets
+
+Story: navigation or a layer button selects a content preset, which drives the shared slider state and the registered Three.js camera/reveal. There is no API or credential boundary for this change.
+
+- Vessels and Experience now select 72%, where the bone has receded. The layer indicator boundaries and accessible description follow the updated stop.
+- Explore the atlas starts at 50%. Initial state uses `overviewView.reveal`, so a direct load does not start at the old 100% value.
+- Education selects 50% and a sagittal side camera at `[-6.2,1,0]`, targeting `[0,1,0]`. Its caption describes the skull/side view.
+- No density transfer, source GLB, registration, light, texture or resolution change was needed.
+
+Verification passed: production build, packaging and regression suites, all nine existing browser navigation groups, and seven focused preset checks. The focused checks exercised the home CTA, Vessels, Education and Experience hotspots, Back/Forward, direct links and refresh for all three routes, Reset, and same-section reselection. At DPR 2, settled captures retain the 1020×1140 composition. Browser warnings/errors were empty. The existing navigation suite also passed 390/320 layouts, compact hotspot behavior and keyboard controls. Vite started successfully; the production build reported only its existing chunk-size advisory.
+
+Evidence: `qa/density-presets/presets.jpg`, `preset-report.json`, and `navigation-report.json`. The original browser probe needed to wait for asynchronous history navigation before asserting the new state; the completed checks above include that wait. PR #4 remains preview only; production is unchanged.

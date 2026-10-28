@@ -24,8 +24,8 @@ export const sections = [
   {
     id:'education',label:'Education',eyebrow:'FOUNDATIONS',title:'Education',
     intro:'The foundations behind the questions I’m learning to ask.',
-    region:'Cortex',anchor:[-.42,1.35,.15],callout:{side:'right'},
-    view:{position:[-3.7,2.2,4.9],target:[0,1,0],reveal:100},
+    region:'Skull · sagittal view',anchor:[-.42,1.35,.15],callout:{side:'right'},
+    view:{position:[-6.2,1,0],target:[0,1,0],reveal:50},
     items:[
       {id:'boston-university',
         title:'Boston University',
@@ -47,7 +47,7 @@ export const sections = [
     id:'experience',label:'Experience',eyebrow:'IN PRACTICE',title:'Experience',
     intro:'Research, engineering, and the work of turning ideas into useful tools.',
     region:'Vascular tree',anchor:[-.5,.2,.35],callout:{side:'left'},
-    view:{position:[3.6,1.2,4.7],target:[0,.6,0],reveal:68},
+    view:{position:[3.6,1.2,4.7],target:[0,.6,0],reveal:72},
     items:[
       {id:'boston-scientific',
         title:'Boston Scientific',
@@ -201,4 +201,4 @@ export const sections = [
   },
 ];
 export const sectionById=Object.fromEntries(sections.map(section=>[section.id,section]));
-export const overviewView={position:[2.1,1.6,7.4],target:[0,.8,0],reveal:100};
+export const overviewView={position:[2.1,1.6,7.4],target:[0,.8,0],reveal:50};
