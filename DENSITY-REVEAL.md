@@ -23,14 +23,14 @@ Individual regions vary with their density and thickness proxies. These ranges a
 
 `DensityRenderer.mjs` renders surface color, depth, density and structural attributes from the **same anatomical scene** into reusable buffers. Captures comprise one avatar surface, two bone depths, two arterial depths, an additional major-vessel capture, and one cortex surface. The major-vessel capture protects large trunks hidden by fine foreground branches. A per-pixel shader recomputes the masks and sorts contributing surfaces by depth on every reveal change. Duplicate arterial captures are suppressed. Camera/projection/size changes invalidate these buffers; stationary density scrubbing does not rerender the meshes. The opaque 0–15 range uses the normal scene renderer.
 
-Composition uses a 70%-resolution intermediate, a bounded edge filter, and one final tone/color transform. This controls fragment cost without simplifying or moving geometry. DPR is capped at 1.5 desktop and 1.25 mobile. Shaders are prewarmed before controls enable; browsers without parallel compilation use synchronous compilation. An RGBA8 color fallback is available without floating-point color buffers. All render targets, materials, textures and geometry are disposed through the scene lifecycle.
+Still views compose at the full backing-buffer resolution. During input, composition uses approximately one pixel per CSS pixel, then the engine schedules a final native-resolution frame when movement settles. A gentler edge filter preserves cortex and vessel detail at rest. Retina DPR can reach 2, with supersampling budgets of 1.4M desktop / 650K mobile pixels and a minimum of one pixel per CSS pixel. Surface buffers remain at the same resolution across motion/refinement, so sharpening does not recapture or change the anatomy. The density transfer functions and phase timing are unchanged. Shaders are prewarmed before controls enable; browsers without parallel compilation use synchronous compilation. An RGBA8 color fallback is available without floating-point color buffers. All render targets, materials, textures and geometry are disposed through the scene lifecycle.
 
 ## Limits
 
 - This is a surface-based visual approximation. It does not integrate a CT volume or simulate measured tissue density, true volumetric scattering, or physical refraction.
 - The depth capture count is finite. More deeply occluded surfaces within one anatomical mesh can be absent after foreground erosion. The extra major-vessel capture mitigates this for trunks; it is not a full anatomical reconstruction.
 - Thickness is estimated from simplified geometry, with smoothed fallbacks at open/inconsistent surfaces. There are no source centerlines or clinical caliber labels.
-- The density intermediate softens fine details relative to native resolution. The opaque avatar retains full-resolution rendering.
+- The motion pass is coarser than the still view on retina displays. It refines automatically after movement stops. Supersampling is bounded to control the seven surface buffers’ memory use.
 - Cloud Chromium uses SwiftShader. Software timings are recorded separately and do not establish physical desktop/phone GPU frame rates or pinch behavior.
 
 ## Reproduce
@@ -56,4 +56,4 @@ Rebake only after changing bone/artery source models:
 npm run prepare:density
 ```
 
-The asset regression checks reject mismatched source hashes/counts. Browser density checks verify required states, forward/reverse pixel equality, unchanged geometry/camera/lighting, continuity at stops, temporal stability, whole-model changes, narrow layouts and the RGBA8 fallback. Review `qa/density-reveal/` and the latest `design-qa.md` entry for evidence and measured limits.
+The asset regression checks reject mismatched source hashes/counts. Browser density checks verify required states, forward/reverse pixel equality, unchanged geometry/camera/lighting, continuity at stops, temporal stability, whole-model changes, narrow layouts and the RGBA8 fallback. Review `qa/density-resolution/` for the sharper iteration and `qa/density-reveal/` for the initial preview and the latest `design-qa.md` entry for evidence and measured limits.

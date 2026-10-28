@@ -9,8 +9,8 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const errors=[],checks=[],metrics={};
  const check=name=>{checks.push(name);console.log('PASS '+name);};
- async function context(viewport,byte=false){
-  const c=await browser.newContext({viewport,reducedMotion:'reduce'});await c.route('https://fonts.googleapis.com/**',r=>r.abort());
+ async function context(viewport,byte=false,deviceScaleFactor=1){
+  const c=await browser.newContext({viewport,reducedMotion:'reduce',deviceScaleFactor});await c.route('https://fonts.googleapis.com/**',r=>r.abort());
   if(byte)await c.addInitScript(()=>{const original=WebGL2RenderingContext.prototype.getExtension;WebGL2RenderingContext.prototype.getExtension=function(name){return name==='EXT_color_buffer_float'?null:original.call(this,name);};});
   const p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(['warning','error'].includes(m.type())&&!/fonts.googleapis|favicon.ico|ERR_FAILED/.test(m.text()+' '+m.location().url))errors.push(m.text());});
   return {c,p};
@@ -18,7 +18,7 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
  async function ready(p){await p.waitForFunction(()=>document.querySelector('#reveal')?.disabled===false,null,{timeout:60000});await p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));}
  async function set(p,value){
   await p.locator('#reveal').evaluate((el,v)=>{Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);
-  await p.waitForFunction(v=>Math.abs(document.querySelector('canvas').__atlas.reveal-v)<.0001,value);
+  await p.waitForFunction(v=>{const e=document.querySelector('canvas').__atlas;return Math.abs(e.reveal-v)<.0001&&!e.densityRenderer.needsRefinement;},value);
  }
  async function image(p){return p.locator('canvas').screenshot({style:'.model-markers{visibility:hidden!important}'});}
  async function raw(buffer){return sharp(buffer).removeAlpha().raw().toBuffer();}
@@ -63,6 +63,18 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
    await p.locator('.portrait-region').scrollIntoViewIfNeeded();await p.screenshot({path:out+'/mobile-'+viewport.width+'.png'});await c.close();
   }
   check('390px/320px controls, hotspots and density landmarks stay accessible without page overflow');
+  const retina=await context({width:1366,height:900},false,2);await retina.p.goto(base+'/projects');await ready(retina.p);
+  for(const v of [20,56,100]){
+   await set(retina.p,v);
+   const detail=await retina.p.evaluate(()=>{const c=document.querySelector('canvas'),e=c.__atlas;return {css:[c.clientWidth,c.clientHeight],backing:[c.width,c.height],composition:[e.densityRenderer.colorTarget.width,e.densityRenderer.colorTarget.height],dpr:e.renderer.getPixelRatio()};});
+   assert.equal(detail.dpr,2);assert.deepEqual(detail.composition,detail.backing);metrics.retina=detail;
+  }
+  const interaction=await retina.p.evaluate(()=>{const e=document.querySelector('canvas').__atlas,d=e.densityRenderer,before=d.captures;d.render(100,{moving:true});return {width:d.colorTarget.width,css:document.querySelector('canvas').clientWidth,before};});
+  assert(Math.abs(interaction.width-interaction.css)<=1);
+  await retina.p.waitForFunction(()=>!document.querySelector('canvas').__atlas.densityRenderer.needsRefinement);
+  assert.equal(await retina.p.evaluate(()=>document.querySelector('canvas').__atlas.densityRenderer.captures),interaction.before);
+  await retina.p.screenshot({path:out+'/retina.png'});await retina.c.close();
+  check('retina still views refine to every backing-buffer pixel after input without recapturing geometry');
   const byte=await context({width:1000,height:800},true);await byte.p.goto(base);await ready(byte.p);assert.equal(await byte.p.evaluate(()=>document.querySelector('canvas').__atlas.densityRenderer.floating),false);
   for(const v of [20,56,85,100]){await set(byte.p,v);await image(byte.p);}await byte.p.screenshot({path:out+'/byte-fallback.png'});await byte.c.close();check('RGBA8 fallback works when floating-point color buffers are unavailable');
   assert.deepEqual(errors,[]);fs.writeFileSync(out+'/report.json',JSON.stringify({checks,metrics,errors},null,2));console.log(JSON.stringify({checks,metrics,errors},null,2));

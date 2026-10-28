@@ -9,9 +9,15 @@ const descriptions=[
  {name:'arteries',kind:2},{name:'arteries',kind:2,peel:true},{name:'arteries',kind:2,major:true},
  {name:'brain',kind:3},
 ];
+// Supersample small/retina viewers without allowing the seven surface buffers
+// to grow without bound. Never render below one pixel per CSS pixel.
+export function densityPixelRatio(width,height,dpr,mobile=false){
+ const pixelBudget=mobile?650000:1400000;
+ return Math.max(1,Math.min(dpr||1,2,Math.sqrt(pixelBudget/Math.max(1,width*height))));
+}
 export class DensityRenderer{
  constructor(renderer,scene,camera,models,density){
-  Object.assign(this,{renderer,scene,camera,models,density});this.size=new THREE.Vector2();this.revision=0;this.signature='';this.captures=0;
+  Object.assign(this,{renderer,scene,camera,models,density});this.size=new THREE.Vector2();this.revision=0;this.signature='';this.captures=0;this.needsRefinement=false;
   this.floating=renderer.extensions.has('EXT_color_buffer_float');density.uniforms.densityColorScale.value=this.floating?1:.25;
   this.slots=descriptions.map(spec=>{
    const target=new THREE.WebGLRenderTarget(1,1,{count:2,type:THREE.UnsignedByteType,depthBuffer:true,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -25,9 +31,9 @@ export class DensityRenderer{
   // A bounded nine-tap edge filter keeps small vessel edges smooth without
   // a long iterative FXAA search on low-power or software renderers.
   this.finalMaterial=new THREE.ShaderMaterial({
-   uniforms:{image:{value:this.colorTarget.texture},resolution:{value:new THREE.Vector2()},decodeScale:{value:this.floating?1:4}},depthTest:false,depthWrite:false,toneMapped:true,
+   uniforms:{image:{value:this.colorTarget.texture},resolution:{value:new THREE.Vector2()},decodeScale:{value:this.floating?1:4},edgeStrength:{value:.25}},depthTest:false,depthWrite:false,toneMapped:true,
    vertexShader:'varying vec2 pixel;void main(){pixel=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
-   fragmentShader:`uniform sampler2D image;uniform vec2 resolution;uniform float decodeScale;varying vec2 pixel;
+   fragmentShader:`uniform sampler2D image;uniform vec2 resolution;uniform float decodeScale;uniform float edgeStrength;varying vec2 pixel;
     void main(){
      vec3 m=texture2D(image,pixel).rgb;vec3 nw=texture2D(image,pixel+vec2(-1.0,1.0)*resolution).rgb;vec3 ne=texture2D(image,pixel+resolution).rgb;vec3 sw=texture2D(image,pixel-resolution).rgb;vec3 se=texture2D(image,pixel+vec2(1.0,-1.0)*resolution).rgb;
      vec3 luma=vec3(.299,.587,.114);float lm=dot(m,luma),lnw=dot(nw,luma),lne=dot(ne,luma),lsw=dot(sw,luma),lse=dot(se,luma);
@@ -37,7 +43,7 @@ export class DensityRenderer{
       float reduce=max((lnw+lne+lsw+lse)*.03125,.0078125);
       direction=clamp(direction/(min(abs(direction.x),abs(direction.y))+reduce),vec2(-6.0),vec2(6.0))*resolution;
       vec3 a=.5*(texture2D(image,pixel+direction*(-1.0/6.0)).rgb+texture2D(image,pixel+direction*(1.0/6.0)).rgb);
-      vec3 b=a*.5+.25*(texture2D(image,pixel-direction*.5).rgb+texture2D(image,pixel+direction*.5).rgb);float lb=dot(b,luma);color=lb<low||lb>high?a:b;
+      vec3 b=a*.5+.25*(texture2D(image,pixel-direction*.5).rgb+texture2D(image,pixel+direction*.5).rgb);float lb=dot(b,luma);color=mix(m,lb<low||lb>high?a:b,edgeStrength);
      }
      gl_FragColor=vec4(color*decodeScale,1.0);
      #include <tonemapping_fragment>
@@ -98,9 +104,15 @@ export class DensityRenderer{
   if(signature!==this.signature){this.signature=signature;this.invalidate();}
   for(const slot of this.slots)if(slot.target.width!==this.size.x||slot.target.height!==this.size.y){slot.target.setSize(this.size.x,this.size.y);slot.revision=-1;}
   this.density.uniforms.densityResolution.value.copy(this.size);
-  const width=Math.max(1,Math.round(this.size.x*.7)),height=Math.max(1,Math.round(this.size.y*.7));
+ }
+ compositionSize(moving){
+  // Keep the familiar lightweight pass during input. A still view gets every
+  // pixel of the backing buffer, so there is no permanently enlarged image.
+  const scale=moving?1/this.renderer.getPixelRatio():1;
+  const width=Math.max(1,Math.round(this.size.x*scale)),height=Math.max(1,Math.round(this.size.y*scale));
   if(this.colorTarget.width!==width||this.colorTarget.height!==height)this.colorTarget.setSize(width,height);
   this.finalMaterial.uniforms.resolution.value.set(1/width,1/height);
+  this.finalMaterial.uniforms.edgeStrength.value=moving?.7:.25;
  }
  capture(slot){
   if(slot.revision===this.revision||!this.models[slot.name])return;
@@ -126,8 +138,9 @@ export class DensityRenderer{
   finally{renderer.toneMapping=tone;renderer.setRenderTarget(null);Object.values(this.models).forEach((m,i)=>{m.visible=visibility[i];});}
   await Promise.all(tasks);this.prime();
  }
- render(value){
+ render(value,{moving=false}={}){
   this.sync();const windows=densityWindows(value);
+  this.needsRefinement=moving&&value>15;
   // You is a natural opaque surface through 15. Use the original full-resolution
   // scene here; the density phase uses a bounded intermediate resolution.
   if(value<=15){
@@ -135,6 +148,7 @@ export class DensityRenderer{
    try{for(const [name,model] of Object.entries(this.models))model.visible=name==='avatar';u.densityPeel.value=0;u.densityPreviousDepth.value=null;u.densityMajorOnly.value=0;u.densityColorScale.value=1;this.renderer.setRenderTarget(null);this.renderer.setClearColor(0,1);this.renderer.render(this.scene,this.camera);}
    finally{u.densityColorScale.value=scale;Object.values(this.models).forEach((m,i)=>{m.visible=visibility[i];});}return;
   }
+  this.compositionSize(moving);
   this.slots.forEach(slot=>{if(windows[slot.name])this.capture(slot);});
   this.quad.material=this.compositeFor(value);this.quad.material.uniforms.reveal.value=value;this.quad.material.uniforms.projectionScale.value.set(this.camera.projectionMatrix.elements[0],this.camera.projectionMatrix.elements[5]);this.renderer.setRenderTarget(this.colorTarget);this.renderer.setClearColor(0,1);this.renderer.render(this.output,this.outputCamera);this.renderer.setRenderTarget(null);this.renderer.render(this.finalOutput,this.outputCamera);
  }

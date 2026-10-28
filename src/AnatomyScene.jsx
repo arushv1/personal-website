@@ -4,7 +4,7 @@ import { damp, revealState, layerBlend, revealMode } from './reveal.mjs';
 import { followLink, routeHref } from './navigation.mjs';
 import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
 import { DensityReveal, attachDensityField } from './DensityReveal.mjs';
-import { DensityRenderer } from './DensityRenderer.mjs';
+import { DensityRenderer, densityPixelRatio } from './DensityRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
 import { sections, sectionById, overviewView } from './content/portfolio.mjs';
 import { layoutHotspots } from './hotspots.mjs';
@@ -27,7 +27,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const density=mode==='density'?new DensityReveal():null;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, density?(matchMedia('(max-width:760px)').matches?1.25:1.5):1.65));
+    if(!density)renderer.setPixelRatio(Math.min(devicePixelRatio,1.65));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
     const canvas = renderer.domElement;
@@ -115,9 +115,9 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const anchors=Object.fromEntries(sections.map(section=>[section.id,registerAnatomyPoint(...section.anchor)]));
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
-    let needsRender=true,drawnReveal=-1;
+    let needsRender=true,drawnReveal=-1,lastRevealTarget=live.current.reveal;
     if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;}};
-    const resize = () => { const {width,height} = container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
+    const resize = () => { const {width,height} = container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
     const reset = () => flyTo({position:start.toArray(),target:[0,.55,0]});
@@ -193,8 +193,12 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
-      if(viewChanged || Math.abs(drawnReveal-currentReveal)>.0001){
-        if(densityRenderer)densityRenderer.render(currentReveal);
+      const revealMoving=Math.abs(drawnReveal-currentReveal)>.0001;
+      const revealQualityMoving=p.reveal!==lastRevealTarget||Math.abs(currentReveal-p.reveal)>.005;
+      lastRevealTarget=p.reveal;
+      const cameraMoving=Boolean(destination)||controls.autoRotate||camera.position.distanceToSquared(drawnPosition)>1e-8||1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-8;
+      if(viewChanged || revealMoving || densityRenderer?.needsRefinement){
+        if(densityRenderer)densityRenderer.render(currentReveal,{moving:revealQualityMoving||cameraMoving});
         else if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
         else renderer.render(scene,camera);
         needsRender=false;drawnReveal=currentReveal;

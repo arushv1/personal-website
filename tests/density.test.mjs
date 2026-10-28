@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import * as THREE from 'three';
 import {densityWindows,attachDensityField,sampleDensityField} from '../src/DensityReveal.mjs';
-import {DensityRenderer} from '../src/DensityRenderer.mjs';
+import {DensityRenderer,densityPixelRatio} from '../src/DensityRenderer.mjs';
 
 test('baked thickness sidecars match the unchanged source models and have useful structural range',async()=>{
  const base=new URL('../public/models/',import.meta.url),manifest=JSON.parse(await fs.readFile(new URL('density/manifest.json',base),'utf8'));
@@ -35,17 +35,28 @@ test('shared density is deterministic, spatially continuous and never changes so
 test('slider changes reuse surface buffers; orbit and resize invalidate them; resources are released',()=>{
  const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.05,50),models=Object.fromEntries(['avatar','bone','arteries','brain'].map(name=>[name,new THREE.Group()]));
  let width=200,height=200,geometryDraws=0,target=null;
- const renderer={extensions:{has:()=>true},toneMapping:THREE.ACESFilmicToneMapping,getDrawingBufferSize:v=>v.set(width,height),setRenderTarget:t=>{target=t;},setClearColor(){},render:s=>{if(s===scene)geometryDraws++;}};
+ const renderer={extensions:{has:()=>true},toneMapping:THREE.ACESFilmicToneMapping,getPixelRatio:()=>2,getDrawingBufferSize:v=>v.set(width,height),setRenderTarget:t=>{target=t;},setClearColor(){},render:s=>{if(s===scene)geometryDraws++;}};
  const density={uniforms:{densityColorScale:{},densityResolution:{value:new THREE.Vector2()},densityPeel:{},densityPreviousDepth:{},densityMajorOnly:{}}};
  const deferred=new DensityRenderer(renderer,scene,camera,models,density);deferred.prime();
  assert.equal(geometryDraws,7);geometryDraws=0;
  for(const r of [20,34,56,68,85,100,85,68,56,34,20])deferred.render(r);
  assert.equal(geometryDraws,0,'Density scrubbing must not rerender the meshes');
+ deferred.render(56,{moving:true});assert.equal(deferred.colorTarget.width,100);assert.equal(deferred.needsRefinement,true);
+ deferred.render(56);assert.equal(deferred.colorTarget.width,200);assert.equal(deferred.needsRefinement,false);
+ assert.equal(geometryDraws,0,'Resolution refinement must reuse the same anatomical surfaces');
  camera.position.x=.3;deferred.render(85);assert.equal(geometryDraws,4);
  geometryDraws=0;width=300;height=400;deferred.render(34);assert.equal(geometryDraws,5);
  assert.equal(target,null);assert(Object.values(models).every(m=>m.visible));
  let disposed=0;for(const slot of deferred.slots)slot.target.addEventListener('dispose',()=>disposed++);
  deferred.colorTarget.addEventListener('dispose',()=>disposed++);deferred.dispose();assert.equal(disposed,8);
+});
+test('retina resolution respects supersampling budgets while keeping native CSS detail',()=>{
+ assert.equal(densityPixelRatio(510,570,2),2);
+ assert.equal(densityPixelRatio(510,570,1),1);
+ assert.equal(densityPixelRatio(300,400,3,true),2);
+ const mobile=densityPixelRatio(390,600,3,true);assert(mobile>1.5&&mobile<2);
+ assert(mobile*mobile*390*600<=650001);
+ assert.equal(densityPixelRatio(2000,1500,2),1);
 });
 test('overlapping density windows preserve the avatar, CTA and cortex landmarks',()=>{
  for(let value=0;value<=100;value+=.125){
