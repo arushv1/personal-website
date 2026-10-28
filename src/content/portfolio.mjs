@@ -122,7 +122,7 @@ export const sections = [
         period:'Oct. 2026',
         summary:'Earned second place in the Health and Biotech Hack at Boston University’s DS + X Hackathon in October 2026, applying data science to challenges at the intersection of health and biotechnology.'},
       {id:'urop-poster',
-        photos:[],
+        photos:[{src:'/photos/projects/bannerUROP.jpg',width:2000,height:1335,alt:'Arush Vyas standing with three fellow recipients and Boston University representatives at the 2026 UROP Symposium award ceremony.',caption:'2026 UROP Symposium · Convergent Research Poster Award.'}],
         title:'UROP Symposium Poster Award',
         subtitle:'Convergent Research · Health Across the Lifespan',
         period:'Sept. 2026',
