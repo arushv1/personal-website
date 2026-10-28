@@ -1,6 +1,6 @@
-# Global density reveal — review preview
+# Global density reveal
 
-Branch: `codex/density-reveal`. The implementation follows [Arush’s brief](DENSITY-BRIEF.md). Publishing this branch creates a **preview only**. Do not merge or promote it until Arush approves the preview.
+Release target: `main` and the existing Vercel production project. The implementation follows [Arush’s brief](DENSITY-BRIEF.md). On October 28, Arush approved preview `7a4ce12` and explicitly requested releasing it through PR #4. Density is the default; the sectional and whole-model comparisons remain available.
 
 ## Behavior
 

@@ -85,7 +85,7 @@ Use `/about`, `/education`, `/experience`, `/projects`, `/awards`, `/courses`, a
 
 The opening view has no hotspots. Choose “Explore the atlas” to reveal all seven compact labels in close gutters beside the head. They remain available in the section views, with local collision handling and a wider desktop reader. The opening follows the minimal portrait/headline composition, and both views use a slim borderless control strip with word labels and 44px interaction targets. Returning home hides them again. Selecting a section moves to its own structure/view and layer preset; manual orbit/zoom interrupts that movement. Reselecting the section restores its preset. Reset (or Home with the canvas focused) restores the whole-person angle and slider 0 while keeping the section text open.
 
-This review branch defaults to a global synthetic-density reveal; see [DENSITY-REVEAL.md](DENSITY-REVEAL.md). `?reveal=section` retains the sectional comparison, and `?reveal=blend` retains the whole-model fade. All modes preserve native section links and the same shared eye/jaw registration. The anatomy and density values are illustrative. This branch is preview-only until Arush approves a production release.
+Look within defaults to a global synthetic-density reveal; see [DENSITY-REVEAL.md](DENSITY-REVEAL.md). `?reveal=section` retains the sectional comparison, and `?reveal=blend` retains the whole-model fade. All modes preserve native section links and the same shared eye/jaw registration. The anatomy and density values are illustrative. Arush approved the density release to main and Vercel on October 28, 2026.
 
 Optional browser acceptance suite (requires Playwright and Chromium in the test environment):
 
