@@ -79,6 +79,7 @@ export const sections = [
     view:{position:[-1.8,1.8,5.3],target:[0,1,.15],reveal:100},
     items:[
       {id:'vascupath',
+        experience:'brain-slice',
         photos:[],
         title:'VascuPath',
         subtitle:'Extracting vascular features from brain tissue',

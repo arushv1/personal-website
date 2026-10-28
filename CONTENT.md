@@ -76,3 +76,7 @@ Start `npm run dev` and check your entry using its index link and scroll. The op
 The optional `tests/browser-scene.cjs` test checks full-motion camera interruption, pointer orbit, wheel zoom and reset. Both browser scripts require Playwright and Chromium in the test environment; `CHROMIUM_PATH` can select the browser binary.
 
 `node tests/browser-photos.cjs` checks photo galleries against a running Vite development server using temporary local images. It covers multiple/single/no-photo entries, keyboard/Previous/Next navigation, full-size links, preserved reader/camera state and mobile sizing. Fixtures are cleaned up and are never published as portfolio photos.
+
+## VascuPath research explorer
+
+The VascuPath item's `experience: 'brain-slice'` enables its interactive entrance. Research figures are defined separately in `src/content/vascupath.mjs`, with their original files under `public/vascupath/`. Use a shared `viewGroup` only for aligned images of the same tissue section. See [VASCUPATH.md](VASCUPATH.md) for the full editing guide and the distinction between the illustrative anatomy and supplied research figures.

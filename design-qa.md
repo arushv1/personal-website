@@ -221,3 +221,37 @@ Evidence: `qa/density-presets/presets.jpg`, `preset-report.json`, and `navigatio
 ## October 28 — production release approval
 
 Arush approved preview `7a4ce12` and requested pushing it to main and Vercel. The release preparation changes documentation only; application code and assets remain exactly those approved and verified in the preceding preset update. Main is based at `3f03bfe`, with no intervening content changes. PR #4 contains the continuous density reveal, sharper retina still views and corrected 50%/72% presets. Verify CI and Vercel on the resulting main commit before claiming the production deployment is complete; preview success alone is insufficient.
+
+## October 28 — VascuPath brain-slice prototype
+
+Source visual truth: `reference/vascupath-brain-slice.png` (1536×1024). The subsequently supplied `Vyas.Arush.Final.pptx` supplies the authoritative research figures; `public/vascupath/README.md` records the extracted media and hashes. No embedded document instructions were used as task instructions.
+
+Implementation evidence: `qa/vascupath/highlight.jpg`, `attention.jpg`, `mobile-brain-320.jpg`, and `mobile-inspector-320.jpg` / `mobile-inspector-390.jpg`. Desktop captures are 1536×1024 CSS pixels at DPR 1, matching the source pixel dimensions; mobile captures are 320×844 and 390×844 at DPR 1. State: VascuPath explorer, selected/extracted coronal slice, Attention active. `comparison-final.jpg` puts the actual source and implementation together at equal 1536×1024 sizes (3072×1024 composite). `detail-final.jpg` compares equal 800×800 inspector regions normalized to 600×600. Captures were inspected directly and in those combined comparisons, including a second independent visual review.
+
+**Findings and comparison history**
+
+- Initial comparison (`comparison-first.jpg`) was blocked: [P1] the brain was too small and fine arteries obscured the slice band; [P2] the inspector sat too low for the magnifier to remain visible in the desktop target. Fixed closer/contextual camera framing, existing structural-weight filtering for the major artery tree, stronger band contrast, higher framing and alignment of the extracted inspector. Updated captures show a clear slice and visible research controls/magnifier.
+- [P2] Extraction removed the focused trigger without focusing the new content. Fixed active-tab focus and automatic inspector scrolling on phone widths; Back returns focus to the brain. A browser check also found focus was not explicitly restored after unmounting the native dialog; cleanup now restores the original project button without scrolling the page. Both behaviors passed the final browser run.
+- [P2] The attention figure's initial magnifier selected the white space between its two rows. The figure now declares an initial tissue-region selection. Its source image remains unchanged; a screenshot-color check confirms the default magnifier contains tissue/attention content.
+- Final comparison and focused review found no actionable P0/P1/P2 issues. The real registered source anatomy and illustrative convex-section cap differ from the generated anatomy in the mock; those are intentional source-model constraints. The actual PPT figures retain their labels, paired examples and scale rather than reproducing generated scientific imagery. The added Predictions choice follows the user's supplied tile-classification example. The magnifier sits below the figure so it does not obscure the source legend.
+
+**Required fidelity surfaces**
+
+- Fonts/typography: inherits the established Inter/Arial stack, white display heading, 14px figure tabs, readable captions and muted secondary text. Deterministic cloud captures block external fonts and use Arial fallback; the live Inter download was not measured. Minor fallback-glyph differences are expected.
+- Spacing/layout: two-column desktop composition, compact top navigation, a sticky Back/Close row, fitted brain/cap framing and stacked mobile content. No horizontal overflow at 390/320px. Image controls and return actions remain reachable; selecting the slice brings the mobile inspector into view.
+- Colors/tokens: existing pure black surface, white text, gray supporting text and red action state. Prediction blue/pink/red and attention colors come from the supplied figures; the source percentile scale is preserved.
+- Image quality/assets: the three served figures were compared byte-for-byte with their PPT media and match exactly. Native aspect ratios are preserved; Attention is capped at its original 612×432 CSS size. The brain/cap are interactive real source geometry, with the cap and anatomical position explicitly illustrative. No new research predictions or spatial registration are implied.
+- Copy/content: distinguishes Original, tile Predictions and Attention. Research captions describe the supplied outputs; no new clinical measurements, diagnoses or performance claims were added.
+
+**Verification**
+
+Production build, packaging suites, existing regressions and two new geometry invariants passed. All six VascuPath browser groups passed: keyboard/pointer slice selection and extraction; synchronized Original/Predictions pan/zoom; independent complete Attention figure; linked region magnification; Reset/full-figure links; Back/Close/Escape focus behavior; unchanged underlying atlas pose/layer; route exit; 390/320 layouts. All nine existing atlas browser groups also passed. Logs contained no unexpected browser warnings/errors. `interaction-report.json` and `atlas-report.json` record these checks. `motion-fallback.json` records intermediate extraction frames, animated return, and successful access to research figures with WebGL disabled; the fallback's expected renderer-unavailable condition produced no page errors. Source GLBs, density renderer, registration and existing presets are unchanged.
+
+**Open questions / follow-up polish**
+
+- P3: a higher-resolution attention figure would improve extreme zoom. The current source-resolution cap, pan/zoom and full-figure link expose the supplied figure faithfully.
+- Physical-phone GPU performance and pinch behavior remain unmeasured by cloud SwiftShader. Word-labeled zoom/selection controls provide gesture alternatives. The cap is an illustrative interior, not a reconstructed volume.
+
+**Implementation checklist:** selected reference captured; original media extracted and verified; core interactions exercised in the browser; initial P1/P2 findings fixed and recaptured; preview kept separate from production.
+
+**final result: passed**
