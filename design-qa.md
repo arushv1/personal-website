@@ -221,3 +221,77 @@ Evidence: `qa/density-presets/presets.jpg`, `preset-report.json`, and `navigatio
 ## October 28 — production release approval
 
 Arush approved preview `7a4ce12` and requested pushing it to main and Vercel. The release preparation changes documentation only; application code and assets remain exactly those approved and verified in the preceding preset update. Main is based at `3f03bfe`, with no intervening content changes. PR #4 contains the continuous density reveal, sharper retina still views and corrected 50%/72% presets. Verify CI and Vercel on the resulting main commit before claiming the production deployment is complete; preview success alone is insufficient.
+
+## October 28 — VascuPath brain-slice prototype
+
+Source visual truth: `reference/vascupath-brain-slice.png` (1536×1024). The subsequently supplied `Vyas.Arush.Final.pptx` supplies the authoritative research figures; `public/vascupath/README.md` records the extracted media and hashes. No embedded document instructions were used as task instructions.
+
+Implementation evidence: `qa/vascupath/highlight.jpg`, `attention.jpg`, `mobile-brain-320.jpg`, and `mobile-inspector-320.jpg` / `mobile-inspector-390.jpg`. Desktop captures are 1536×1024 CSS pixels at DPR 1, matching the source pixel dimensions; mobile captures are 320×844 and 390×844 at DPR 1. State: VascuPath explorer, selected/extracted coronal slice, Attention active. `comparison-final.jpg` puts the actual source and implementation together at equal 1536×1024 sizes (3072×1024 composite). `detail-final.jpg` compares equal 800×800 inspector regions normalized to 600×600. Captures were inspected directly and in those combined comparisons, including a second independent visual review.
+
+**Findings and comparison history**
+
+- Initial comparison (`comparison-first.jpg`) was blocked: [P1] the brain was too small and fine arteries obscured the slice band; [P2] the inspector sat too low for the magnifier to remain visible in the desktop target. Fixed closer/contextual camera framing, existing structural-weight filtering for the major artery tree, stronger band contrast, higher framing and alignment of the extracted inspector. Updated captures show a clear slice and visible research controls/magnifier.
+- [P2] Extraction removed the focused trigger without focusing the new content. Fixed active-tab focus and automatic inspector scrolling on phone widths; Back returns focus to the brain. A browser check also found focus was not explicitly restored after unmounting the native dialog; cleanup now restores the original project button without scrolling the page. Both behaviors passed the final browser run.
+- [P2] The attention figure's initial magnifier selected the white space between its two rows. The figure now declares an initial tissue-region selection. Its source image remains unchanged; a screenshot-color check confirms the default magnifier contains tissue/attention content.
+- Final comparison and focused review found no actionable P0/P1/P2 issues. The real registered source anatomy and illustrative convex-section cap differ from the generated anatomy in the mock; those are intentional source-model constraints. The actual PPT figures retain their labels, paired examples and scale rather than reproducing generated scientific imagery. The added Predictions choice follows the user's supplied tile-classification example. The magnifier sits below the figure so it does not obscure the source legend.
+
+**Required fidelity surfaces**
+
+- Fonts/typography: inherits the established Inter/Arial stack, white display heading, 14px figure tabs, readable captions and muted secondary text. Deterministic cloud captures block external fonts and use Arial fallback; the live Inter download was not measured. Minor fallback-glyph differences are expected.
+- Spacing/layout: two-column desktop composition, compact top navigation, a sticky Back/Close row, fitted brain/cap framing and stacked mobile content. No horizontal overflow at 390/320px. Image controls and return actions remain reachable; selecting the slice brings the mobile inspector into view.
+- Colors/tokens: existing pure black surface, white text, gray supporting text and red action state. Prediction blue/pink/red and attention colors come from the supplied figures; the source percentile scale is preserved.
+- Image quality/assets: the three served figures were compared byte-for-byte with their PPT media and match exactly. Native aspect ratios are preserved; Attention is capped at its original 612×432 CSS size. The brain/cap are interactive real source geometry, with the cap and anatomical position explicitly illustrative. No new research predictions or spatial registration are implied.
+- Copy/content: distinguishes Original, tile Predictions and Attention. Research captions describe the supplied outputs; no new clinical measurements, diagnoses or performance claims were added.
+
+**Verification**
+
+Production build, packaging suites, existing regressions and two new geometry invariants passed. All six VascuPath browser groups passed: keyboard/pointer slice selection and extraction; synchronized Original/Predictions pan/zoom; independent complete Attention figure; linked region magnification; Reset/full-figure links; Back/Close/Escape focus behavior; unchanged underlying atlas pose/layer; route exit; 390/320 layouts. All nine existing atlas browser groups also passed. Logs contained no unexpected browser warnings/errors. `interaction-report.json` and `atlas-report.json` record these checks. `motion-fallback.json` records intermediate extraction frames, animated return, and successful access to research figures with WebGL disabled; the fallback's expected renderer-unavailable condition produced no page errors. Source GLBs, density renderer, registration and existing presets are unchanged.
+
+**Open questions / follow-up polish**
+
+- P3: a higher-resolution attention figure would improve extreme zoom. The current source-resolution cap, pan/zoom and full-figure link expose the supplied figure faithfully.
+- Physical-phone GPU performance and pinch behavior remain unmeasured by cloud SwiftShader. Word-labeled zoom/selection controls provide gesture alternatives. The cap is an illustrative interior, not a reconstructed volume.
+
+**Implementation checklist:** selected reference captured; original media extracted and verified; core interactions exercised in the browser; initial P1/P2 findings fixed and recaptured; preview kept separate from production.
+
+**final result: passed**
+
+## October 28 — right-side brain focus and left-side research figures
+
+Arush requested keeping the interactive model on the right, placing figures on the left, focusing on the brain rather than the vessel tree, extracting the tissue toward the left, and smoothly reversing to the original Projects view. This explicit update supersedes the earlier mock’s column arrangement.
+
+`qa/vascupath-left/` records the new desktop, short-laptop and phone captures. Desktop highlight and Predictions/Attention captures were inspected directly, with an independent review. The camera flies from the stopped atlas pose/rectangle into a bounds-fitted cortex view while arteries fade away. The selected slab moves screen-left toward the figures. Close retracts it, restores the exact captured camera/target and vascular context, then dissolves back into the original atlas. The canvas flight uses its actual animated dimensions to preserve projection; the current atlas rectangle supplies the return destination after a resize. Word-labeled controls remain compact and reachable.
+
+The predictions source was re-audited: PPTX slides 1 and 3 reference the same 1400×870 JPEG, and there is no sharper duplicate or vector/embedded original. Its bytes remain unchanged. Image/magnifier placement and width are aligned to the device-pixel grid, with normal photographic interpolation, native proportions and a full-source link. No invented detail or artificial upscaling was added. Attention remains limited to 612×432.
+
+Verification passed: production build, packaging and regression suites; two additional invariants for projected framing and monotonic exact-ended flight timing; all nine existing atlas browser groups; six reduced-motion explorer groups plus three full-motion/resize/fallback groups. `interaction-report.json` records the reduced-motion results and `motion-report.json` records animated entry/return, viewport resize and unavailable-WebGL results. The animation test observes intermediate progress and vessel opacity and confirms both the private return camera and the underlying atlas exactly match a custom orbit/zoom snapshot with the slider at 72%. No unexpected browser warnings/errors were recorded in normal contexts. A separate loading-state check confirms native initial focus lands on visible Back, Tab reaches visible Close, and Escape closes even while the cortex request is held.
+
+Review found one P2: opacity-hidden chrome initially remained keyboard focusable. The header, figure and model regions now become inert until ready and during return, while visible Back/Close remain available during loading. The follow-up keyboard check passed. Final desktop/phone review found no remaining actionable P0/P1/P2 findings. Physical GPU/phone performance and pinch remain unmeasured; this evidence uses cloud Chromium/SwiftShader. Main/production remain separate from this preview.
+
+**final result: passed**
+
+## October 28 — continuous shared-canvas zoom correction
+
+Arush reported visible jitter and a screen switch in the prior entry/exit. The cause was architectural: a second renderer loaded duplicate models while CSS animated its viewport dimensions, causing repeated projection/DPR/render-target changes and a visible material handoff. The old `BrainSliceScene.jsx` and its unused shader helpers are removed.
+
+The explorer now keeps the original atlas canvas, renderer, camera, source models and density compositor. It temporarily reparents only the existing imperatively owned canvas into the transparent native dialog, retaining its desktop rectangle and backing-buffer dimensions. The original host remains sized. Camera motion and vessel fading occur in the same compositor, using optional focus uniforms separate from the approved Look within transfer. The optional extracted slab has its own depth/color capture in that compositor. Offscreen preparation warms the new shader variants before entry; full focus skips vessel captures. Returning restores the source camera/target/quaternion and existing atlas resources. Caption/figure entrances use a clipped aperture from the brain side, a narrow red sweep and staggered text. The preference for reduced motion removes those effects.
+
+Evidence: `qa/vascupath-continuous/` includes current desktop and 390/320px phone captures, nine-group explorer acceptance and nine-group atlas reports. A frame-by-frame browser observer confirmed the same renderer/camera/brain identities, one fixed desktop draw-buffer size and one fixed canvas screen rectangle through animated entry and exit. Tests exercise a custom orbit/zoom and 72% layer, exact private/main camera restoration, extraction toward screen-left, native pan/zoom/region state, resize return and unavailable-WebGL access to figures. Browser tests recorded no unexpected warnings/errors. Unit checks separately verify early continuous context fading, late context return, exact control/pose restoration, preparation cancellation and comparison fallback restoration; offscreen warm-up never overwrites the default framebuffer, and optional targets/materials are removed afterward. Build, packaging and regression suites passed.
+
+Desktop/mobile screenshots were directly inspected and independently reviewed. An initial capture revealed the underlying footer blurred through the dialog: the global backdrop blur is now explicitly disabled and underlying footer chrome fades with the reader. The red sweep pseudo-element is also explicitly disabled for reduced motion. Short-laptop capture and blend-mode research access passed in a fresh browser. No remaining actionable P0/P1/P2 issue was identified. The retained blend/section comparisons offer figure access while preserving their normal atlas; their 3D slice focus is density-specific. Physical device FPS/smoothness and pinch remain unmeasured by cloud SwiftShader. The cap/location remain illustrative, and exact source research image bytes are unchanged.
+
+Main/production remain separate from this review preview.
+
+**final result: passed**
+
+
+## October 28 — first-visit Explore brain slice button
+
+The entry button’s existing base/hover styles were inside the lazy explorer stylesheet, so the first visit rendered an unstyled text button; returning from the explorer left that stylesheet loaded. Moved those exact rules into the main stylesheet. No reader markup, copy, spacing values or transition code changed. Fresh production-build browser contexts at 1536px and 390px verified the explorer CSS was not loaded initially and the button was already a red 44px pill with a 24px radius; after opening/closing the explorer its computed styling was identical. No page errors occurred. `qa/vascupath-entry/` contains captures/report. Production build and packaging checks passed.
+
+**final result: passed**
+
+
+## October 28 — VascuPath release authorization
+
+Arush approved the first-visit button fix and the continuous brain-slice explorer at preview `8348154`, then explicitly requested pushing to main and Vercel. PR #5 releases this reviewed implementation. Release-preparation edits update documentation only; the approved application source/assets are unchanged. The preview’s GitHub Actions run `40789020303` and Vercel deployment succeeded. Check the resulting main commit’s Vercel status separately before claiming production deployment complete.

@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "keyboard selects the coronal slice, pulls it out and focuses the research inspector",
+    "original/prediction views preserve zoom and pan; pointer and keyboard control the linked magnifier",
+    "attention keeps its complete source figure/legend and separate view state; full-figure links and image reset work",
+    "real 3D slice hit target works; Escape closes focus mode, restores focus and preserves the underlying atlas pose/layer",
+    "390px/320px layouts have no horizontal overflow, 44px controls, reachable Back/Close and automatic inspector focus",
+    "leaving focus mode through navigation restores the established atlas preset and unmounts the extra scene"
+  ],
+  "errors": []
+}

@@ -1,0 +1,15 @@
+{
+  "normalMotion": {
+    "intermediateFrames": [
+      0.608394373323201,
+      0.9844896851159836,
+      0.9860182168466617,
+      0.9998239953248629
+    ],
+    "returnsToBrain": true
+  },
+  "withoutWebGL": {
+    "researchFiguresAvailable": true
+  },
+  "pageErrors": []
+}

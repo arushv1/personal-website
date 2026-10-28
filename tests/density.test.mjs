@@ -70,3 +70,20 @@ test('overlapping density windows preserve the avatar, CTA and cortex landmarks'
  assert(!densityWindows(85).bone&&densityWindows(85).arteries&&densityWindows(85).brain);
  assert(densityWindows(100).brain&&densityWindows(100).arteries);
 });
+
+test('brain focus warms offscreen, captures only brain/slice when focused, and removes optional resources',async()=>{
+ const {DensityReveal}=await import('../src/DensityReveal.mjs');
+ const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.05,50),models=Object.fromEntries(['avatar','bone','arteries','brain'].map(name=>[name,new THREE.Group()]));
+ for(const model of Object.values(models))scene.add(model);
+ let target=null,preparing=false;const captured=[];
+ const renderer={extensions:{has:()=>false},toneMapping:THREE.ACESFilmicToneMapping,getPixelRatio:()=>1,getDrawingBufferSize:v=>v.set(200,200),getRenderTarget:()=>target,setRenderTarget:t=>{target=t;},setClearColor(){},compile(){},render(s){if(preparing)assert(target,'Focus preparation must not overwrite the displayed atlas');if(s===scene)captured.push(Object.keys(models).filter(key=>models[key].visible));}};
+ const density=new DensityReveal(),deferred=new DensityRenderer(renderer,scene,camera,models,density);
+ deferred.prime();const normalMaterials=deferred.materials.size;assert.equal(deferred.slots.length,7);
+ const slice=new THREE.Group();slice.visible=false;scene.add(slice);deferred.registerSlice(slice);const optional=deferred.slots.at(-1);let released=0;optional.target.addEventListener('dispose',()=>released++);
+ preparing=true;await deferred.prepareFocus(100);preparing=false;released=0;
+ assert.equal(target,null);assert.equal(slice.visible,false);assert(Object.entries(models).every(([key,m])=>m.visible===(key!=='slice')));
+ captured.length=0;deferred.focus=1;camera.position.x=.4;slice.visible=true;deferred.render(100);
+ assert.deepEqual(captured.map(names=>names.join()),['brain','slice'],'Hidden vessel passes should not be redrawn during the zoom');
+ deferred.focus=0;deferred.unregisterSlice();assert.equal(released,1);assert.equal(models.slice,undefined);assert.equal(deferred.slots.length,7);assert.equal(deferred.materials.size,normalMaterials);
+ deferred.render(100);assert.equal(target,null);deferred.dispose();density.dispose();
+});

@@ -1,8 +1,8 @@
 import {memo,useEffect,useRef,useState} from 'react';
-import {ArrowDown,ArrowUp,ArrowUpRight} from '@phosphor-icons/react';
+import {ArrowDown,ArrowUp,ArrowUpRight,ArrowRight} from '@phosphor-icons/react';
 import {EntryPhotos} from './EntryPhotos';
 
-export const SectionReader=memo(function SectionReader({section}) {
+export const SectionReader=memo(function SectionReader({section,onExplore}) {
   const reader=useRef(null),entries=useRef({}),[active,setActive]=useState(()=>section.items.some(i=>i.id===location.hash.slice(1))?location.hash.slice(1):section.items[0]?.id);
   const activeIndex=Math.max(0,section.items.findIndex(i=>i.id===active));
   function jump(id,behavior){
@@ -41,6 +41,7 @@ export const SectionReader=memo(function SectionReader({section}) {
         {section.items.map(item=><section id={item.id} key={item.id} ref={el=>{if(el)entries.current[item.id]=el;else delete entries.current[item.id];}} className="portfolio-entry" aria-labelledby={item.id+'-title'}>
           {item.period&&<p className="entry-period">{item.period}</p>}<h2 id={item.id+'-title'}>{item.title}</h2>{item.subtitle&&<p className="entry-subtitle">{item.subtitle}</p>}
           <p className="entry-summary">{item.summary}</p>
+          {item.experience&&onExplore&&<button className="experience-link" onClick={()=>onExplore(item.experience)}>Explore brain slice<ArrowRight size={17}/></button>}
           <EntryPhotos photos={item.photos} title={item.title}/>
           {item.tags?.length>0&&<ul className="entry-tags" aria-label="Topics and tools">{item.tags.map(tag=><li key={tag}>{tag}</li>)}</ul>}
           {item.body?.map(text=><p key={text} className="entry-body">{text}</p>)}

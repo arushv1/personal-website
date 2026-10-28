@@ -39,11 +39,13 @@ float densityAlpha(int layer,float organic,float structure,float r){
 export class DensityReveal{
  constructor(){
   this.materials=new Set();
-  this.uniforms={densityPeel:{value:0},densityPreviousDepth:{value:null},densityResolution:{value:new THREE.Vector2(1,1)},densityMajorOnly:{value:0},densityFar:{value:50},densityColorScale:{value:1}};
+  this.uniforms={densityPeel:{value:0},densityPreviousDepth:{value:null},densityResolution:{value:new THREE.Vector2(1,1)},densityMajorOnly:{value:0},densityFar:{value:50},densityColorScale:{value:1},brainSliceZ:{value:0},brainSliceHalf:{value:0},brainSliceHighlight:{value:0},brainSliceExtract:{value:0}};
  }
  install(material,name){
+  const previousCompile=name==='slice'?material.onBeforeCompile:null,previousKey=name==='slice'?material.customProgramCacheKey():'';
   material.transparent=false;material.alphaHash=false;material.alphaTest=0;material.depthWrite=true;material.blending=THREE.NoBlending;material.side=THREE.FrontSide;
-  material.onBeforeCompile=shader=>{
+  material.onBeforeCompile=(shader,renderer)=>{
+   previousCompile?.call(material,shader,renderer);
    Object.assign(shader.uniforms,this.uniforms);
    shader.vertexShader='attribute float revealDensity;attribute float revealField;varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;\n'+shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
     densityFieldValue=revealField;densityStructure=revealDensity;densityViewDepth=-mvPosition.z;`);
@@ -51,6 +53,19 @@ export class DensityReveal{
     uniform float densityPeel;uniform sampler2D densityPreviousDepth;uniform vec2 densityResolution;uniform float densityMajorOnly;uniform float densityFar;uniform float densityColorScale;
     varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;
     `+shader.fragmentShader;
+   if(name==='brain'){
+    shader.vertexShader='varying float brainSliceLocalZ;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbrainSliceLocalZ=position.z;');
+    shader.fragmentShader='varying float brainSliceLocalZ;uniform float brainSliceZ;uniform float brainSliceHalf;uniform float brainSliceHighlight;uniform float brainSliceExtract;\n'+shader.fragmentShader;
+    shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
+     if(brainSliceExtract>.001&&abs(brainSliceLocalZ-brainSliceZ)<brainSliceHalf*min(1.0,brainSliceExtract*3.0))discard;`);
+    shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`if(brainSliceHighlight>0.0){
+     float sliceBand=1.0-smoothstep(brainSliceHalf-.005,brainSliceHalf+.006,abs(brainSliceLocalZ-brainSliceZ));
+     float sliceEdge=1.0-smoothstep(.003,.010,abs(abs(brainSliceLocalZ-brainSliceZ)-brainSliceHalf));
+     outgoingLight=mix(outgoingLight,vec3(.95,.025,.015),sliceBand*.76*brainSliceHighlight);
+     outgoingLight+=vec3(.72,.012,.008)*sliceEdge*.8*brainSliceHighlight;
+    }
+    #include <opaque_fragment>`);
+   }
    shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',`#include <alphamap_fragment>
     if(densityMajorOnly>.5&&densityStructure<.62)discard;
     if(densityPeel>.5&&gl_FragCoord.z<=texture2D(densityPreviousDepth,gl_FragCoord.xy/densityResolution).r+.0000001)discard;`);
@@ -59,7 +74,7 @@ export class DensityReveal{
     densityFeatures=vec4(packedDepth,densityFieldValue,${name==='avatar'?'pow(1.0-abs(dot(normal,normalize(vViewPosition))),3.0)':'densityStructure'});
     gl_FragColor=vec4(gl_FragColor.rgb*densityColorScale,1.0);`);
   };
-  material.customProgramCacheKey=()=>`density-surface-v2-${name}`;this.materials.add(material);material.needsUpdate=true;
+  material.customProgramCacheKey=()=>`density-surface-v3-${name}${previousKey?'-'+previousKey:''}`;this.materials.add(material);material.needsUpdate=true;
  }
  dispose(){this.materials.clear();}
 }

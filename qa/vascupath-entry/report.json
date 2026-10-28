@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "width": 1536,
+      "before": {
+        "background": "rgb(223, 45, 39)",
+        "display": "inline-flex",
+        "height": 44,
+        "radius": "24px"
+      },
+      "after": {
+        "background": "rgb(223, 45, 39)",
+        "display": "inline-flex",
+        "height": 44,
+        "radius": "24px"
+      }
+    },
+    {
+      "width": 390,
+      "before": {
+        "background": "rgb(223, 45, 39)",
+        "display": "inline-flex",
+        "height": 44,
+        "radius": "24px"
+      },
+      "after": {
+        "background": "rgb(223, 45, 39)",
+        "display": "inline-flex",
+        "height": 44,
+        "radius": "24px"
+      }
+    }
+  ],
+  "errors": []
+}
