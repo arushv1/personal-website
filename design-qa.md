@@ -290,3 +290,8 @@ Main/production remain separate from this review preview.
 The entry button’s existing base/hover styles were inside the lazy explorer stylesheet, so the first visit rendered an unstyled text button; returning from the explorer left that stylesheet loaded. Moved those exact rules into the main stylesheet. No reader markup, copy, spacing values or transition code changed. Fresh production-build browser contexts at 1536px and 390px verified the explorer CSS was not loaded initially and the button was already a red 44px pill with a 24px radius; after opening/closing the explorer its computed styling was identical. No page errors occurred. `qa/vascupath-entry/` contains captures/report. Production build and packaging checks passed.
 
 **final result: passed**
+
+
+## October 28 — VascuPath release authorization
+
+Arush approved the first-visit button fix and the continuous brain-slice explorer at preview `8348154`, then explicitly requested pushing to main and Vercel. PR #5 releases this reviewed implementation. Release-preparation edits update documentation only; the approved application source/assets are unchanged. The preview’s GitHub Actions run `40789020303` and Vercel deployment succeeded. Check the resulting main commit’s Vercel status separately before claiming production deployment complete.

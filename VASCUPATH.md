@@ -1,8 +1,8 @@
-# VascuPath brain-slice prototype
+# VascuPath brain-slice explorer
 
 The project entry smoothly zooms from the current Projects view into a focused brain on the right, with research figures on the left. The vessel tree fades out so the brain is the visual focus. Select the coronal slice with the pointer, press Enter/Space on the canvas, or use **Explore the slice**. The slice moves to screen-left beside the cortex and opens a research-image inspector. **Back to brain** returns it; **Close** or Escape returns to the project reader by retracting the slab and reversing the same camera zoom to the preserved atlas view. Custom rotation, zoom and slider settings remain intact.
 
-This is a prototype on `codex/vascupath-brain-slice`, based on the approved density release `ba60076`. Production remains separate. The selected visual target is `reference/vascupath-brain-slice.png`; the supplied presentation’s actual figures take precedence over the generated concept imagery.
+Arush approved preview `8348154` on October 28 and requested release to main and Vercel through PR #5. The feature was built on `codex/vascupath-brain-slice`, based on the approved density release `ba60076`. Verify the main merge commit’s CI and Vercel status for release completion. The selected visual target is `reference/vascupath-brain-slice.png`; the supplied presentation’s actual figures take precedence over the generated concept imagery.
 
 ## Research figures
 
