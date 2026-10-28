@@ -47,3 +47,7 @@ The runtime applies the same illustrative head/neck registration to bone, arteri
 ## Decoder
 
 The bundled Draco decoder is from the Three.js distribution and is licensed under Apache-2.0. Three.js is MIT licensed.
+
+## Synthetic density display weights
+
+`density/bone.bin` and `density/arteries.bin` are separate per-vertex geometric thickness proxies derived from the corresponding optimized Z-Anatomy / BodyParts3D models. They preserve the source model ordering without modifying geometry. The same upstream attribution and applicable model license terms above apply. These display weights are not patient measurements, CT intensities or Hounsfield units. `density/manifest.json` records source hashes, counts and estimation statistics.

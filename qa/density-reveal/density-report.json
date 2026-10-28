@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "required states render; slider leaves geometry/registration/camera/lighting fixed and reuses surface buffers",
+    "100→0 rebuilds the exact same appearance as 0→100",
+    "no abrupt switch at labeled stops or the bone/cortex window boundary",
+    "forced repeated rendering is stable without frame-dependent speckling",
+    "organic reveal changes upper, middle and lower anatomy together",
+    "390px/320px controls, hotspots and density landmarks stay accessible without page overflow",
+    "RGBA8 fallback works when floating-point color buffers are unavailable"
+  ],
+  "metrics": {
+    "stopDifferences": {
+      "15": 0.9022783733197209,
+      "34": 0.12505615109749874,
+      "68": 0.8750136123872724,
+      "74": 0.009370427088650672,
+      "100": 0.0005104645227156713
+    },
+    "changedPixelsByVerticalThird": [
+      22588,
+      33114,
+      31381
+    ]
+  },
+  "errors": []
+}

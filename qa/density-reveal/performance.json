@@ -1,0 +1,60 @@
+[
+  {
+    "mode": "density",
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "frames": 54,
+    "mean": 103.83333333333333,
+    "median": 100.09999999776483,
+    "max": 367,
+    "cameraDrift": 0,
+    "captures": 0,
+    "float": true,
+    "dpr": 1
+  },
+  {
+    "mode": "density",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "frames": 54,
+    "mean": 51.52222222227741,
+    "median": 33.69999999925494,
+    "max": 301.80000000074506,
+    "cameraDrift": 0,
+    "captures": 0,
+    "float": true,
+    "dpr": 1
+  },
+  {
+    "mode": "?reveal=section",
+    "viewport": {
+      "width": 1366,
+      "height": 900
+    },
+    "frames": 54,
+    "mean": 381.5074074074488,
+    "median": 421.5,
+    "max": 912.3000000007451,
+    "cameraDrift": 0,
+    "captures": 0,
+    "dpr": 1
+  },
+  {
+    "mode": "?reveal=section",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "frames": 54,
+    "mean": 348.462962962963,
+    "median": 283.30000000074506,
+    "max": 1246.800000000745,
+    "cameraDrift": 0,
+    "captures": 0,
+    "dpr": 1
+  }
+]

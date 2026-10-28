@@ -97,14 +97,16 @@ test('shared head/neck registration stays continuous and does not fold or mirror
   assert(registerAnatomyPoint(0,-1,0)[1]<-.4,'Shoulder base must remain low rather than following the head lift');
 });
 
-test('production uses the aligned sectional reveal and retains the blend alternative', async () => {
+test('density preview is default and both prior reveal comparisons remain available', async () => {
   const {revealMode}=await import('../src/reveal.mjs');
   const {routeHref}=await import('../src/navigation.mjs');
-  assert.equal(revealMode(),'section');
+  assert.equal(revealMode(),'density');
   assert.equal(revealMode('?reveal=section'),'section');
   assert.equal(revealMode('?reveal=blend'),'blend');
-  assert.equal(revealMode('?reveal=unknown'),'section');
+  assert.equal(revealMode('?reveal=unknown'),'density');
+  assert.equal(revealMode('?reveal=density'),'density');
   assert.equal(routeHref('/research','?reveal=blend'),'/research?reveal=blend');
+  assert.equal(routeHref('/projects','?reveal=density'),'/projects?reveal=density');
 });
 
 test('portfolio sections, items, views and legacy links remain consistent', async () => {

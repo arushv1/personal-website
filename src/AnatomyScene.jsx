@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { damp, revealState, layerBlend, revealMode } from './reveal.mjs';
 import { followLink, routeHref } from './navigation.mjs';
 import { LayerBlendRenderer } from './LayerBlendRenderer.mjs';
+import { DensityReveal, attachDensityField } from './DensityReveal.mjs';
+import { DensityRenderer } from './DensityRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
 import { sections, sectionById, overviewView } from './content/portfolio.mjs';
 import { layoutHotspots } from './hotspots.mjs';
@@ -21,10 +23,11 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
     catch { setStatus('unsupported'); return; }
     let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasView = live.current.activeChapter||(live.current.exploring?'atlas':'home');
-    const sectional = revealMode(location.search)==='section';
+    const mode=revealMode(location.search),sectional=mode==='section';
+    const density=mode==='density'?new DensityReveal():null;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.65));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, density?(matchMedia('(max-width:760px)').matches?1.25:1.5):1.65));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
     const canvas = renderer.domElement;
@@ -40,7 +43,8 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     controls.enablePan = false; controls.minDistance = 2.5; controls.maxDistance = 10;
     controls.minPolarAngle = Math.PI * .18; controls.maxPolarAngle = Math.PI * .82;
     controls.rotateSpeed = .55; controls.zoomSpeed = .65; controls.autoRotateSpeed = .28; controls.update();
-    controls.addEventListener('start', () => { destination = null; live.current.onInteraction(); });
+    const cancelPendingView=()=>{destination=null;wasView=live.current.activeChapter||(live.current.exploring?'atlas':'home');};
+    controls.addEventListener('start', () => { cancelPendingView(); live.current.onInteraction(); });
     scene.add(new THREE.HemisphereLight(0xfff3dc, 0x302a27, 1.5));
     [[0xffeed7, 3.1, 4, 6, 7], [0xffffff, 1.5, -5, 2, 3], [0xf5e5cf, 2.2, 2, 4, -4]].forEach(([color,intensity,x,y,z]) => {
       const light = new THREE.DirectionalLight(color, intensity); light.position.set(x,y,z); scene.add(light);
@@ -51,6 +55,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       arteries: new THREE.MeshStandardMaterial({ color: '#bf0d09', roughness: .48, alphaHash: true, opacity: 0 }),
       brain: new THREE.MeshStandardMaterial({ color: '#bc796e', roughness: .88, alphaHash: true, opacity: 0 }),
     };
+    if(density){materials.bone.color.set('#d5c9b0');materials.bone.roughness=.5;materials.arteries.roughness=.34;materials.brain.roughness=.72;}
     const anatomy = new THREE.Group(); scene.add(anatomy);
     const avatarMaterials = new Set();
     const cutUniform = {value: revealState(currentReveal).cut};
@@ -58,6 +63,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     // Complementary section masks avoid blending two differently shaped faces.
     // Alpha hashing feathers only the narrow boundary and keeps depth-writing on.
     const section = (material, name) => {
+      if(density){density.install(material,name);return;}
       material.transparent=false; material.alphaHash=sectional; material.depthWrite=true;
       if(!sectional)return;
       material.onBeforeCompile=shader=>{
@@ -71,17 +77,28 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     for(const name of ['bone','arteries','brain']){section(materials[name],name);materials[name].opacity=1;}
     const models = {}, draco = new DRACOLoader().setDecoderPath('/draco/');
     const loader = new GLTFLoader().setDRACOLoader(draco); let completed = 0;
-    const blender=sectional?null:new LayerBlendRenderer(renderer,scene,camera,models);
+    const blender=mode==='blend'?new LayerBlendRenderer(renderer,scene,camera,models):null;
+    const densityRenderer=density?new DensityRenderer(renderer,scene,camera,models,density):null;
     Promise.all(Object.keys(materials).map(async name => {
-      const gltf = await loader.loadAsync(`/models/${name}.glb`);
+      const [gltf,weights]=await Promise.all([
+        loader.loadAsync(`/models/${name}.glb`),
+        density&&['bone','arteries'].includes(name)?fetch(`/models/density/${name}.bin`).then(async response=>{if(!response.ok)throw new Error('Density weights unavailable');return new Uint16Array(await response.arrayBuffer());}):null,
+      ]);
       if(cancelled){ gltf.scene.traverse(o => o.geometry?.dispose()); return; }
+      let offset=0;
       gltf.scene.traverse(o => { if(o.isMesh){
+        if(density){
+          const count=o.geometry.attributes.position.count;
+          if(weights){if(offset+count>weights.length)throw new Error('Density weight/mesh mismatch');o.geometry.setAttribute('revealDensity',new THREE.Uint16BufferAttribute(weights.subarray(offset,offset+count),1,true));offset+=count;}
+          else o.geometry.setAttribute('revealDensity',new THREE.Uint8BufferAttribute(new Uint8Array(count).fill(128),1,true));
+        }
         // Register every internal layer using the same coordinates/landmarks.
         if(name !== 'avatar'){
           const positions=o.geometry.attributes.position;
           for(let i=0;i<positions.count;i++)positions.setXYZ(i,...registerAnatomyPoint(positions.getX(i),positions.getY(i),positions.getZ(i)));
           positions.needsUpdate=true;o.geometry.computeVertexNormals();o.geometry.computeBoundingSphere();o.geometry.computeBoundingBox();
         }
+        if(density){o.updateWorldMatrix(true,false);attachDensityField(o.geometry,o.matrixWorld);}
         if(name === 'avatar'){
           for(const material of Array.isArray(o.material)?o.material:[o.material]){
             section(material,'avatar');material.side=THREE.FrontSide;avatarMaterials.add(material);
@@ -89,34 +106,37 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
         }else{o.material.dispose();o.material=materials[name];}
         o.renderOrder = 0;
       } });
+      if(weights&&offset!==weights.length)throw new Error('Unused density weights: model changed');
       gltf.scene.userData.sectionBounds=new THREE.Box3().setFromObject(gltf.scene);
       models[name] = gltf.scene; anatomy.add(gltf.scene); setProgress(++completed / 4);needsRender=true;
-    })).then(() => { if(!cancelled){ setStatus('ready'); live.current.onReady(); } }).catch(e => {
+    })).then(async () => { if(!cancelled){await densityRenderer?.prepare();if(!cancelled){needsRender=true;setStatus('ready');live.current.onReady();}} }).catch(e => {
       if(!cancelled){ console.error('Anatomy loading failed', e); setStatus('error'); }
     });
     const anchors=Object.fromEntries(sections.map(section=>[section.id,registerAnatomyPoint(...section.anchor)]));
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
     let needsRender=true,drawnReveal=-1;
+    if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;}};
     const resize = () => { const {width,height} = container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
     const reset = () => flyTo({position:start.toArray(),target:[0,.55,0]});
     const focusSection=id=>{const view=sectionById[id]?.view;if(view)flyTo(view);};
-    const rotate = d => { destination=null; live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0), d*.16); camera.position.copy(controls.target).add(offset); controls.update(); };
-    const zoom = d => { destination=null; live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).multiplyScalar(d>0?.9:1.1).clampLength(2.5,10); camera.position.copy(controls.target).add(offset); controls.update(); };
+    const rotate = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0), d*.16); camera.position.copy(controls.target).add(offset); controls.update(); };
+    const zoom = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).multiplyScalar(d>0?.9:1.1).clampLength(2.5,10); camera.position.copy(controls.target).add(offset); controls.update(); };
     const keydown = e => {
       if(['ArrowLeft','ArrowRight','+','=','-','Home'].includes(e.key))e.preventDefault();
       if(e.key==='ArrowLeft')rotate(-1); if(e.key==='ArrowRight')rotate(1);
       if(e.key==='+'||e.key==='=')zoom(1); if(e.key==='-')zoom(-1); if(e.key==='Home')live.current.onReset();
     };
     const stopMotion=()=>{
-      destination=null;controls.autoRotate=false;
+      cancelPendingView();controls.autoRotate=false;
       // Drain OrbitControls inertia while preserving this exact viewing angle.
       const position=camera.position.clone(),target=controls.target.clone();
       controls.enableDamping=false;controls.update(0);
       camera.position.copy(position);controls.target.copy(target);controls.update(0);
       controls.enableDamping=true;
+      if(completed===4)densityRenderer?.prime();
     };
     canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection};
     const render = time => {
@@ -174,13 +194,14 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
       if(viewChanged || Math.abs(drawnReveal-currentReveal)>.0001){
-        if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
+        if(densityRenderer)densityRenderer.render(currentReveal);
+        else if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
         else renderer.render(scene,camera);
         needsRender=false;drawnReveal=currentReveal;
         drawnPosition.copy(camera.position);drawnRotation.copy(camera.quaternion);
       }
     };frame=requestAnimationFrame(render);
-    return () => { cancelled=true;cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
+    return () => { cancelled=true;cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();densityRenderer?.dispose();density?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
   },[]);
   return <div className="anatomy-canvas" ref={host}>
     {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}
