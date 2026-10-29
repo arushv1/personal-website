@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "home and manual reveal hide hotspots; Explore the atlas reveals seven compact hotspots; controls retain 44px targets",
+    "all seven sections, distinct structure views, layer presets and selected hotspots",
+    "project index, previous/next and native wheel scroll preserve page and camera",
+    "button and keyboard reset slider + camera; current-section hotspot reselects preset without history spam",
+    "direct item links/refresh, section history/new tabs and legacy-route migration",
+    "updated contact details, dialogs and keyboard section focus",
+    "desktop/short laptop/390/320 layouts; mobile item navigation, 3D jump and pan-y",
+    "adding a fourth project in the content array automatically builds the index and reader",
+    "blend alternative retains mode, assets load, unknown routes recover and returning home hides hotspots"
+  ],
+  "errors": [],
+  "fixtureVerified": true
+}

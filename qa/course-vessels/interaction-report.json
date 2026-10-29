@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "direct Courses entry opens only the design branch and shows both supplied design courses, three branches and four works",
+    "branch toggles are compact; selecting a course reveals its detail and both linked works without changing the atlas pose",
+    "work selection highlights every supporting branch, lists all related courses and lets hidden-branch course chips reopen the right branch",
+    "the native catalogue contains all 13 courses; an unconnected course remains browseable and hashes survive refresh and browser Back/Forward",
+    "View project is a native modified-clickable link to the exact item, preserves reveal comparison and returns through browser history",
+    "the original atlas retains pointer orbit, wheel, keyboard and visible zoom controls; course selection leaves its pose untouched",
+    "390px and 320px layouts fit without horizontal overflow, keep 44px controls and native mobile scrolling, and honor reduced motion without looping vessel animation"
+  ],
+  "errors": []
+}
