@@ -304,3 +304,6 @@ Arush requested moving the large headline and avatar closer to the center. The d
 Production-build browser captures were inspected at 1697×1058, 1536×1024, 1366×768, 1024×768, 390×844 and 320×800. The desktop hero is horizontally centered, columns do not overlap, the opening action fits the viewport, and no size has horizontal overflow. Projects still loads its seven hotspots. No page errors were recorded. Build and packaging checks passed. `qa/home-centered/` contains before/after, laptop/mobile captures and bounding-box results. Cloud captures use the Arial fallback while external font requests are blocked. No actionable P0/P1/P2 findings remain for this scoped layout update.
 
 **final result: passed**
+
+
+Centered-opening release: Arush approved preview `99846dd` and explicitly requested publishing it to main and Vercel via PR #6. Its GitHub Actions run `40793167333` and Vercel preview deployment passed. Release preparation changes documentation only; the approved CSS is unchanged. Verify Vercel on the resulting main merge commit before reporting production deployment complete.
