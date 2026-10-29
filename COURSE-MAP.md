@@ -1,6 +1,6 @@
-# Courses vessel-map preview
+# Courses vessel map
 
-This working preview replaces the Courses list with a selectable course-to-work map, based on `reference/course-vessels.png`. The existing anatomical model remains real and interactive. Main/production remain separate pending review.
+This feature replaces the Courses list with a selectable course-to-work map, based on `reference/course-vessels.png`. The existing anatomical model remains real and interactive. Arush approved preview `0e64585` on October 29 and requested release to main and Vercel through PR #7. Release preparation changes documentation only; verify the main merge commit's Vercel status before reporting deployment complete.
 
 ## Content
 

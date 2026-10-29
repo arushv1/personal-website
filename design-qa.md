@@ -310,7 +310,7 @@ Centered-opening release: Arush approved preview `99846dd` and explicitly reques
 
 ## October 28 — Courses vessel-map working preview
 
-Visual target: `reference/course-vessels.png`, the selected 1536×1024 generated concept. The existing licensed anatomy/model and section view remain authoritative over the mock’s generated skull. The working map lives in the existing `/courses` route; main/production remain unchanged pending review.
+Visual target: `reference/course-vessels.png`, the selected 1536×1024 generated concept. The existing licensed anatomy/model and section view remain authoritative over the mock’s generated skull. The map lives in the existing `/courses` route. This QA initially covered the separate preview; the approved release is recorded below.
 
 **Comparison and findings**
 
@@ -333,6 +333,8 @@ Source and implementation were inspected directly and together at1536×1024 CSS 
 
 Production build, packaging, existing regressions and three new data integrity checks passed. All seven course-map browser groups passed with no unexpected warnings/errors: default branch, course/work bidirectional selection and full supporting-course chips; native catalogue, focus, direct hashes/refresh/Back/Forward; native project links/new tabs/query preservation; unchanged atlas pose/layer during selection; actual orbit/wheel/keyboard/button controls; responsive targets/overflow and reduced motion. All nine existing atlas browser groups also passed. Reports are `qa/course-vessels/interaction-report.json` and `atlas-report.json`. React review checked isolated local selection state, effect cleanup, stable content IDs, keyboard/button semantics and resize-driven paths without a continuous layout loop. Physical-device GPU performance remains unmeasured; course connection copy is deliberately proposed for review.
 
-Implementation checklist: selected reference retained; all supplied course content added once; core course↔work interaction and routes exercised; desktop primary-action findings fixed and recaptured; phone/reduced-motion checks passed; preview kept separate from production.
+Implementation checklist: selected reference retained; all supplied course content added once; core course↔work interaction and routes exercised; desktop primary-action findings fixed and recaptured; phone/reduced-motion checks passed; preview kept separate from production during review.
+
+October 29 release authorization: Arush approved preview `0e64585` and explicitly requested pushing to main and Vercel via PR #7. Its GitHub Actions run `40803547048` and Vercel preview deployment passed. Release preparation changes documentation only; the tested application source and assets are unchanged. Verify the resulting main merge commit's Vercel status separately before reporting deployment complete.
 
 **final result: passed**
