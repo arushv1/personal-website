@@ -307,3 +307,34 @@ Production-build browser captures were inspected at 1697×1058, 1536×1024, 1366
 
 
 Centered-opening release: Arush approved preview `99846dd` and explicitly requested publishing it to main and Vercel via PR #6. Its GitHub Actions run `40793167333` and Vercel preview deployment passed. Release preparation changes documentation only; the approved CSS is unchanged. Verify Vercel on the resulting main merge commit before reporting production deployment complete.
+
+## October 28 — Courses vessel-map working preview
+
+Visual target: `reference/course-vessels.png`, the selected 1536×1024 generated concept. The existing licensed anatomy/model and section view remain authoritative over the mock’s generated skull. The map lives in the existing `/courses` route. This QA initially covered the separate preview; the approved release is recorded below.
+
+**Comparison and findings**
+
+- [P2, fixed] The first desktop implementation preserved the old reader’s tall header, placing the default connection action below the initial viewport (detail top877, View project around1106). The Courses-only header/grid now use the available width, omit the redundant eyebrow, use compact course labels with full titles in accessible names/detail/catalogue, and keep one branch open. The refined default action fits within1024px.
+- [P2, fixed] Focused card comparison showed the initial text-only View project action weaker than the selected concept’s primary action. It now uses the site’s red action treatment and a44px target; the final desktop capture measures its bottom989.625px, inside the1024px viewport.
+- Catalogue selection now focuses/returns the selected course to the map, including on mobile. Branch source ports track measured header centers so vessels remain aligned when cards expand. The initially overstrict software-browser orbit-settle assertion was corrected to use the app’s visible Reset control; native orbit, wheel and keyboard zoom work.
+- No remaining actionable P0/P1/P2 findings. The live diagram uses a sparse set of tapered, data-backed SVG connections, retaining readable relationships as content changes. The generated concept’s dense ornamental branches and annotation footer are omitted. The actual anatomy, hotspots and controls remain interactive; its existing source meshes/preset differ from the generated concept. These are intentional integration constraints, rather than new anatomical assets.
+
+**Evidence and required fidelity surfaces**
+
+Source and implementation were inspected directly and together at1536×1024 CSS pixels/DPR1. `qa/course-vessels/comparison.jpg` is the refined comparison (each half768×512 plus a24px label strip); `comparison-final.jpg` contains the source on the left and final viewport on the right at equal768×512 scaling. `detail-comparison.jpg` records the initial primary-action finding; `detail-comparison-final.jpg` compares the selected card regions at650px width each. `default-desktop-viewport.jpg`, course/work/catalogue states and390/320px full-page captures show the actual browser implementation.
+
+- Typography: inherits the existing Inter/Arial system; deterministic cloud captures block external font requests and use Arial. Display headings, compact node labels, codes and detail text maintain the established hierarchy. Full source titles and affiliations remain visible in the detail/catalogue and accessible names.
+- Layout/spacing: a stable two-sided network in the left panel, one open learning branch, four work endpoints and a detail card. The default desktop action fits the viewport; native scrolling accommodates longer selections. On phones the map stays in two columns and the existing anatomy remains below. No horizontal overflow at390/320px; visible controls have44px targets.
+- Colors/tokens: existing black/white/gray palette and `--red`. Selected courses/work use red borders, colored source/end ports and tapered red paths. Unrelated connections remain visible in subdued tones. Selection is also conveyed in words, badges and pressed/expanded states.
+- Assets: standard Phosphor icons, genuine existing Three.js anatomy, and functional measured SVG paths. No replacement anatomy raster, custom decorative asset or additional model load was introduced. Source GLBs, registration and renderer are unchanged.
+- Content: all13 supplied courses are represented, ENGBE209 stays single, and BME160 retains UCSC. Work nodes resolve to three existing projects and the existing BCI publication. Proposed relationships use exploratory wording; no grades, completion dates, performance ratings or unverified personal contribution claims were added. Thermodynamics remains browseable with a broader-foundation state.
+
+**Verification**
+
+Production build, packaging, existing regressions and three new data integrity checks passed. All seven course-map browser groups passed with no unexpected warnings/errors: default branch, course/work bidirectional selection and full supporting-course chips; native catalogue, focus, direct hashes/refresh/Back/Forward; native project links/new tabs/query preservation; unchanged atlas pose/layer during selection; actual orbit/wheel/keyboard/button controls; responsive targets/overflow and reduced motion. All nine existing atlas browser groups also passed. Reports are `qa/course-vessels/interaction-report.json` and `atlas-report.json`. React review checked isolated local selection state, effect cleanup, stable content IDs, keyboard/button semantics and resize-driven paths without a continuous layout loop. Physical-device GPU performance remains unmeasured; course connection copy is deliberately proposed for review.
+
+Implementation checklist: selected reference retained; all supplied course content added once; core course↔work interaction and routes exercised; desktop primary-action findings fixed and recaptured; phone/reduced-motion checks passed; preview kept separate from production during review.
+
+October 29 release authorization: Arush approved preview `0e64585` and explicitly requested pushing to main and Vercel via PR #7. Its GitHub Actions run `40803547048` and Vercel preview deployment passed. Release preparation changes documentation only; the tested application source and assets are unchanged. Verify the resulting main merge commit's Vercel status separately before reporting deployment complete.
+
+**final result: passed**

@@ -80,3 +80,8 @@ The optional `tests/browser-scene.cjs` test checks full-motion camera interrupti
 ## VascuPath research explorer
 
 The VascuPath item's `experience: 'brain-slice'` enables its interactive entrance. Research figures are defined separately in `src/content/vascupath.mjs`, with their original files under `public/vascupath/`. Use a shared `viewGroup` only for aligned images of the same tissue section. See [VASCUPATH.md](VASCUPATH.md) for the full editing guide and the distinction between the illustrative anatomy and supplied research figures.
+
+
+### Courses vessel map
+
+The Courses preview uses the same `courses.items` content plus a small relationship manifest in `src/content/course-map.mjs`. Add course titles/codes/affiliations to `portfolio.mjs`, assign their IDs to a branch, and add proposed work connections in the manifest. Compact labels are optional; full titles remain in the detail and catalogue. See `COURSE-MAP.md` for examples and relationship rules.
