@@ -295,3 +295,12 @@ The entry button’s existing base/hover styles were inside the lazy explorer st
 ## October 28 — VascuPath release authorization
 
 Arush approved the first-visit button fix and the continuous brain-slice explorer at preview `8348154`, then explicitly requested pushing to main and Vercel. PR #5 releases this reviewed implementation. Release-preparation edits update documentation only; the approved application source/assets are unchanged. The preview’s GitHub Actions run `40789020303` and Vercel deployment succeeded. Check the resulting main commit’s Vercel status separately before claiming production deployment complete.
+
+
+## October 28 — centered opening composition
+
+Arush requested moving the large headline and avatar closer to the center. The desktop home hero is now auto-centered at `min(88%,1280px)` with no extra copy inset; the subtitle can wrap at narrower widths. The canvas remains real, interactive 3D with the existing camera, framing logic and controls. Exploration layouts and the mobile stack retain their existing CSS.
+
+Production-build browser captures were inspected at 1697×1058, 1536×1024, 1366×768, 1024×768, 390×844 and 320×800. The desktop hero is horizontally centered, columns do not overlap, the opening action fits the viewport, and no size has horizontal overflow. Projects still loads its seven hotspots. No page errors were recorded. Build and packaging checks passed. `qa/home-centered/` contains before/after, laptop/mobile captures and bounding-box results. Cloud captures use the Arial fallback while external font requests are blocked. No actionable P0/P1/P2 findings remain for this scoped layout update.
+
+**final result: passed**
