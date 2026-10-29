@@ -73,3 +73,10 @@
 
 /* Project entry controls must be styled before the explorer is lazy-loaded. */
 .experience-link{display:inline-flex;align-items:center;gap:12px;min-height:44px;margin-top:17px;padding:10px 17px;background:var(--red);border-radius:24px;font-size:13px;font-weight:550}.experience-link:hover{background:#bf241f}
+
+/* Bring the opening headline and portrait into one centered composition. */
+@media(min-width:761px){
+ .site-shell:not(.is-exploring) .hero{width:min(88%,1280px);margin-inline:auto}
+ .site-shell:not(.is-exploring) .hero-copy{padding-left:0}
+ .site-shell:not(.is-exploring) .hero-subtitle{white-space:normal}
+}
