@@ -54,22 +54,43 @@ export const sections = [
         subtitle:'Health AI Engineering Intern',
         period:'May 2026 – Present',
         summary:'Building and evaluating 3D CTA segmentation for vascular-therapies medical imaging.',
-        tags:['Medical imaging','Deep learning','CTA'],
-        highlights:['Developed a segmentation pipeline reaching mean artery Dice 0.87 and clDice 0.94.','Benchmarked model variants, loss functions, attention mechanisms, and foundation-model fine-tuning.','Co-invented patent-pending imaging technology and presented technical findings to leadership.']},
+        tags:['Medical Imaging','Deep Learning','CT/CTA', '3D Slicer'],
+        highlights:[
+          'Developed a segmentation pipeline reaching mean artery Dice 0.87 and clDice 0.94.',
+          'Benchmarked model variants, loss functions, attention mechanisms, and foundation-model fine-tuning.',
+          'Co-invented patent-pending imaging technology and presented technical findings to leadership.'
+        ]},
       {id:'tian-lab',
         title:'Tian Lab',
         subtitle:'Undergraduate Deep Learning Researcher',
         period:'September 2025 – Present',
         summary:'Computational imaging research on vascular features in brain tissue.',
-        tags:['Histopathology','QuPath','Whole-slide imaging'],
-        highlights:['Curating 2,500+ annotated tissue patches from 40+ whole-slide images and a diagnosis manifest of 760+ slides.','Introduced multi-resolution viewing and scripted tile extraction to streamline dataset curation.']},
+        tags:['Digital Pathology','QuPath','Whole-slide imaging', 'PyTorch', 'Attention Mechanisms'],
+        highlights:[
+          'Curating 2,500+ annotated tissue patches from 40+ whole-slide images and a diagnosis manifest of 760+ slides.',
+          'Introduced multi-resolution viewing and scripted tile extraction to streamline dataset curation.'
+        ]},
       {id:'btec',
         title:'BTEC',
         subtitle:'Lab Assistant · Boston University',
         period:'September 2025 – Present',
         summary:'Supporting the Bioengineering Technology & Entrepreneurship Center with retrieval tools and research resources.',
-        tags:['RAG','Knowledge systems','Evaluation'],
-        highlights:['Maintain a retrieval knowledge base spanning 1,800+ documents across 12 subject areas.','Prepare resources for retrieval and benchmark answer accuracy against real assistant queries.']},
+        tags:['RAG','Biomedical Instrumentation','Evaluation'],
+        highlights:[
+          'Maintain a retrieval knowledge base spanning 1,800+ documents across 12 subject areas.',
+          'Prepare resources for retrieval and benchmark answer accuracy against real assistant queries.'
+        ]},
+      {id:'albro-lab',
+        title:'Albro Lab',
+        subtitle:'Undergraduate Researcher',
+        period:'December 2024 – May 2025',
+        summary:'Developing computational models to simulate biochemical degradation in tissue.',
+        tags:['Raman Spectroscopy','MATLAB','Cell Culture', 'GAG Assays'],
+        highlights:[
+          'Developed a multi-scale computational model in MATLAB that models how cartilage breaks down under inflammatory conditions, using 9 coupled partial differential equations in cylindrical coordinates that simulate biochemical degradation',
+          'Prepare resources for retrieval and benchmark answer accuracy against real assistant queries.',
+          'Performed glycosaminoglycan (GAG) assays on 30+ tissue samples and conducted 2D cell culture studies to detect cell pathways'
+        ]}
     ],
   },
   {
@@ -87,7 +108,12 @@ export const sections = [
         summary:'An AI pipeline for detecting and quantifying vascular changes in gigapixel brain slides. Funded by Boston University\'s Undergraduate Reserarch Program (UROP).',
         tags:['Python','PyTorch','QuPath','OpenSlide','MLflow'],
         body:['A shared neuropathology foundation backbone feeds stain and vessel prediction heads, supporting feature extraction across hundreds of slides.'],
-        highlights:['Reached 99.6% stain classification and 96.7% vessel detection accuracy on 500 test patches.','Reduced per-slide inference time from 5–6 minutes to 1–2 minutes.','Built attention-based multiple-instance learning models for disease-pattern analysis.']},
+        highlights:[
+          'Reached 99.6% stain classification and 96.7% vessel detection accuracy on 500 test patches.',
+          'Reduced per-slide inference time from 5–6 minutes to 1–2 minutes.',
+          'Built attention-based multiple-instance learning models for disease-pattern analysis.'
+        ]
+      },
       {id:'threshold',
         photos:[{src:'/photos/projects/threshold/home.webp',width:1411,height:984,alt:'Threshold home page with the headline Fair eligibility. More possibility. and a patient receiving care.',caption:'Threshold — cancer trial access in Massachusetts.'}],
         title:'Threshold',
@@ -96,7 +122,11 @@ export const sections = [
         summary:'An eligibility linter and patient-trial matcher that makes restrictive criteria easier to examine.',
         tags:['Python','TypeScript','Next.js','Claude API', 'Vercel'],
         body:['Combines ClinicalTrials.gov, CDC PLACES, and MassGIS environmental-justice data to explore which communities trial criteria may exclude.'],
-        highlights:['Covers 1,011 recruiting Massachusetts cancer trials.','Extracted 3,839 restrictions and verified them word for word against source text.','Evaluated against human-labeled trials, with 0.97 precision and 0.94 F1.'],
+        highlights:[
+          'Covers 1,011 recruiting Massachusetts cancer trials.',
+          'Extracted 3,839 restrictions and verified them word for word against source text.',
+          'Evaluated against human-labeled trials, with 0.97 precision and 0.94 F1.'
+        ],
         links: [{label: 'View the live app', href:'https://patient-eligibility-linter.vercel.app/' }, {label: 'View the DevPost', href:'https://devpost.com/software/stageshare?_gl=1*8icc1a*_gcl_au*MjA1OTc3NDEwMC4xNzkyODY3MTU5*_ga*NDE5MTEyMjY1LjE3OTI4NjcxNTk.*_ga_0YHJK3Y10M*czE3OTMwMzkyNjIkbzkkZzEkdDE3OTMwMzkyNzkkajQzJGwwJGgw'}]},
       {id:'symptomai',
         photos:[{src:'/photos/projects/symptomai/home.webp',width:526,height:388,alt:'SymptomAI home page with the headline Understand Your Symptoms with Intelligent Analysis and a Start Symptom Check button.',caption:'SymptomAI — symptom-based disease prediction.'}],
@@ -106,7 +136,10 @@ export const sections = [
         summary:'Exploring overlapping symptoms and the challenge of distinguishing between possible conditions.',
         tags:['Python','Flask','React','PyTorch'],
         body:['A disease prediction system that takes symptom inputs and returns the three most likely conditions. A convolutional neural network models interactions across symptoms.'],
-        highlights:['Designed around 328 symptom inputs and 773 disease classes.','Built a model-training and prediction workflow with GPU acceleration and early stopping.'],
+        highlights:[
+          'Designed around 328 symptom inputs and 773 disease classes.',
+          'Built a model-training and prediction workflow with GPU acceleration and early stopping.'
+        ],
         links: [{label: 'View the Devpost', href:'https://devpost.com/software/symptomai-1g07ih'}]},
     ],
   },
@@ -150,7 +183,7 @@ export const sections = [
         photos:[{src:'/photos/awards/public-health-equity/presentation.webp',width:726,height:613,alt:'Public Health Equity Hackathon presentation showing a Cross-Tabulation Analysis slide on housing stability and suicidal ideation.',caption:'Public Health Equity Hackathon · 1st Place Overall.'}],
         title:'Hackathon for Public Health Equity | BU School of Public Health',
         subtitle:'1st Place · Overall',
-        period:'May 2024',
+        period:'May 2025',
         summary:'Awarded 1st place for a team analysis and presentation using 2023 Youth Risk Behavior Surveillance System data to examine the association between housing instability and suicidal ideation among U.S. adolescents, applying chi-square tests and logistic regression in RStudio.'},
     ],
   },
