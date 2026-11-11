@@ -1,3 +1,40 @@
+# Design QA — content and scan interactions (November 10, 2026, preview branch)
+
+Scope: `claude/content-and-scan-interactions`. Checked against the local Vite server in headless Chrome with software WebGL (SwiftShader). This establishes states, layout and behavior; it does not establish frame rate on real hardware.
+
+## Findings
+
+No open P0/P1/P2 findings. Four issues were found and fixed during verification:
+
+- Deep links to an entry below a long write-up (for example `/projects#symptomai`) intermittently landed in the wrong place, which made `browser-photos` fail about half the time. Entries used `content-visibility: auto` with a 380px height estimate, so real heights arrived after the jump. Entries now lay out at their real height; the suite then passed 12 runs in a row.
+
+- The course catalog text pushed "View project" below the fold at 1366 × 768, failing an existing course-map check. The text now sits below the link.
+- With long write-ups, the item index could mark the wrong entry, because the reader scrolled a long way without crossing an observer threshold. Position is now also tracked from scroll events.
+- Corner readouts were hard to read where the model passed behind them. They now carry a dark text shadow.
+
+## Evidence (`qa/scan-interactions/`)
+
+- `intro-you.jpg`, `intro-bone.jpg`, `intro-vessels.jpg`, `intro-within.jpg`: the opening at each layer, 1366 × 768. Headline and model stay pinned; captions read Structure, Flow, Ideas; no hotspots appear.
+- `intro-phone-390.jpg`, `intro-phone-320.jpg`: the pinned model with its caption overlay and controls inside the phone viewport.
+- `hover-preview.jpg`: Publications hovered on the atlas: halo on its anchor, `PREVIEW · POSTERIOR CORTEX` readout, camera about 10° from rest.
+- `writeup.jpg`, `glossary.jpg`, `poster-zoomed.jpg`, `course-catalog.jpg`, `atlas-now.jpg`: the new content.
+- `report.json`: the 11 passing browser checks and an empty error list.
+
+## Checks
+
+- Build, 4 packaging tests and 34 regression tests pass (6 new in `tests/interactions.test.mjs`).
+- `tests/browser-interactions.cjs`: wheel scrolls rather than zooms on home while Ctrl+wheel zooms; the portrait does not move while pinned; slider keys, layer buttons and Reset agree with the page position without drift; readouts match the scene and orientation letters turn with the model; previews stay within 11° and return exactly; labels do not move under the pointer; Escape closes the poster viewer without leaving Publications; reduced motion has no scroll track and no preview camera movement; 390 and 320 px have no horizontal overflow and the header fits.
+- Existing suites: `browser-smoke`, `browser-course-map`, `browser-density`, `browser-photos` and `browser-scene` pass every functional check. In this environment the first three then trip their final console-warning assertion on a GL driver `ReadPixels` message produced by screenshots, and `browser-vascupath` times out sampling a mid-transition frame. Both occur identically on untouched `main`.
+- Also viewed: 900 × 700 (two-column tablet), 320 × 568, the end of the scroll track with the footer, and the atlas page with the Now strip.
+
+## Not verified
+
+- Scroll smoothness and GPU load on a physical phone.
+- Safari and Firefox. Sticky positioning, native dialogs and `findLastIndex` are standard, but only Chrome was run.
+- The poster's letterforms against PowerPoint's own rendering (see `public/posters/README.md`).
+
+---
+
 # Design QA — Arush's real 3D avatar
 
 ## Findings

@@ -8,21 +8,24 @@ import { DensityRenderer, densityPixelRatio } from './DensityRenderer.mjs';
 import { registerAnatomyPoint } from './registration.mjs';
 import { sections, sectionById, overviewView } from './content/portfolio.mjs';
 import { layoutHotspots } from './hotspots.mjs';
+import { scanReadout, peekPose } from './scan.mjs';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
-  const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({}), leaders=useRef({}), dots=useRef({});
+  const host = useRef(null), engine = useRef(null), live = useRef(props), markers = useRef({}), leaders=useRef({}), dots=useRef({}), scan=useRef({});
   const [status, setStatus] = useState('loading'), [progress, setProgress] = useState(0);
   live.current = props;
-  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id), getView:()=>engine.current?.getView(), getCanvas:()=>engine.current?.canvas, setFocusViewport:value=>engine.current?.setFocusViewport(value), startBrainSlice:options=>engine.current?.startBrainSlice(options), extractBrainSlice:value=>engine.current?.brainSlice?.extract(value), closeBrainSlice:options=>engine.current?.closeBrainSlice(options), abortBrainSlice:()=>engine.current?.abortBrainSlice(), focusZoom:direction=>engine.current?.brainSlice?.zoom(direction), focusReset:()=>engine.current?.brainSlice?.reset(), focusRotate:(x,y)=>engine.current?.brainSlice?.rotate(x,y), hitBrainSlice:(x,y)=>engine.current?.hitBrainSlice(x,y) }), []);
+  useImperativeHandle(ref, () => ({ reset: () => engine.current?.reset(), zoom: d => engine.current?.zoom(d), stopMotion: () => engine.current?.stopMotion(), focusSection: id=>engine.current?.focusSection(id), getView:()=>engine.current?.getView(), getCanvas:()=>engine.current?.canvas, setFocusViewport:value=>engine.current?.setFocusViewport(value), startBrainSlice:options=>engine.current?.startBrainSlice(options), extractBrainSlice:value=>engine.current?.brainSlice?.extract(value), closeBrainSlice:options=>engine.current?.closeBrainSlice(options), abortBrainSlice:()=>engine.current?.abortBrainSlice(), focusZoom:direction=>engine.current?.brainSlice?.zoom(direction), focusReset:()=>engine.current?.brainSlice?.reset(), focusRotate:(x,y)=>engine.current?.brainSlice?.rotate(x,y), hitBrainSlice:(x,y)=>engine.current?.hitBrainSlice(x,y), preview:id=>engine.current?.preview(id) }), []);
   useEffect(() => {
     const container = host.current;
     let renderer;
     try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
     catch { setStatus('unsupported'); return; }
     let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasView = live.current.activeChapter||(live.current.exploring?'atlas':'home');
+    // Hover preview: `peek` remembers the pose to return to; labels hold still meanwhile.
+    let peek=null,frozenLabels=null,lastLabels=null,previewId=null,labelsDirty=false;
     const mode=revealMode(location.search),sectional=mode==='section';
     const density=mode==='density'?new DensityReveal():null;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -38,12 +41,15 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const start = new THREE.Vector3(2.1, 1.3, 6.7); camera.position.copy(start);
     const initialView=sectionById[live.current.activeChapter]?.view||(live.current.exploring?overviewView:null);
     if(initialView)camera.position.fromArray(initialView.position);
+    // The scroll-driven opening needs plain wheel scrolling to reach the page.
+    // Ctrl/⌘ + wheel (and trackpad pinch, which reports ctrlKey) still zooms.
+    canvas.addEventListener('wheel',event=>{controls.enableZoom=live.current.wheelZoom!==false||event.ctrlKey||event.metaKey;},{capture:true,passive:true});
     const controls = new OrbitControls(camera, canvas);
     controls.target.fromArray(initialView?.target||[0,.55,0]); controls.enableDamping = true; controls.dampingFactor = 0.075;
     controls.enablePan = false; controls.minDistance = 2.5; controls.maxDistance = 10;
     controls.minPolarAngle = Math.PI * .18; controls.maxPolarAngle = Math.PI * .82;
     controls.rotateSpeed = .55; controls.zoomSpeed = .65; controls.autoRotateSpeed = .28; controls.update();
-    const cancelPendingView=()=>{destination=null;wasView=live.current.activeChapter||(live.current.exploring?'atlas':'home');};
+    const cancelPendingView=()=>{destination=null;if(peek||frozenLabels){peek=null;frozenLabels=null;labelsDirty=true;}wasView=live.current.activeChapter||(live.current.exploring?'atlas':'home');};
     controls.addEventListener('start', () => { cancelPendingView(); live.current.onInteraction(); });
     scene.add(new THREE.HemisphereLight(0xfff3dc, 0x302a27, 1.5));
     [[0xffeed7, 3.1, 4, 6, 7], [0xffffff, 1.5, -5, 2, 3], [0xf5e5cf, 2.2, 2, 4, -4]].forEach(([color,intensity,x,y,z]) => {
@@ -117,11 +123,28 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
     let needsRender=true,drawnReveal=-1,lastRevealTarget=live.current.reveal,brainSlice=null,focusViewport=null,focusGeneration=0;
     if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;},get brainSlice(){return brainSlice;}};
-    const resize = () => { const {width,height} = focusViewport||container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
+    const resize = () => { const {width,height} = focusViewport||container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;frozenLabels=null;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
     const reset = () => flyTo({position:start.toArray(),target:[0,.55,0]});
     const focusSection=id=>{const view=sectionById[id]?.view;if(view)flyTo(view);};
+    const baseRadius=start.distanceTo(new THREE.Vector3(0,.55,0));
+    // Hovering or focusing a section label glows its anchor and eases the camera a
+    // few degrees toward that section's view. Leaving returns to the stored pose;
+    // selecting, orbiting, zooming or scrubbing cancels the peek instead.
+    const preview=id=>{
+      id=id||null;if(id===previewId)return;
+      markers.current[previewId]?.classList.remove('is-previewing');
+      previewId=id;
+      markers.current[previewId]?.classList.add('is-previewing');
+      if(reduced||brainSlice||completed<4||!live.current.exploring||(destination&&!destination.peek))return;
+      const view=previewId&&previewId!==live.current.activeChapter?sectionById[previewId]?.view:null;
+      if(view){
+        if(!peek){peek={position:camera.position.toArray(),target:controls.target.toArray()};frozenLabels=lastLabels;}
+        const pose=peekPose(peek,view);
+        destination={camera:new THREE.Vector3().fromArray(pose.position),target:new THREE.Vector3().fromArray(pose.target),peek:true};
+      }else if(peek)destination={camera:new THREE.Vector3().fromArray(peek.position),target:new THREE.Vector3().fromArray(peek.target),peek:true,returning:true};
+    };
     const rotate = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).applyAxisAngle(new THREE.Vector3(0,1,0), d*.16); camera.position.copy(controls.target).add(offset); controls.update(); };
     const zoom = d => { cancelPendingView(); live.current.onInteraction(); const offset=camera.position.clone().sub(controls.target).multiplyScalar(d>0?.9:1.1).clampLength(2.5,10); camera.position.copy(controls.target).add(offset); controls.update(); };
     const keydown = e => {
@@ -167,13 +190,14 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       const rect=canvas.getBoundingClientRect();slicePointer.set((x-rect.left)/rect.width*2-1,-(y-rect.top)/rect.height*2+1);raycaster.setFromCamera(slicePointer,camera);
       return Boolean(brainSlice.sliceTarget&&raycaster.intersectObject(brainSlice.sliceTarget,false).length||brainSlice.slab?.visible&&raycaster.intersectObject(brainSlice.slab,true).length);
     };
-    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection,getView,canvas,startBrainSlice,closeBrainSlice,abortBrainSlice,hitBrainSlice,setFocusViewport:value=>{if(!value&&!focusViewport)return;if(value&&focusViewport&&value.width===focusViewport.width&&value.height===focusViewport.height)return;focusViewport=value;resize();},get brainSlice(){return brainSlice;}};
+    canvas.addEventListener('keydown',keydown); engine.current={reset,zoom,stopMotion,focusSection,preview,getView,canvas,startBrainSlice,closeBrainSlice,abortBrainSlice,hitBrainSlice,setFocusViewport:value=>{if(!value&&!focusViewport)return;if(value&&focusViewport&&value.width===focusViewport.width&&value.height===focusViewport.height)return;focusViewport=value;resize();},get brainSlice(){return brainSlice;}};
     const render = time => {
       if(cancelled)return; frame=requestAnimationFrame(render); if(time-last<1000/60-1)return;
       const elapsed=Math.max(0,(time-last)/1000),dt=Math.min(elapsed,.1);last=time;const p=live.current;
       const viewKey=p.activeChapter||(p.exploring?'atlas':'home');
       if(viewKey!==wasView){
         wasView=viewKey;
+        markers.current[previewId]?.classList.remove('is-previewing');previewId=null;
         if(p.activeChapter)focusSection(p.activeChapter);else if(p.exploring)flyTo(overviewView);else reset();
       }
       const description=p.activeChapter?`Selected view: ${sectionById[p.activeChapter].region}`:'Whole-person overview';
@@ -185,7 +209,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
         from.theta+=Math.atan2(Math.sin(to.theta-from.theta),Math.cos(to.theta-from.theta))*blend;
         from.phi=THREE.MathUtils.lerp(from.phi,to.phi,blend);from.radius=THREE.MathUtils.lerp(from.radius,to.radius,blend);
         controls.target.lerp(destination.target,blend);camera.position.copy(controls.target).add(new THREE.Vector3().setFromSpherical(from));
-        if(camera.position.distanceTo(destination.camera)<.012&&controls.target.distanceTo(destination.target)<.012){camera.position.copy(destination.camera);controls.target.copy(destination.target);destination=null;}
+        if(camera.position.distanceTo(destination.camera)<.012&&controls.target.distanceTo(destination.target)<.012){camera.position.copy(destination.camera);controls.target.copy(destination.target);if(destination.returning){peek=null;frozenLabels=null;labelsDirty=true;}destination=null;}
       }
       if(brainSlice)brainSlice.update(time);
       else{controls.autoRotate=p.spinning&&!reduced&&!destination;controls.update(dt);currentReveal=reduced?p.reveal:damp(currentReveal,p.reveal,elapsed);}
@@ -200,7 +224,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
           (name==='arteries'?state.boneCut:state.brainCut)<max.y+.025;
       }
       const viewChanged=needsRender || completed<4 || camera.position.distanceToSquared(drawnPosition)>1e-12 || 1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-12;
-      const labelsNeedLayout=sections.some(section=>markers.current[section.id]&&!markers.current[section.id].style.transform);
+      const labelsNeedLayout=labelsDirty||sections.some(section=>markers.current[section.id]&&!markers.current[section.id].style.transform);
       if(viewChanged||labelsNeedLayout){
         // Project against this frame’s camera, including an instant section snap.
         camera.updateMatrixWorld(true);
@@ -210,7 +234,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
           projected.fromArray(anchors[section.id]).project(camera);
           return [{id:section.id,side:section.callout.side,width:marker.offsetWidth,x:THREE.MathUtils.clamp((projected.x*.5+.5)*w,16,w-16),y:THREE.MathUtils.clamp((-projected.y*.5+.5)*h,16,h-16)}];
         });
-        const labels=layoutHotspots(points,w,h);
+        const labels=frozenLabels||layoutHotspots(points,w,h,{top:34,bottom:30});lastLabels=labels;labelsDirty=false;
         for(const point of points){
           const id=point.id,label=labels[id],marker=markers.current[id],dot=dots.current[id],leader=leaders.current[id];
           if(!label||!marker||!dot||!leader)continue;
@@ -219,6 +243,11 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
           leader.setAttribute('x1',Math.max(label.x,Math.min(point.x,label.x+label.width)));leader.setAttribute('y1',label.y+22);
           leader.setAttribute('x2',point.x);leader.setAttribute('y2',point.y);
         }
+      }
+      // Scan-viewer readouts: plain text derived from this frame's real state.
+      if(!brainSlice){
+        const readout=scanReadout({reveal:currentReveal,position:camera.position.toArray(),target:controls.target.toArray(),baseRadius,view:p.activeChapter?sectionById[p.activeChapter].region:p.exploring?'Atlas overview':'Whole person',preview:previewId&&previewId!==p.activeChapter?sectionById[previewId]?.region:null});
+        for(const key in readout){const node=scan.current[key];if(node&&node.textContent!==readout[key])node.textContent=readout[key];}
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
       // Loading, resizing, orbiting and reveal movement all invalidate the frame.
@@ -237,13 +266,20 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     return () => { cancelled=true;abortBrainSlice();cancelAnimationFrame(frame);observer.disconnect();canvas.removeEventListener('keydown',keydown);controls.dispose();draco.dispose();anatomy.traverse(o=>o.geometry?.dispose());const textures=new Set();for(const m of avatarMaterials){for(const slot of ['map','normalMap','roughnessMap','metalnessMap'])if(m[slot])textures.add(m[slot]);m.dispose();}textures.forEach(t=>t.dispose());Object.values(materials).forEach(m=>m.dispose());blender?.dispose();densityRenderer?.dispose();density?.dispose();renderer.dispose();canvas.remove();engine.current=null; };
   },[]);
   return <div className="anatomy-canvas" ref={host}>
-    {status==='loading'&&<div className="model-loading" role="status"><span>Bringing the atlas into view</span><progress max="1" value={progress}/></div>}
+    {status==='loading'&&<div className="model-loading" role="status"><span>Acquiring series {Math.min(4,Math.round(progress*4)+1)} / 4</span><progress max="1" value={progress}/></div>}
     {status==='error'&&<div className="model-loading" role="alert"><p>The anatomy couldn’t load.</p><button onClick={()=>location.reload()}>Try again</button></div>}
     {status==='unsupported'&&<div className="model-loading" role="alert"><p>This browser could not start the 3D view.</p><a href={routeHref('/projects',location.search)} onClick={event=>followLink(event,routeHref('/projects',location.search),props.onNavigate)}>Explore the work</a></div>}
+    {status==='ready'&&<div className="scan-overlay" aria-hidden="true">
+      <div className="scan-corner scan-tl"><span>VYAS, ARUSH</span><span>STUDY · PERSONAL ATLAS</span><span className="scan-dim">ILLUSTRATIVE MODEL</span></div>
+      <div className="scan-corner scan-tr"><span>SERIES · LOOK WITHIN</span><span className="scan-accent" ref={el=>{scan.current.layer=el;}}/></div>
+      <div className="scan-corner scan-bl"><span ref={el=>{scan.current.image=el;}}/><span ref={el=>{scan.current.zoom=el;}}/></div>
+      <div className="scan-corner scan-br"><span ref={el=>{scan.current.view=el;}}/><span ref={el=>{scan.current.angle=el;}}/></div>
+      <span className="scan-edge scan-edge-left" ref={el=>{scan.current.left=el;}}/><span className="scan-edge scan-edge-right" ref={el=>{scan.current.right=el;}}/>
+    </div>}
     {status==='ready'&&props.exploring&&<div className="model-markers" aria-label="Explore portfolio sections">
       <svg className="marker-leaders" aria-hidden="true">{sections.map(section=><line key={section.id} ref={el=>{leaders.current[section.id]=el;}}/>)}</svg>
-      {sections.map(section=><a href={routeHref('/'+section.id,location.search)} key={section.id} ref={el=>{markers.current[section.id]=el;}} className={`model-marker ${props.activeChapter===section.id?'selected':''}`} aria-current={props.activeChapter===section.id?'page':undefined} aria-label={`Open ${section.label} — ${section.region}`} onClick={event=>followLink(event,routeHref('/'+section.id,location.search),props.onNavigate)}><span className="marker-label"><span>{section.label}</span></span><span className="marker-dot" ref={el=>{dots.current[section.id]=el;}}/></a>)}
+      {sections.map(section=><a href={routeHref('/'+section.id,location.search)} key={section.id} ref={el=>{markers.current[section.id]=el;}} className={`model-marker ${props.activeChapter===section.id?'selected':''}`} aria-current={props.activeChapter===section.id?'page':undefined} aria-label={`Open ${section.label} — ${section.region}`} onClick={event=>followLink(event,routeHref('/'+section.id,location.search),props.onNavigate)} onFocus={event=>{if(event.currentTarget.matches(':focus-visible'))engine.current?.preview(section.id);}} onBlur={()=>engine.current?.preview(null)}><span className="marker-label" onPointerEnter={event=>{if(event.pointerType!=='touch')engine.current?.preview(section.id);}} onPointerLeave={()=>engine.current?.preview(null)}><span>{section.label}</span></span><span className="marker-dot" ref={el=>{dots.current[section.id]=el;}}/></a>)}
     </div>}
-
+    {props.children}
   </div>;
 });

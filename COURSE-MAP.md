@@ -6,6 +6,8 @@ This feature replaces the Courses list with a selectable course-to-work map, bas
 
 `src/content/portfolio.mjs` is the authoritative course catalogue: 13 unique titles, codes and supplied university affiliations. No completion dates, grades or course outcomes have been inferred. ENGBE 209 appears once; BME160 retains its University of California, Santa Cruz association.
 
+Each course also carries `catalog` and `catalogUrl`. Arush asked on November 10, 2026 for a placeholder describing what each class teaches, taken from what is published online. The text is a short paraphrase of the public Boston University or UC Santa Cruz catalog entry, shown in the detail panel (below the project link, so the link stays in view) and in the all-courses catalogue under the label "From the course catalog". It describes the course, not what Arush did in it. Replace it with his own takeaways when supplied. Note that the BU catalog lists ENG BE 209 as "Principles of Molecular Cell Biology and Biotechnology"; the title Arush supplied is kept.
+
 `src/content/course-map.mjs` contains:
 
 - `courseBranches`: Computation & AI, Biomedical Systems, Health & Design, each listing course IDs.

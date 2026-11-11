@@ -23,3 +23,11 @@
  .site-shell.has-course-map .course-map-columns{padding-bottom:12px}
 }
 .course-map-network{scroll-margin-top:18px}
+
+/* Catalog summaries are labeled placeholders; see COURSE-MAP.md. */
+.course-map-catalog{font-size:13px;line-height:1.7;color:#bdbdbd;margin-top:16px;padding-top:14px;border-top:1px solid #262626;max-width:65ch}
+.course-map-catalog>span{display:block;font-size:9px;letter-spacing:.16em;color:#999;margin-bottom:4px}
+.course-map-catalog a{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:#aaa;white-space:nowrap}
+.course-map-catalog a:hover{color:#fff}
+.course-map-catalogue-course{flex-wrap:wrap}
+.course-map-catalogue-course .course-map-catalogue-topics{flex-basis:100%;color:#8e8e8e}

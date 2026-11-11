@@ -76,7 +76,8 @@ export const workNodes=[
 ];
 
 // Candidate labels help visitors browse the map without adding unverified
-// learning outcomes, course descriptions, completion dates, or proficiency.
+// learning outcomes, completion dates, or proficiency. Catalog summaries live
+// with each course in portfolio.mjs (`catalog`) and are labeled as such.
 export const courseSkills={
   'research-programming-life-sciences':'Scientific programming',
   'systems-physiology':'Physiological systems',

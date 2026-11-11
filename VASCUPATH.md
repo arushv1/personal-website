@@ -39,3 +39,7 @@ PREVIEW_URL=http://127.0.0.1:5182 node tests/browser-smoke.cjs
 ```
 
 Review the newest VascuPath section of `design-qa.md` and `qa/vascupath/` for browser evidence. Software Chromium measurements do not establish physical phone/GPU performance.
+
+## Research poster
+
+The main poster (slide 1 of the same presentation) is published separately under Publications as `vascupath-poster`, with a zoomable viewer. See `public/posters/README.md` for provenance and `CONTENT.md` for the `poster` field. It is independent of the brain-slice explorer and its figures.

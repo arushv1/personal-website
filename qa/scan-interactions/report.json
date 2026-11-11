@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "scroll-driven opening: pinned portrait, wheel scrolls instead of zooming, four layers with captions and no hotspots",
+    "slider, layer buttons, reset and Ctrl+wheel zoom stay in step with the page position",
+    "scan overlay reports layer, slice, zoom, view angle and patient-style orientation from the live scene",
+    "header résumé link opens the served PDF in a new tab",
+    "hover previews glow the anchor, lean the camera a few degrees, keep labels still and return on leave",
+    "Now note appears on the atlas and opens its About entry",
+    "glossary, both project write-ups and the corrected entries render from content data",
+    "poster opens in a zoomable viewer and Escape closes only the viewer",
+    "course catalog summaries appear with their source link",
+    "390 and 320 px phones: header fits, the model pins after the headline, captions overlay the pinned model",
+    "reduced motion: no scroll track, slider drives captions, previews glow without camera movement"
+  ],
+  "errors": []
+}
