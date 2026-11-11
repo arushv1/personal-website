@@ -58,6 +58,6 @@ npm run prepare:density
 
 The asset regression checks reject mismatched source hashes/counts. Browser density checks verify required states, forward/reverse pixel equality, unchanged geometry/camera/lighting, continuity at stops, temporal stability, whole-model changes, narrow layouts and the RGBA8 fallback. Review `qa/density-resolution/` for the sharper iteration and `qa/density-reveal/` for the initial preview and the latest `design-qa.md` entry for evidence and measured limits.
 
-## Blood-flow pulse (preview branch, November 10)
+## Blood-flow pulse (released November 11, PR #8)
 
 The artery surface buffers previously wrote a constant 1 to alpha. For arteries only, alpha now carries a baked path length from the aortic root (`0.5 + 0.5 × value`, from `public/models/flow/arteries.bin`). The compositor reads it, sets alpha back to 1, and then runs the transfer function above unchanged, so thresholds, phase timing, depth sorting and the approved appearance are the same whenever the pulse strength is 0, which is always the case except for a few seconds after a vessel view settles. During a pulse it adds a travelling highlight to the artery colour in the existing composite pass and redraws no geometry. On devices without floating-point colour buffers the path length has 7-bit precision, which can show faint banding in the highlight. See `INTERACTIONS.md`.

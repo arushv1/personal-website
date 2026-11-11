@@ -58,7 +58,7 @@ This replaces the previous Next.js implementation. `vercel.json` explicitly sele
 - The slider progresses through You, Bone, Vessels, and Within, with all layers sharing one rotatable 3D scene. the atlas opens the seven portfolio sections.
 - Seven section views, native item browsing, Contact, résumé, GitHub, LinkedIn, and email links.
 - Responsive layouts, semantic controls, visible keyboard focus, and reduced-motion handling.
-- Preview branch: scrolling the home page peels the layers with a one-word caption for each; corner readouts in the style of a medical image viewer follow the live view; hovering a section label glows its anchor and leans the camera toward it; a soft pulse runs along the vessels for a few beats when a view settles; and changing section wipes the text column behind a red scan line. A Résumé button sits in the header. See [INTERACTIONS.md](INTERACTIONS.md).
+- Scrolling the home page peels the layers with a one-word caption for each; corner readouts in the style of a medical image viewer follow the live view; hovering a section label glows its anchor and leans the camera toward it; a soft pulse runs along the vessels for a few beats when a view settles; and changing section wipes the text column behind a red scan line. A Résumé button sits in the header. See [INTERACTIONS.md](INTERACTIONS.md).
 
 Copy is a draft grounded in Arush's supplied interests and resume. The avatar uses the supplied headshot as a likeness reference; exact desk hardware, personal stories, and detailed project case studies still need Arush's input.
 

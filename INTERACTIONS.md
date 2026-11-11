@@ -1,6 +1,6 @@
 # Scan interactions: scroll-driven opening, scan overlay, hover previews, blood flow, scan sweep
 
-Arush requested these three on November 10, 2026, together with a header résumé link. They live on `claude/content-and-scan-interactions` as a preview. Nothing here is released to `main` or production until Arush approves the preview.
+Arush requested these three on November 10, 2026, together with a header résumé link. They were built on `claude/content-and-scan-interactions`, and Arush approved the preview for release to `main` on November 11 (PR #8).
 
 After reviewing the first preview the same day, Arush asked for two more: **blood flow in the vessels** (pulsing for a few beats after a view settles) and a **scan-sweep transition on the text side as a true wipe**. Both are described below. He also asked for the caption sentences, the atlas "Now" bar and the long glossary to be cut back; see `AGENTS.md`.
 

@@ -2,9 +2,13 @@
 
 Read this file before changing the repository. It is the handoff for the current design, implementation, decisions, and verification. Keep it updated when Arush makes durable decisions or the architecture changes. Use repository-relative paths so the context works on another machine.
 
-## November 10, 2026 (second round): trims, blood flow and the text scan sweep — preview only
+## November 11, 2026: scan interactions, blood flow and text scan sweep — approved production release
 
-Same branch, `claude/content-and-scan-interactions`. Arush reviewed the first preview and asked for the following. It is still a preview; he has not approved a release.
+On November 11 Arush reviewed the preview of `claude/content-and-scan-interactions` (`c788664`) and wrote "push to main". This authorizes the production release of both rounds described below, through PR #8. Confirm CI and the Vercel status of the resulting main commit before reporting deployment complete. Still open with him after release: the wording of the two write-ups, the Threshold precision figures, the poster's date and venue, and whether the scan sweep should also wipe the 3D model.
+
+### Second round (November 10): trims, blood flow and the text scan sweep
+
+Arush reviewed the first preview and asked for the following.
 
 Cut back, at his request (do not reintroduce these):
 
@@ -25,9 +29,9 @@ Side effects recorded for the next agent:
 
 Verification for this round: build, `test:sites` 4/4, `test:regression` 35/35. `tests/browser-interactions.cjs` 13/13 with an empty error log. Existing suites: `browser-smoke` 9/9, `browser-course-map` 7/7 and `browser-density` 8/8 functional checks, `browser-photos` and `browser-scene` pass. The sandbox-only GL warning and `browser-vascupath` timing caveats from the first round still apply. Evidence: `qa/scan-interactions/` (`blood-flow-frames.jpg`, `scan-sweep-frames.jpg`, `scan-sweep-phone.jpg`, `key-terms.jpg`). Only Chrome with software rendering was run; phone performance of the pulse and of the sweep over a live 3D canvas is unmeasured.
 
-## November 10, 2026: content, scan interactions and résumé link — preview only
+### First round (November 10): content, scan interactions and résumé link
 
-Branch `claude/content-and-scan-interactions`, based on main `3086f11`. This is a preview for Arush to review. He has **not** approved a release; do not merge to `main` or treat Vercel production as updated until he says so. Feature details and rationale are in `INTERACTIONS.md`; content fields are in `CONTENT.md`.
+Branch `claude/content-and-scan-interactions`, based on main `3086f11`. Released with the second round through PR #8. Feature details and rationale are in `INTERACTIONS.md`; content fields are in `CONTENT.md`.
 
 What Arush asked for, and what was done:
 
@@ -192,7 +196,7 @@ Retained comparison: the top-to-bottom sectional reveal is selected with `?revea
 
 Registration: `registration.mjs` provides the single `registerAnatomyPoint()` mapping used by bone, arteries, cortex and hotspot anchors. It retains the original lower-neck compression and shoulder fitting, lifts the head by up to .42 units using a gradual neck transition, narrows head X by up to 8%, fits depth by up to 18% with a small forward adjustment, and settles the crown by .10 units. These values were checked against front/side eye sockets and jaw overlays. All internal layers use the same mapping; the textured avatar and source GLBs are unchanged. This fits generic illustrative anatomy to a stylized character and is not a personal medical reconstruction.
 
-- Preview branch only (November 10): on home, scrolling peels the layers with pinned captions; every view shows corner scan readouts; hovering a section label glows its anchor and leans the camera a few degrees. See `INTERACTIONS.md`. The scene ref also exposes `preview(id)`, and `AnatomyScene` takes `wheelZoom` (false on the scroll-driven home) and renders children inside the canvas host.
+- Since the November 11 release: on home, scrolling peels the layers with pinned one-word captions; every view shows corner scan readouts; hovering a section label glows its anchor and leans the camera a few degrees; vessels pulse briefly when a view settles; route changes sweep the text column. See `INTERACTIONS.md`. The scene ref also exposes `preview(id)`, and `AnatomyScene` takes `wheelZoom` (false on the scroll-driven home) and renders children inside the canvas host.
 - Home retains the accepted black/white/red direction and real textured avatar at reveal 0. Hotspots remain hidden there. “Explore the atlas” enters the overview and reveals all seven compact labels beside their dots. Direct section URLs also enter exploration. Returning home hides hotspots again. Compact labels keep 44px interaction targets and sit in close gutters beside the head, with short connectors and collision handling. The reader receives a larger desktop share of the layout.
 - Atlas overview exposes all seven section links. Selecting a section applies its `view` preset in `portfolio.mjs`; direct loads use the same preset. Reselecting the current hotspot restores it without adding history. Spherical camera easing avoids flying through the model; manual pointer/keyboard/zoom input cancels it. Reduced-motion views move immediately.
 - About Me uses the face; Education the skull in sagittal view; Experience the vascular tree; Projects the frontal cortex; Awards the crown; Courses the cervical spine; Publications the posterior cortex. These are symbolic navigation locations, not functional brain claims.
@@ -287,3 +291,5 @@ October 27, 2026 minimal-opening refinement: removed the opening eyebrow, portra
 November 10, 2026 (Claude session, cloud): reviewed the repository and live site, proposed content and interaction ideas, then implemented the subset Arush chose on `claude/content-and-scan-interactions`: quick content fixes, catalog-based course summaries, Threshold and SymptomAI write-ups, a Boston Scientific glossary, the VascuPath poster under Publications, a Now note, the scroll-driven opening, scan-viewer overlay, hover previews and a header résumé link. Blood flow and the scan-sweep transition were explained, not built. The branch was pushed for preview at `bf6ed34`, and its Vercel commit status reported "Deployment has completed" for the preview build. The preview page itself was not opened from the cloud session, so check it before approving. No pull request was opened or merged and production was not changed. See the section at the top of this file for decisions and verification.
 
 November 10, 2026, second round (Claude session, cloud): on Arush's review of the first preview, removed the caption sentences and the atlas Now bar, turned the glossary into three "Key terms" on all four experiences, and added the blood-flow pulse (after-settle timing) and the text-column scan sweep (true wipe). Pushed to the same preview branch; no pull request, no production change.
+
+November 11, 2026: Arush approved the preview with "push to main". PR #8 was opened from `claude/content-and-scan-interactions` for the release. Record the merge commit's CI and Vercel results here only after checking them.
