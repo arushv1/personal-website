@@ -1,0 +1,16 @@
+{
+  "description": "Illustrative path length from the ascending aorta along the artery mesh, normalised 0-255. Drives a display-only pulse; not a blood-flow measurement or simulation.",
+  "sourceSHA256": "cf70a2c2dbf0c68eb161093f6e0c8f6e52df39e7b4d70b15311891d678b5668e",
+  "vertexCount": 129527,
+  "weldedPoints": 121370,
+  "seedPoints": 21,
+  "bridgedPoints": 158,
+  "pathLengthQuantiles": [
+    3.047,
+    3.527,
+    3.879,
+    4.44,
+    5.451,
+    6.311
+  ]
+}

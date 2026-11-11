@@ -2,6 +2,65 @@
 
 Read this file before changing the repository. It is the handoff for the current design, implementation, decisions, and verification. Keep it updated when Arush makes durable decisions or the architecture changes. Use repository-relative paths so the context works on another machine.
 
+## November 11, 2026: scan interactions, blood flow and text scan sweep — approved production release
+
+On November 11 Arush reviewed the preview of `claude/content-and-scan-interactions` (`c788664`) and wrote "push to main". This authorizes the production release of both rounds described below, through PR #8. Confirm CI and the Vercel status of the resulting main commit before reporting deployment complete. Still open with him after release: the wording of the two write-ups, the Threshold precision figures, the poster's date and venue, and whether the scan sweep should also wipe the 3D model.
+
+### Second round (November 10): trims, blood flow and the text scan sweep
+
+Arush reviewed the first preview and asked for the following.
+
+Cut back, at his request (do not reintroduce these):
+
+- **Opening captions are a label and one word.** The sentence under "Structure", "Flow" and "Ideas" is gone, on desktop and in the phone overlay. `introCaptions` holds only `layer` and `title`, and a regression test enforces it.
+- **No "Now" bar on the atlas page.** The About Me "Now" entry stays.
+- **"In plain terms" became "Key terms"**: three short, general definitions per entry, in a compact inline list rather than a box. The field is now `terms` (the name `glossary` is retired). He asked for the same on the other experiences, so Tian Lab, BTEC and Albro Lab each have three. They define vocabulary only. The Boston Scientific rule still holds: nothing about methods or pipelines.
+
+Added:
+
+- **Blood flow, first timing option**: a soft pulse along the arteries for a few beats after each view settles, then the scene goes idle. A dash also runs once along a Courses connection when it is selected. Design, data and limits are in `INTERACTIONS.md`. The path-length weights are baked by `npm run prepare:flow` into `public/models/flow/`; they are illustrative, not a flow simulation. The value rides in the artery surface buffer's previously constant alpha channel, and the compositor restores alpha to 1 before the approved density maths, so the reveal is unchanged and no render target was added. `flowPeak` was reduced from 0.62 to 0.42 after seeing the first frames, to keep it "soft".
+- **Scan sweep on the text side, as a true wipe.** His words were "add the scan-sweep transitions to the text side, true wipe". This was read as: the sweep runs over the text column, with old text below the line and new text above it. The 3D model is not wiped and keeps its approved transition. If he meant the model too, that is a separate, larger change (the camera must hold still during it); ask before building it. It uses the View Transitions API, with an immediate change as the fallback for reduced motion, open dialogs and browsers without the API.
+
+Side effects recorded for the next agent:
+
+- A route change now lands one frame after the click (the browser captures the old column first). History is pushed in that same step.
+- `tests/browser-scene.cjs` compares canvas pixels to detect camera motion, so it switches the pulse off through the development hook (`canvas.__atlas.pulse=false`) and waits for the address before its interruption check. Its assertions are otherwise unchanged.
+- Density shader cache key is now `density-surface-v4`.
+
+Verification for this round: build, `test:sites` 4/4, `test:regression` 35/35. `tests/browser-interactions.cjs` 13/13 with an empty error log. Existing suites: `browser-smoke` 9/9, `browser-course-map` 7/7 and `browser-density` 8/8 functional checks, `browser-photos` and `browser-scene` pass. The sandbox-only GL warning and `browser-vascupath` timing caveats from the first round still apply. Evidence: `qa/scan-interactions/` (`blood-flow-frames.jpg`, `scan-sweep-frames.jpg`, `scan-sweep-phone.jpg`, `key-terms.jpg`). Only Chrome with software rendering was run; phone performance of the pulse and of the sweep over a live 3D canvas is unmeasured.
+
+### First round (November 10): content, scan interactions and résumé link
+
+Branch `claude/content-and-scan-interactions`, based on main `3086f11`. Released with the second round through PR #8. Feature details and rationale are in `INTERACTIONS.md`; content fields are in `CONTENT.md`.
+
+What Arush asked for, and what was done:
+
+1. **Quick fixes.** Removed the BTEC bullet that had been pasted into Albro Lab (nothing was invented to replace it). Fixed "Reserarch" and expanded the name to "Undergraduate Research Opportunities Program", matching the Awards entry. Shortened the Threshold Devpost link to drop tracking parameters. Each course gained a `catalog` summary: a short paraphrase of the public course catalog with a `catalogUrl`. Arush called these **placeholders**; they are labeled "From the course catalog" in the UI and should be replaced with his own takeaways when he supplies them. Titles, codes and affiliations are unchanged.
+2. **Content.**
+   - Threshold and SymptomAI have full write-ups (`writeup`) in the reader, drafted from each project's Devpost page and Threshold's live app. They use "we", name no teammates, and add no result that those pages do not state. Arush has not yet reviewed the wording. Known mismatch to raise with him: the existing Threshold highlight says 0.97 precision and 0.94 F1 (from his résumé), while Devpost reports 98% precision and 92% recall on the held-out set. The highlight was left as he wrote it and the write-up quotes neither.
+   - Boston Scientific has plain-language definitions of general terms only (CTA, segmentation, Dice, clDice). Arush explicitly said **no pipeline or other detail yet**; keep it that way until he says otherwise. (Reshaped into three "Key terms" in the second round, above.)
+   - The VascuPath research poster is under Publications (`vascupath-poster`), with a zoomable viewer. Arush supplied `Vyas.Arush.Final.pptx` and said to use **only slide 1**. Provenance is in `public/posters/README.md`. Its date and venue are unconfirmed, so the entry says "2026 · Research poster"; ask before naming an event.
+   - About Me has a "Now" entry (`id: 'now'`) with Arush's three current topics. (A strip on the atlas page was removed in the second round.)
+3. **Explanations first.** Arush liked blood flow in the vessels and asked how it and a scan-sweep transition would work **before any change**. He then approved specific versions of both, built in the second round above.
+4. **Built:** the scroll-driven opening, the scan-viewer overlay and hover previews. He said to **hold the rest** of the creative ideas (per-entry camera moves, timeline slider, LEGO mode).
+5. **Résumé link** in the header, top right, opening the served PDF in a new tab. The footer link remains.
+
+Decisions made while building, with reasons:
+
+- **Scroll and slider are one state.** A second, independent control would let the caption and the model disagree. The page position and slider convert both ways exactly (`src/intro.mjs`).
+- **Native scrolling with sticky pinning**, no scroll hijacking, consistent with the earlier rule that no wheel or touch gesture is taken over.
+- **Wheel over the model scrolls the page on home only.** Otherwise the right half of the opening would not respond to scrolling. Ctrl/⌘ + wheel, pinch, buttons and keys still zoom, and every other view keeps wheel zoom. This changes an approved interaction on one route; it was flagged to Arush.
+- **The opening is slightly less minimal.** The October 27 decision removed hints and captions from home. The scroll cue and overlay were added because Arush asked for these features; hotspots still never appear on home.
+- **Overlay values are real or fixed labels.** No imitation patient data, and "ILLUSTRATIVE MODEL" is shown, in keeping with the rule not to imply a personal scan.
+- **Hover glow is screen-space.** A material-level glow would mean changing the approved density compositor.
+- **Labels freeze during a preview** so the hovered label cannot slide out from under the pointer.
+- **Reduced motion** gets no scroll track and no preview camera movement.
+- **Reader position tracking** now also listens to scroll events. Long write-ups scroll far without crossing an IntersectionObserver threshold, which left the item index pointing at the wrong entry.
+- **Entries render at their real height.** `content-visibility: auto` with a 380px estimate was removed from `.portfolio-entry`. With a long write-up above it, a deep link such as `/projects#symptomai` (used by the Courses map) could land in the wrong place because heights changed after the jump; this showed up as an intermittent `browser-photos` failure. Sections hold at most a handful of text entries, so the saving was negligible.
+- The existing Escape-to-home shortcut ignores Escape while any native dialog is open, so closing the poster viewer does not leave the section.
+
+Verification on November 10: `npm run build`, `test:sites` (4/4) and `test:regression` (34/34, six new) pass. `tests/browser-interactions.cjs` passes all 11 checks with an empty error log. The existing `browser-smoke`, `browser-course-map`, `browser-density`, `browser-photos` and `browser-scene` suites pass every functional check. In this cloud browser the first three then fail their final "no console warnings" assertion on a `GL Driver Message … ReadPixels` warning caused by canvas screenshots, and `browser-vascupath` times out sampling a mid-transition frame; both happen identically on untouched `main`, so they are environment effects, not regressions. Evidence is in `qa/scan-interactions/`. Physical-phone performance of the pinned, scroll-driven reveal is not measured.
+
 Completed photo follow-up: optional photos for Projects and Awards (also supported in all other sections). Use `photos: [{src, alt, caption?}]` on an item, with user-supplied files in `public/photos`. Arush supplied screenshots via Archive.zip. The Threshold and SymptomAI home screenshots are attached to their matching projects; the MedAI team photo is under MedAI Hackathon, and the Threshold award team photo is under Health and Biotech Hack. Arush identified the presentation screenshot (6.19.44 PM, Cross-Tabulation Analysis) as Public Health Equity Hackathon and explicitly placed it under Awards. Arush confirmed this award is 1st Place Overall. Keep one entry for it; no duplicate project. Preserve the existing user-authored May 2024 date and full analysis description from main. `CONTENT.md` documents GitHub uploads. `tests/browser-photos.cjs` and `qa/photo-gallery/` record gallery verification. Work branch: `codex/entry-photos`, synced with main `1500914` (including Arush’s latest content edits); no production release requested in this follow-up.
 
 ## Courses vessel map — approved production release
@@ -91,7 +150,14 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `src/App.jsx` | Route/section state, labeled controls/reset, contact and credits dialogs |
 | `src/content/portfolio.mjs` | All seven sections, item content, hotspot anchors and section camera/layer presets |
 | `src/SectionReader.jsx` | Native scrolling item reader, side/mobile item index, previous/next and item hashes |
-| `src/hotspots.mjs` | Compact labels beside projected anchors, with local collision handling |
+| `src/hotspots.mjs` | Compact labels beside projected anchors, with local collision handling and optional top/bottom insets for the scan readouts |
+| `src/intro.mjs` | Layer stops, scroll-progress ↔ reveal mapping and the opening captions |
+| `src/scan.mjs` | Scan-overlay readouts, orientation letters and hover-preview camera maths (no Three.js/DOM) |
+| `src/PosterFigure.jsx` | Poster preview and zoomable viewer dialog for items with a `poster` |
+| `public/posters/` | Served poster images and their provenance |
+| `INTERACTIONS.md` | Scroll-driven opening, scan overlay, hover previews, blood-flow pulse, text scan sweep |
+| `scripts/bake-flow.mjs`, `public/models/flow/` | Bakes and stores the illustrative artery path-length weights for the pulse (`npm run prepare:flow`) |
+| `tests/interactions.test.mjs`, `tests/browser-interactions.cjs` | Regression and optional browser checks for the above and the new content fields |
 | `CONTENT.md` | GitHub editing guide and item schema |
 | `src/AnatomyScene.jsx` | Renderer, camera, orbit controls, model loading, animation, keyboard controls, and projected chapter markers |
 | `src/styles.css` | Typography, colors, layout, responsive breakpoints, focus, and reduced-motion rules |
@@ -130,6 +196,7 @@ Retained comparison: the top-to-bottom sectional reveal is selected with `?revea
 
 Registration: `registration.mjs` provides the single `registerAnatomyPoint()` mapping used by bone, arteries, cortex and hotspot anchors. It retains the original lower-neck compression and shoulder fitting, lifts the head by up to .42 units using a gradual neck transition, narrows head X by up to 8%, fits depth by up to 18% with a small forward adjustment, and settles the crown by .10 units. These values were checked against front/side eye sockets and jaw overlays. All internal layers use the same mapping; the textured avatar and source GLBs are unchanged. This fits generic illustrative anatomy to a stylized character and is not a personal medical reconstruction.
 
+- Since the November 11 release: on home, scrolling peels the layers with pinned one-word captions; every view shows corner scan readouts; hovering a section label glows its anchor and leans the camera a few degrees; vessels pulse briefly when a view settles; route changes sweep the text column. See `INTERACTIONS.md`. The scene ref also exposes `preview(id)`, and `AnatomyScene` takes `wheelZoom` (false on the scroll-driven home) and renders children inside the canvas host.
 - Home retains the accepted black/white/red direction and real textured avatar at reveal 0. Hotspots remain hidden there. “Explore the atlas” enters the overview and reveals all seven compact labels beside their dots. Direct section URLs also enter exploration. Returning home hides hotspots again. Compact labels keep 44px interaction targets and sit in close gutters beside the head, with short connectors and collision handling. The reader receives a larger desktop share of the layout.
 - Atlas overview exposes all seven section links. Selecting a section applies its `view` preset in `portfolio.mjs`; direct loads use the same preset. Reselecting the current hotspot restores it without adding history. Spherical camera easing avoids flying through the model; manual pointer/keyboard/zoom input cancels it. Reduced-motion views move immediately.
 - About Me uses the face; Education the skull in sagittal view; Experience the vascular tree; Projects the frontal cortex; Awards the crown; Courses the cervical spine; Publications the posterior cortex. These are symbolic navigation locations, not functional brain claims.
@@ -188,7 +255,7 @@ Existing QA passed for the selected prototype: actual orbit/wheel zoom, layer re
 ## Limits and remaining work
 
 - The outer avatar is an approximate artistic likeness, not a face scan. Its internal anatomy remains generic.
-- Draft copy; detailed case studies, exact setup specifications, and richer personal stories have not been supplied. A headshot was supplied for the avatar.
+- Draft copy; exact setup specifications and richer personal stories have not been supplied. The Threshold and SymptomAI write-ups and the course catalog summaries were drafted from public pages and await Arush's review. A headshot was supplied for the avatar.
 - Real anatomical contours differ from the generated illustration; a custom art-directed model is possible later.
 - Physical phone GPU performance and two-finger gestures were not directly measured. Mobile viewport/layout, computed touch action, and button alternatives were checked.
 - Reduced-motion handling is implemented; an OS preference toggle was not directly exercised in the initial QA run.
@@ -220,3 +287,9 @@ October 27, 2026 portfolio UI update: added the seven requested sections, data-d
 October 27, 2026 compact-label follow-up: home now hides hotspots until atlas/section entry; all seven remain available during exploration. Labels are small pills placed near their dots, with short connectors and collision handling, rather than wide rails. Section/atlas layouts give more width to text. Anchor projection updates the camera matrix before layout, keeping labels aligned after instant section changes. This updates PR #2 and its existing preview.
 
 October 27, 2026 minimal-opening refinement: removed the opening eyebrow, portrait caption and extra hint to follow the supplied screenshot; enlarged the portrait and headline. Replaced boxed control panels with a slim, borderless, width-limited layer strip and text-labeled toolbar. Exploration labels now share two narrow gutters beside the head, with compact pills and connectors, preserving the wider reader. Home remains hotspot-free until exploration entry.
+
+November 10, 2026 (Claude session, cloud): reviewed the repository and live site, proposed content and interaction ideas, then implemented the subset Arush chose on `claude/content-and-scan-interactions`: quick content fixes, catalog-based course summaries, Threshold and SymptomAI write-ups, a Boston Scientific glossary, the VascuPath poster under Publications, a Now note, the scroll-driven opening, scan-viewer overlay, hover previews and a header résumé link. Blood flow and the scan-sweep transition were explained, not built. The branch was pushed for preview at `bf6ed34`, and its Vercel commit status reported "Deployment has completed" for the preview build. The preview page itself was not opened from the cloud session, so check it before approving. No pull request was opened or merged and production was not changed. See the section at the top of this file for decisions and verification.
+
+November 10, 2026, second round (Claude session, cloud): on Arush's review of the first preview, removed the caption sentences and the atlas Now bar, turned the glossary into three "Key terms" on all four experiences, and added the blood-flow pulse (after-settle timing) and the text-column scan sweep (true wipe). Pushed to the same preview branch; no pull request, no production change.
+
+November 11, 2026: Arush approved the preview with "push to main". PR #8 was opened from `claude/content-and-scan-interactions` for the release. Record the merge commit's CI and Vercel results here only after checking them.

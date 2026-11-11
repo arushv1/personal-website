@@ -47,11 +47,15 @@ export class DensityReveal{
   material.onBeforeCompile=(shader,renderer)=>{
    previousCompile?.call(material,shader,renderer);
    Object.assign(shader.uniforms,this.uniforms);
-   shader.vertexShader='attribute float revealDensity;attribute float revealField;varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;\n'+shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
-    densityFieldValue=revealField;densityStructure=revealDensity;densityViewDepth=-mvPosition.z;`);
+   // Arteries also carry a baked path length from the aortic root (see
+   // scripts/bake-flow.mjs). It rides in the otherwise constant surface alpha,
+   // so the blood-flow pulse needs no extra render target.
+   const flow=name==='arteries';
+   shader.vertexShader=(flow?'attribute float flowDistance;varying float densityFlow;\n':'')+'attribute float revealDensity;attribute float revealField;varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;\n'+shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
+    densityFieldValue=revealField;densityStructure=revealDensity;densityViewDepth=-mvPosition.z;${flow?'densityFlow=flowDistance;':''}`);
    shader.fragmentShader=`layout(location=1) out highp vec4 densityFeatures;
     uniform float densityPeel;uniform sampler2D densityPreviousDepth;uniform vec2 densityResolution;uniform float densityMajorOnly;uniform float densityFar;uniform float densityColorScale;
-    varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;
+    varying float densityFieldValue;varying float densityStructure;varying float densityViewDepth;${flow?'varying float densityFlow;':''}
     `+shader.fragmentShader;
    if(name==='brain'){
     shader.vertexShader='varying float brainSliceLocalZ;\n'+shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nbrainSliceLocalZ=position.z;');
@@ -72,9 +76,9 @@ export class DensityReveal{
    shader.fragmentShader=shader.fragmentShader.replace('#include <dithering_fragment>',`#include <dithering_fragment>
     vec2 packedDepth=fract(min(densityViewDepth/densityFar,.9999)*vec2(1.0,255.0));packedDepth.x-=packedDepth.y/255.0;
     densityFeatures=vec4(packedDepth,densityFieldValue,${name==='avatar'?'pow(1.0-abs(dot(normal,normalize(vViewPosition))),3.0)':'densityStructure'});
-    gl_FragColor=vec4(gl_FragColor.rgb*densityColorScale,1.0);`);
+    gl_FragColor=vec4(gl_FragColor.rgb*densityColorScale,${flow?'.5+.5*clamp(densityFlow,0.0,1.0)':'1.0'});`);
   };
-  material.customProgramCacheKey=()=>`density-surface-v3-${name}${previousKey?'-'+previousKey:''}`;this.materials.add(material);material.needsUpdate=true;
+  material.customProgramCacheKey=()=>`density-surface-v4-${name}${previousKey?'-'+previousKey:''}`;this.materials.add(material);material.needsUpdate=true;
  }
  dispose(){this.materials.clear();}
 }

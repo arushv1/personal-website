@@ -1,3 +1,72 @@
+# Design QA — second round: trims, blood flow, text scan sweep (November 10, 2026, preview branch)
+
+Scope: the second commit on `claude/content-and-scan-interactions`. Same method as the first round below: local Vite server, headless Chrome, software WebGL. States and layout are established; real-device frame rates are not.
+
+## Findings
+
+No open P0/P1/P2 findings. Two things were adjusted during verification:
+
+- The first pulse frames read as bright pink rather than a soft pulse. Peak strength was reduced from 0.62 to 0.42.
+- `browser-scene` failed, because it detects camera movement by comparing canvas pixels and the pulse animates a still view, and because the sweep delays the route change by a frame. The test now switches the pulse off through the development hook and waits for the address; its assertions are unchanged.
+
+## Evidence (`qa/scan-interactions/`)
+
+- `intro-bone.jpg`, `intro-vessels.jpg`, `intro-within.jpg`, `intro-phone-390.jpg`, `intro-phone-320.jpg`: captions are a label and one word; no sentence.
+- `key-terms.jpg`: three compact Key terms under Boston Scientific.
+- `blood-flow-frames.jpg`: six frames about 0.35 s apart on Experience, captured at the first-look strength of 0.62; the shipped pulse is softer. The band moves from the aortic arch up the neck into the head, then stops. `blood-flow.jpg` is one frame at the shipped strength.
+- `scan-sweep-frames.jpg`: atlas → Projects, slowed for capture: new text above the line, old below. `scan-sweep.jpg`: home → atlas. `scan-sweep-phone.jpg`: 390 px.
+- `report.json`: 13 passing browser checks, empty error list.
+
+## Checks
+
+- Build, 4 packaging tests, 35 regression tests (one new, for the flow weights).
+- `tests/browser-interactions.cjs` 13/13: the sweep runs `wipe-old`, `wipe-new` and `wipe-line` together, sets and clears its marker in order, restarts on a second click, follows Back, and never runs under reduced motion; the pulse starts after a vessel view settles, does not change the surface capture count, stops by itself and on movement, and does not run where vessels are hidden or under reduced motion; no Now bar on the atlas; three Key terms on each of the four experiences; the course dash plays once.
+- Existing suites: `browser-smoke` 9/9, `browser-course-map` 7/7, `browser-density` 8/8 functional checks; `browser-photos` and `browser-scene` pass.
+
+## Not verified
+
+- Phone GPU cost of a six-second full-resolution pulse, and of a view transition over a live 3D canvas.
+- Safari and Firefox. Without the View Transitions API the section change is immediate, by design.
+
+---
+
+# Design QA — content and scan interactions (November 10, 2026, preview branch)
+
+Scope: `claude/content-and-scan-interactions`. Checked against the local Vite server in headless Chrome with software WebGL (SwiftShader). This establishes states, layout and behavior; it does not establish frame rate on real hardware.
+
+## Findings
+
+No open P0/P1/P2 findings. Four issues were found and fixed during verification:
+
+- Deep links to an entry below a long write-up (for example `/projects#symptomai`) intermittently landed in the wrong place, which made `browser-photos` fail about half the time. Entries used `content-visibility: auto` with a 380px height estimate, so real heights arrived after the jump. Entries now lay out at their real height; the suite then passed 12 runs in a row.
+
+- The course catalog text pushed "View project" below the fold at 1366 × 768, failing an existing course-map check. The text now sits below the link.
+- With long write-ups, the item index could mark the wrong entry, because the reader scrolled a long way without crossing an observer threshold. Position is now also tracked from scroll events.
+- Corner readouts were hard to read where the model passed behind them. They now carry a dark text shadow.
+
+## Evidence (`qa/scan-interactions/`)
+
+- `intro-you.jpg`, `intro-bone.jpg`, `intro-vessels.jpg`, `intro-within.jpg`: the opening at each layer, 1366 × 768. Headline and model stay pinned; captions read Structure, Flow, Ideas; no hotspots appear.
+- `intro-phone-390.jpg`, `intro-phone-320.jpg`: the pinned model with its caption overlay and controls inside the phone viewport.
+- `hover-preview.jpg`: Publications hovered on the atlas: halo on its anchor, `PREVIEW · POSTERIOR CORTEX` readout, camera about 10° from rest.
+- `writeup.jpg`, `poster-zoomed.jpg`, `course-catalog.jpg`: the new content. (The glossary and atlas Now-bar captures from this round were removed when those features were cut back in the second round.)
+- `report.json` then held 11 passing browser checks and an empty error list; it now holds the second round's 13.
+
+## Checks
+
+- Build, 4 packaging tests and 34 regression tests pass (6 new in `tests/interactions.test.mjs`).
+- `tests/browser-interactions.cjs`: wheel scrolls rather than zooms on home while Ctrl+wheel zooms; the portrait does not move while pinned; slider keys, layer buttons and Reset agree with the page position without drift; readouts match the scene and orientation letters turn with the model; previews stay within 11° and return exactly; labels do not move under the pointer; Escape closes the poster viewer without leaving Publications; reduced motion has no scroll track and no preview camera movement; 390 and 320 px have no horizontal overflow and the header fits.
+- Existing suites: `browser-smoke`, `browser-course-map`, `browser-density`, `browser-photos` and `browser-scene` pass every functional check. In this environment the first three then trip their final console-warning assertion on a GL driver `ReadPixels` message produced by screenshots, and `browser-vascupath` times out sampling a mid-transition frame. Both occur identically on untouched `main`.
+- Also viewed: 900 × 700 (two-column tablet), 320 × 568, the end of the scroll track with the footer, and the atlas page with the Now strip.
+
+## Not verified
+
+- Scroll smoothness and GPU load on a physical phone.
+- Safari and Firefox. Sticky positioning, native dialogs and `findLastIndex` are standard, but only Chrome was run.
+- The poster's letterforms against PowerPoint's own rendering (see `public/posters/README.md`).
+
+---
+
 # Design QA — Arush's real 3D avatar
 
 ## Findings

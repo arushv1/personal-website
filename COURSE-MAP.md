@@ -6,6 +6,8 @@ This feature replaces the Courses list with a selectable course-to-work map, bas
 
 `src/content/portfolio.mjs` is the authoritative course catalogue: 13 unique titles, codes and supplied university affiliations. No completion dates, grades or course outcomes have been inferred. ENGBE 209 appears once; BME160 retains its University of California, Santa Cruz association.
 
+Each course also carries `catalog` and `catalogUrl`. Arush asked on November 10, 2026 for a placeholder describing what each class teaches, taken from what is published online. The text is a short paraphrase of the public Boston University or UC Santa Cruz catalog entry, shown in the detail panel (below the project link, so the link stays in view) and in the all-courses catalogue under the label "From the course catalog". It describes the course, not what Arush did in it. Replace it with his own takeaways when supplied. Note that the BU catalog lists ENG BE 209 as "Principles of Molecular Cell Biology and Biotechnology"; the title Arush supplied is kept.
+
 `src/content/course-map.mjs` contains:
 
 - `courseBranches`: Computation & AI, Biomedical Systems, Health & Design, each listing course IDs.
@@ -30,6 +32,10 @@ The default selection is Hands-On Engineering under Health & Design. One branch 
 `/courses#<course-id>` and `/courses#work-<work-id>` restore selection, including browser Back/Forward. Selection does not move the 3D camera or change Look within. Native View project/publication links preserve the optional reveal comparison query and lead to the existing section/item, where normal camera navigation runs. Modified clicks/new tabs work normally.
 
 The vessels are functional data-driven paths. ResizeObserver keeps their tapered shapes aligned with branch and work buttons; only color/opacity transitions run on selection. There is no force layout or frame loop. HTML buttons provide the interactions and text relationships, while the SVG is hidden from assistive technologies. Mobile keeps the map readable in two columns and the existing anatomy below; touch targets are at least 44px. Reduced motion disables transitions.
+
+### Flow dash
+
+Selecting a connection sends one bright dash along that vessel, from the course branch to the work (`.course-flow` in `src/course-map.css`, drawn on the vessel's centre line). It plays once per selection and never loops, so the map still has no continuous animation. Reduced motion hides it. This is the Courses half of the blood-flow feature described in `INTERACTIONS.md`.
 
 ## Verification
 
