@@ -26,6 +26,9 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     let cancelled = false, frame = 0, last = 0, currentReveal = live.current.reveal, destination = null, wasView = live.current.activeChapter||(live.current.exploring?'atlas':'home');
     // Hover preview: `peek` remembers the pose to return to; labels hold still meanwhile.
     let peek=null,frozenLabels=null,lastLabels=null,previewId=null,labelsDirty=false;
+    // Blood-flow pulse: a few beats each time a view with visible vessels settles.
+    let flowReady=false,flowAllowed=true,flowStart=0,flowSettled=0,flowBusy=true,flowClear=false;
+    const flowSeconds=6.3,flowBeat=.9,flowPeak=.42,ease=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
     const mode=revealMode(location.search),sectional=mode==='section';
     const density=mode==='density'?new DensityReveal():null;
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -86,9 +89,11 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const blender=mode==='blend'?new LayerBlendRenderer(renderer,scene,camera,models):null;
     const densityRenderer=density?new DensityRenderer(renderer,scene,camera,models,density):null;
     const modelReadiness=Promise.all(Object.keys(materials).map(async name => {
-      const [gltf,weights]=await Promise.all([
+      const [gltf,weights,flowData]=await Promise.all([
         loader.loadAsync(`/models/${name}.glb`),
         density&&['bone','arteries'].includes(name)?fetch(`/models/density/${name}.bin`).then(async response=>{if(!response.ok)throw new Error('Density weights unavailable');return new Uint16Array(await response.arrayBuffer());}):null,
+        // Optional: without it the vessels simply do not pulse.
+        density&&name==='arteries'&&!reduced?fetch('/models/flow/arteries.bin').then(async response=>response.ok?new Uint8Array(await response.arrayBuffer()):null).catch(()=>null):null,
       ]);
       if(cancelled){ gltf.scene.traverse(o => o.geometry?.dispose()); return; }
       let offset=0;
@@ -97,6 +102,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
           const count=o.geometry.attributes.position.count;
           if(weights){if(offset+count>weights.length)throw new Error('Density weight/mesh mismatch');o.geometry.setAttribute('revealDensity',new THREE.Uint16BufferAttribute(weights.subarray(offset,offset+count),1,true));offset+=count;}
           else o.geometry.setAttribute('revealDensity',new THREE.Uint8BufferAttribute(new Uint8Array(count).fill(128),1,true));
+          if(flowData?.length===count){o.geometry.setAttribute('flowDistance',new THREE.Uint8BufferAttribute(flowData,1,true));flowReady=true;}
         }
         // Register every internal layer using the same coordinates/landmarks.
         if(name !== 'avatar'){
@@ -122,7 +128,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
     const projected = new THREE.Vector3();
     const drawnPosition=new THREE.Vector3(),drawnRotation=new THREE.Quaternion();
     let needsRender=true,drawnReveal=-1,lastRevealTarget=live.current.reveal,brainSlice=null,focusViewport=null,focusGeneration=0;
-    if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;},get brainSlice(){return brainSlice;}};
+    if(import.meta.env.DEV)canvas.__atlas={camera,controls,models,scene,renderer,density,densityRenderer,get reveal(){return currentReveal;},get brainSlice(){return brainSlice;},get flowing(){return Boolean(flowStart);},set pulse(value){flowAllowed=Boolean(value);needsRender=true;}};
     const resize = () => { const {width,height} = focusViewport||container.getBoundingClientRect(); if(!width || !height)return; needsRender=true;frozenLabels=null;if(density)renderer.setPixelRatio(densityPixelRatio(width,height,devicePixelRatio,matchMedia('(max-width:760px)').matches));renderer.setSize(width,height); camera.aspect=width/height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(container); resize();
     const flyTo=view=>{stopMotion();destination={camera:new THREE.Vector3().fromArray(view.position),target:new THREE.Vector3().fromArray(view.target)};};
@@ -246,7 +252,7 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       }
       // Scan-viewer readouts: plain text derived from this frame's real state.
       if(!brainSlice){
-        const readout=scanReadout({reveal:currentReveal,position:camera.position.toArray(),target:controls.target.toArray(),baseRadius,view:p.activeChapter?sectionById[p.activeChapter].region:p.exploring?'Atlas overview':'Whole person',preview:previewId&&previewId!==p.activeChapter?sectionById[previewId]?.region:null});
+        const readout=scanReadout({reveal:currentReveal,position:camera.position.toArray(),target:controls.target.toArray(),baseRadius,view:p.activeChapter?sectionById[p.activeChapter].region:p.exploring?'Atlas overview':'Whole person',preview:previewId&&previewId!==p.activeChapter?sectionById[previewId]?.region:null,acquiring:document.documentElement.dataset.wipe==='run'});
         for(const key in readout){const node=scan.current[key];if(node&&node.textContent!==readout[key])node.textContent=readout[key];}
       }
       // Avoid redrawing a half-million triangles while the scene is stationary.
@@ -255,7 +261,24 @@ export const AnatomyScene = forwardRef(function AnatomyScene(props, ref) {
       const revealQualityMoving=p.reveal!==lastRevealTarget||Math.abs(currentReveal-p.reveal)>.005;
       lastRevealTarget=p.reveal;
       const cameraMoving=Boolean(destination)||Boolean(brainSlice&&brainSlice.phase!=='focused')||controls.autoRotate||camera.position.distanceToSquared(drawnPosition)>1e-8||1-Math.abs(camera.quaternion.dot(drawnRotation))>1e-8;
-      if(viewChanged || revealMoving || densityRenderer?.needsRefinement){
+      if(flowReady){
+        const pulse=densityRenderer.flow,busy=!flowAllowed||viewChanged||revealQualityMoving||cameraMoving||Boolean(brainSlice);
+        if(busy){
+          // Any movement ends the pulse at once; it starts again when the view rests.
+          if(flowStart){flowStart=0;pulse.strength.value=0;}
+          flowBusy=true;flowSettled=0;
+        }else{
+          if(flowBusy){flowBusy=false;flowSettled=time;}
+          if(flowSettled&&!flowStart&&!densityRenderer.needsRefinement&&time-flowSettled>350){flowSettled=0;if(currentReveal>=44)flowStart=time;}
+        }
+        if(flowStart){
+          const t=(time-flowStart)/1000;
+          if(t>=flowSeconds){flowStart=0;pulse.strength.value=0;flowClear=true;}
+          else{pulse.phase.value=t/flowBeat;pulse.strength.value=flowPeak*ease(0,.5,t)*(1-ease(flowSeconds-.9,flowSeconds,t));}
+        }
+      }
+      if(viewChanged || revealMoving || densityRenderer?.needsRefinement || flowStart || flowClear){
+        flowClear=false;
         if(densityRenderer)densityRenderer.render(currentReveal,{moving:revealQualityMoving||cameraMoving});
         else if(blender){if(viewChanged)blender.invalidate();blender.render(layerBlend(currentReveal));}
         else renderer.render(scene,camera);

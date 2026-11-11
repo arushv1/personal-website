@@ -24,7 +24,7 @@ Start with [CONTENT.md](CONTENT.md). All seven sections, entries, hotspots and c
 | What to change | Where |
 | --- | --- |
 | About Me, Education, Experience, Projects, Awards, Courses, Publications | `src/content/portfolio.mjs` |
-| Project write-ups, glossaries, posters, the Now note, course summaries | `src/content/portfolio.mjs` (see `CONTENT.md`) |
+| Project write-ups, key terms, posters, the Now note, course summaries | `src/content/portfolio.mjs` (see `CONTENT.md`) |
 | Opening captions and scroll mapping | `src/intro.mjs` |
 | Item browsing and scroll behavior | `src/SectionReader.jsx` |
 | Header, contact, controls, reset behavior | `src/App.jsx` |
@@ -45,6 +45,7 @@ npm run test:regression # Routing, link semantics, reveal timing, Vercel rewrite
 npm run preview        # Preview the production client
 npm run prepare:models # Optional: rebuild the compressed anatomy assets
 npm run prepare:avatar # Optional: rebuild the optimized textured avatar
+npm run prepare:flow   # Optional: rebake the artery path lengths used by the blood-flow pulse
 ```
 
 The production frontend is in `dist/client/`. The build also emits `dist/server/index.js` and `dist/.openai/hosting.json` for a future Sites deployment. Build before running `test:sites`: its packaging check reads those generated files. The included GitHub Actions workflow runs these steps in that order; it does not deploy.
@@ -57,7 +58,7 @@ This replaces the previous Next.js implementation. `vercel.json` explicitly sele
 - The slider progresses through You, Bone, Vessels, and Within, with all layers sharing one rotatable 3D scene. the atlas opens the seven portfolio sections.
 - Seven section views, native item browsing, Contact, résumé, GitHub, LinkedIn, and email links.
 - Responsive layouts, semantic controls, visible keyboard focus, and reduced-motion handling.
-- Preview branch: scrolling the home page peels the layers with a caption for each; corner readouts in the style of a medical image viewer follow the live view; hovering a section label glows its anchor and leans the camera toward it. A Résumé button sits in the header. See [INTERACTIONS.md](INTERACTIONS.md).
+- Preview branch: scrolling the home page peels the layers with a one-word caption for each; corner readouts in the style of a medical image viewer follow the live view; hovering a section label glows its anchor and leans the camera toward it; a soft pulse runs along the vessels for a few beats when a view settles; and changing section wipes the text column behind a red scan line. A Résumé button sits in the header. See [INTERACTIONS.md](INTERACTIONS.md).
 
 Copy is a draft grounded in Arush's supplied interests and resume. The avatar uses the supplied headshot as a likeness reference; exact desk hardware, personal stories, and detailed project case studies still need Arush's input.
 
@@ -96,6 +97,6 @@ Optional browser acceptance suite (requires Playwright and Chromium in the test 
 PREVIEW_URL=http://127.0.0.1:5173 node tests/browser-smoke.cjs
 ```
 
-`tests/browser-interactions.cjs` runs the same way and covers the scroll-driven opening, scan overlay, hover previews, résumé link, write-ups and the poster viewer.
+`tests/browser-interactions.cjs` runs the same way and covers the scroll-driven opening, scan overlay, hover previews, scan sweep, blood-flow pulse, résumé link, write-ups and the poster viewer.
 
 Set `CHROMIUM_PATH` if Chromium is elsewhere and `QA_DIR` to choose where screenshots and the report are saved. This suite uses system-font fallback for deterministic checks; typography from Google Fonts depends on network access.

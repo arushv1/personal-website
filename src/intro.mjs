@@ -34,10 +34,10 @@ export function introProgressFor(reveal,hold=.16){
   return (index+hold+t*(1-2*hold))/(stops.length-1);
 }
 
-// One caption per internal layer. Each line names the sections that open from
-// that structure in the atlas; edit the wording here.
+// One caption per internal layer: its label and a single word. Arush asked for
+// the supporting sentence to be removed, so keep these to a word.
 export const introCaptions=[
-  {layer:'Bone',title:'Structure',text:'Education, courses and the milestones that hold everything up.'},
-  {layer:'Vessels',title:'Flow',text:'Experience: research and engineering, carried into practice.'},
-  {layer:'Within',title:'Ideas',text:'Projects and publications, where curiosity becomes something built.'},
+  {layer:'Bone',title:'Structure'},
+  {layer:'Vessels',title:'Flow'},
+  {layer:'Within',title:'Ideas'},
 ];

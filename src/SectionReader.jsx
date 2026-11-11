@@ -67,7 +67,7 @@ export const SectionReader=memo(function SectionReader({section,onExplore}) {
           {item.facts?.length>0&&<dl className="entry-facts">{item.facts.map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
           {item.highlights?.length>0&&<ul className="entry-highlights">{item.highlights.map(text=><li key={text}>{text}</li>)}</ul>}
           {item.links?.length>0&&<div className="entry-links">{item.links.map(link=><a key={link.href} href={link.href} target="_blank" rel="noreferrer">{link.label}<ArrowUpRight size={16}/></a>)}</div>}
-          {item.glossary?.length>0&&<div className="entry-glossary"><h3>In plain terms</h3><dl>{item.glossary.map(([term,meaning])=><div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>)}</dl></div>}
+          {item.terms?.length>0&&<div className="entry-terms"><h3>Key terms</h3><dl>{item.terms.map(([term,meaning])=><div key={term}><dt>{term}</dt><dd>{meaning}</dd></div>)}</dl></div>}
           {item.writeup?.length>0&&<div className="entry-writeup">{item.writeup.map(part=><section key={part.heading}>
             <h3>{part.heading}</h3>
             {[].concat(part.text||[]).map(text=><p key={text}>{text}</p>)}

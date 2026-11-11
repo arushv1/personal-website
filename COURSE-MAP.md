@@ -33,6 +33,10 @@ The default selection is Hands-On Engineering under Health & Design. One branch 
 
 The vessels are functional data-driven paths. ResizeObserver keeps their tapered shapes aligned with branch and work buttons; only color/opacity transitions run on selection. There is no force layout or frame loop. HTML buttons provide the interactions and text relationships, while the SVG is hidden from assistive technologies. Mobile keeps the map readable in two columns and the existing anatomy below; touch targets are at least 44px. Reduced motion disables transitions.
 
+### Flow dash
+
+Selecting a connection sends one bright dash along that vessel, from the course branch to the work (`.course-flow` in `src/course-map.css`, drawn on the vessel's centre line). It plays once per selection and never loops, so the map still has no continuous animation. Reduced motion hides it. This is the Courses half of the blood-flow feature described in `INTERACTIONS.md`.
+
 ## Verification
 
 ```bash

@@ -31,3 +31,9 @@
 .course-map-catalog a:hover{color:#fff}
 .course-map-catalogue-course{flex-wrap:wrap}
 .course-map-catalogue-course .course-map-catalogue-topics{flex-basis:100%;color:#8e8e8e}
+
+/* Blood flow: one bright dash runs from the course branch to the work when a
+   connection is selected. It plays once and never loops. */
+.course-flow{fill:none;stroke:#ffd9d2;stroke-width:2.4;stroke-linecap:round;stroke-dasharray:.16 1;stroke-dashoffset:.16;opacity:0;filter:drop-shadow(0 0 4px #ff6c5c);animation:course-flow 950ms cubic-bezier(.45,.05,.4,.95) 140ms 1 both}
+@keyframes course-flow{0%{stroke-dashoffset:.16;opacity:0}12%{opacity:1}88%{opacity:1}100%{stroke-dashoffset:-1;opacity:0}}
+@media(prefers-reduced-motion:reduce){.course-flow{display:none}}

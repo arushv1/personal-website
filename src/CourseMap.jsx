@@ -19,6 +19,8 @@ function fromHash(){
  return {kind:'course',id:defaultCourse};
 }
 function firstBranch(selection){return selection.kind==='course'?branchByCourse[selection.id]:courseBranches.find(b=>connections.some(c=>b.courseIds.includes(c.courseId)&&c.workId===selection.id))?.id||'design';}
+// The same curve as the vessel's centre line, for the travelling flow dash.
+function vesselCentre(s,t){const d=t.x-s.x;return `M${s.x},${s.y} C${s.x+d*.44},${s.y} ${t.x-d*.4},${t.y} ${t.x},${t.y}`;}
 function vesselShape(s,t){
  const d=t.x-s.x,w=2.2,v=.65;
  return `M${s.x},${s.y-w} C${s.x+d*.44},${s.y-w} ${t.x-d*.4},${t.y-v} ${t.x},${t.y-v} L${t.x},${t.y+v} C${t.x-d*.4},${t.y+v} ${s.x+d*.44},${s.y+w} ${s.x},${s.y+w} Z`;
@@ -52,7 +54,7 @@ export function CourseMap({onNavigate}){
   const root=network.current;
   const measure=()=>{
    const bounds=root.getBoundingClientRect(),point=(node,end)=>{const r=node.getBoundingClientRect();return {x:(end?r.left:r.right)-bounds.left,y:r.top+r.height/2-bounds.top};};
-   const paths=edges.flatMap(edge=>{const a=branchRefs.current[edge.branchId],b=workRefs.current[edge.workId];if(a)a.parentElement.style.setProperty('--port-y',(a.getBoundingClientRect().height/2+1)+'px');return a&&b?[{...edge,d:vesselShape(point(a,false),point(b,true))}]:[];});
+   const paths=edges.flatMap(edge=>{const a=branchRefs.current[edge.branchId],b=workRefs.current[edge.workId];if(a)a.parentElement.style.setProperty('--port-y',(a.getBoundingClientRect().height/2+1)+'px');return a&&b?[{...edge,d:vesselShape(point(a,false),point(b,true)),centre:vesselCentre(point(a,false),point(b,true))}]:[];});
    setGeometry(previous=>{const next={width:bounds.width,height:bounds.height,paths};return JSON.stringify(previous)===JSON.stringify(next)?previous:next;});
   };
   measure();const observer=new ResizeObserver(measure);observer.observe(root);for(const node of [...Object.values(branchRefs.current),...Object.values(workRefs.current)])if(node)observer.observe(node);
@@ -70,6 +72,7 @@ export function CourseMap({onNavigate}){
   <div ref={network} className="course-map-network">
    <svg className="course-map-vessels" width="100%" height="100%" viewBox={`0 0 ${geometry.width||1} ${geometry.height||1}`} aria-hidden="true" focusable="false">
     {geometry.paths.map(edge=>{const active=selectedConnections.some(c=>c.workId===edge.workId&&branchByCourse[c.courseId]===edge.branchId);return <path key={edge.id} className="course-vessel" data-active={active} d={edge.d}/>;})}
+    {geometry.paths.filter(edge=>selectedConnections.some(c=>c.workId===edge.workId&&branchByCourse[c.courseId]===edge.branchId)).map(edge=><path key={edge.id+'|'+selection.kind+selection.id} className="course-flow" d={edge.centre} pathLength="1"/>)}
    </svg>
    <div className="course-map-branches">
     {courseBranches.map(branch=>{const Icon=icons[branch.id],open=expanded===branch.id,support=branch.courseIds.filter(id=>activeCourseIds.has(id)).length;return <section className="course-map-branch" data-active={activeBranches.has(branch.id)} key={branch.id}>

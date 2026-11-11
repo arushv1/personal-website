@@ -2,6 +2,29 @@
 
 Read this file before changing the repository. It is the handoff for the current design, implementation, decisions, and verification. Keep it updated when Arush makes durable decisions or the architecture changes. Use repository-relative paths so the context works on another machine.
 
+## November 10, 2026 (second round): trims, blood flow and the text scan sweep — preview only
+
+Same branch, `claude/content-and-scan-interactions`. Arush reviewed the first preview and asked for the following. It is still a preview; he has not approved a release.
+
+Cut back, at his request (do not reintroduce these):
+
+- **Opening captions are a label and one word.** The sentence under "Structure", "Flow" and "Ideas" is gone, on desktop and in the phone overlay. `introCaptions` holds only `layer` and `title`, and a regression test enforces it.
+- **No "Now" bar on the atlas page.** The About Me "Now" entry stays.
+- **"In plain terms" became "Key terms"**: three short, general definitions per entry, in a compact inline list rather than a box. The field is now `terms` (the name `glossary` is retired). He asked for the same on the other experiences, so Tian Lab, BTEC and Albro Lab each have three. They define vocabulary only. The Boston Scientific rule still holds: nothing about methods or pipelines.
+
+Added:
+
+- **Blood flow, first timing option**: a soft pulse along the arteries for a few beats after each view settles, then the scene goes idle. A dash also runs once along a Courses connection when it is selected. Design, data and limits are in `INTERACTIONS.md`. The path-length weights are baked by `npm run prepare:flow` into `public/models/flow/`; they are illustrative, not a flow simulation. The value rides in the artery surface buffer's previously constant alpha channel, and the compositor restores alpha to 1 before the approved density maths, so the reveal is unchanged and no render target was added. `flowPeak` was reduced from 0.62 to 0.42 after seeing the first frames, to keep it "soft".
+- **Scan sweep on the text side, as a true wipe.** His words were "add the scan-sweep transitions to the text side, true wipe". This was read as: the sweep runs over the text column, with old text below the line and new text above it. The 3D model is not wiped and keeps its approved transition. If he meant the model too, that is a separate, larger change (the camera must hold still during it); ask before building it. It uses the View Transitions API, with an immediate change as the fallback for reduced motion, open dialogs and browsers without the API.
+
+Side effects recorded for the next agent:
+
+- A route change now lands one frame after the click (the browser captures the old column first). History is pushed in that same step.
+- `tests/browser-scene.cjs` compares canvas pixels to detect camera motion, so it switches the pulse off through the development hook (`canvas.__atlas.pulse=false`) and waits for the address before its interruption check. Its assertions are otherwise unchanged.
+- Density shader cache key is now `density-surface-v4`.
+
+Verification for this round: build, `test:sites` 4/4, `test:regression` 35/35. `tests/browser-interactions.cjs` 13/13 with an empty error log. Existing suites: `browser-smoke` 9/9, `browser-course-map` 7/7 and `browser-density` 8/8 functional checks, `browser-photos` and `browser-scene` pass. The sandbox-only GL warning and `browser-vascupath` timing caveats from the first round still apply. Evidence: `qa/scan-interactions/` (`blood-flow-frames.jpg`, `scan-sweep-frames.jpg`, `scan-sweep-phone.jpg`, `key-terms.jpg`). Only Chrome with software rendering was run; phone performance of the pulse and of the sweep over a live 3D canvas is unmeasured.
+
 ## November 10, 2026: content, scan interactions and résumé link — preview only
 
 Branch `claude/content-and-scan-interactions`, based on main `3086f11`. This is a preview for Arush to review. He has **not** approved a release; do not merge to `main` or treat Vercel production as updated until he says so. Feature details and rationale are in `INTERACTIONS.md`; content fields are in `CONTENT.md`.
@@ -11,10 +34,10 @@ What Arush asked for, and what was done:
 1. **Quick fixes.** Removed the BTEC bullet that had been pasted into Albro Lab (nothing was invented to replace it). Fixed "Reserarch" and expanded the name to "Undergraduate Research Opportunities Program", matching the Awards entry. Shortened the Threshold Devpost link to drop tracking parameters. Each course gained a `catalog` summary: a short paraphrase of the public course catalog with a `catalogUrl`. Arush called these **placeholders**; they are labeled "From the course catalog" in the UI and should be replaced with his own takeaways when he supplies them. Titles, codes and affiliations are unchanged.
 2. **Content.**
    - Threshold and SymptomAI have full write-ups (`writeup`) in the reader, drafted from each project's Devpost page and Threshold's live app. They use "we", name no teammates, and add no result that those pages do not state. Arush has not yet reviewed the wording. Known mismatch to raise with him: the existing Threshold highlight says 0.97 precision and 0.94 F1 (from his résumé), while Devpost reports 98% precision and 92% recall on the held-out set. The highlight was left as he wrote it and the write-up quotes neither.
-   - Boston Scientific has a plain-language `glossary` of general terms only (CTA, segmentation, Dice, clDice and so on). Arush explicitly said **no pipeline or other detail yet**; keep it that way until he says otherwise.
+   - Boston Scientific has plain-language definitions of general terms only (CTA, segmentation, Dice, clDice). Arush explicitly said **no pipeline or other detail yet**; keep it that way until he says otherwise. (Reshaped into three "Key terms" in the second round, above.)
    - The VascuPath research poster is under Publications (`vascupath-poster`), with a zoomable viewer. Arush supplied `Vyas.Arush.Final.pptx` and said to use **only slide 1**. Provenance is in `public/posters/README.md`. Its date and venue are unconfirmed, so the entry says "2026 · Research poster"; ask before naming an event.
-   - About Me has a "Now" entry (`id: 'now'`) with Arush's three current topics, also shown as a strip on the atlas page.
-3. **Explanations only.** Arush likes blood flow in the vessels and asked how it and a scan-sweep transition would work **before any change**. Both are written up under "Proposed, not built" in `INTERACTIONS.md`. Do not implement either without his go-ahead.
+   - About Me has a "Now" entry (`id: 'now'`) with Arush's three current topics. (A strip on the atlas page was removed in the second round.)
+3. **Explanations first.** Arush liked blood flow in the vessels and asked how it and a scan-sweep transition would work **before any change**. He then approved specific versions of both, built in the second round above.
 4. **Built:** the scroll-driven opening, the scan-viewer overlay and hover previews. He said to **hold the rest** of the creative ideas (per-entry camera moves, timeline slider, LEGO mode).
 5. **Résumé link** in the header, top right, opening the served PDF in a new tab. The footer link remains.
 
@@ -128,7 +151,8 @@ The current app is React 19 + Vite 6 + Three.js, using JavaScript ES modules. It
 | `src/scan.mjs` | Scan-overlay readouts, orientation letters and hover-preview camera maths (no Three.js/DOM) |
 | `src/PosterFigure.jsx` | Poster preview and zoomable viewer dialog for items with a `poster` |
 | `public/posters/` | Served poster images and their provenance |
-| `INTERACTIONS.md` | Scroll-driven opening, scan overlay, hover previews; proposals for blood flow and scan sweep |
+| `INTERACTIONS.md` | Scroll-driven opening, scan overlay, hover previews, blood-flow pulse, text scan sweep |
+| `scripts/bake-flow.mjs`, `public/models/flow/` | Bakes and stores the illustrative artery path-length weights for the pulse (`npm run prepare:flow`) |
 | `tests/interactions.test.mjs`, `tests/browser-interactions.cjs` | Regression and optional browser checks for the above and the new content fields |
 | `CONTENT.md` | GitHub editing guide and item schema |
 | `src/AnatomyScene.jsx` | Renderer, camera, orbit controls, model loading, animation, keyboard controls, and projected chapter markers |
@@ -261,3 +285,5 @@ October 27, 2026 compact-label follow-up: home now hides hotspots until atlas/se
 October 27, 2026 minimal-opening refinement: removed the opening eyebrow, portrait caption and extra hint to follow the supplied screenshot; enlarged the portrait and headline. Replaced boxed control panels with a slim, borderless, width-limited layer strip and text-labeled toolbar. Exploration labels now share two narrow gutters beside the head, with compact pills and connectors, preserving the wider reader. Home remains hotspot-free until exploration entry.
 
 November 10, 2026 (Claude session, cloud): reviewed the repository and live site, proposed content and interaction ideas, then implemented the subset Arush chose on `claude/content-and-scan-interactions`: quick content fixes, catalog-based course summaries, Threshold and SymptomAI write-ups, a Boston Scientific glossary, the VascuPath poster under Publications, a Now note, the scroll-driven opening, scan-viewer overlay, hover previews and a header résumé link. Blood flow and the scan-sweep transition were explained, not built. The branch was pushed for preview at `bf6ed34`, and its Vercel commit status reported "Deployment has completed" for the preview build. The preview page itself was not opened from the cloud session, so check it before approving. No pull request was opened or merged and production was not changed. See the section at the top of this file for decisions and verification.
+
+November 10, 2026, second round (Claude session, cloud): on Arush's review of the first preview, removed the caption sentences and the atlas Now bar, turned the glossary into three "Key terms" on all four experiences, and added the blood-flow pulse (after-settle timing) and the text-column scan sweep (true wipe). Pushed to the same preview branch; no pull request, no production change.

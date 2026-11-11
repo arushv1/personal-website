@@ -4,6 +4,7 @@ import {access,readFile} from 'node:fs/promises';
 import {layerStops,layerIndex,introReveal,introProgressFor,introCaptions} from '../src/intro.mjs';
 import {orientationLabels,scanReadout,peekPose,toSpherical,fromSpherical} from '../src/scan.mjs';
 import {layoutHotspots} from '../src/hotspots.mjs';
+import {flowWaves} from '../src/DensityRenderer.mjs';
 import {sections,sectionById,overviewView} from '../src/content/portfolio.mjs';
 
 test('scroll-driven opening rests on each named layer and never runs backwards',()=>{
@@ -26,7 +27,8 @@ test('slider values and page positions convert both ways without drift',()=>{
  }
  for(let value=1;value<=100;value++)assert(introProgressFor(value)>introProgressFor(value-1));
  assert.equal(introCaptions.length,layerStops.length-1);
- introCaptions.forEach((caption,index)=>{assert.equal(caption.layer,layerStops[index+1].name);assert(caption.title&&caption.text);});
+ // Each caption is a layer label and one word; the supporting sentence was removed at Arush's request.
+ introCaptions.forEach((caption,index)=>{assert.equal(caption.layer,layerStops[index+1].name);assert.match(caption.title,/^\w+$/);assert.deepEqual(Object.keys(caption),['layer','title']);});
 });
 
 test('scan readouts follow a radiology viewer convention and the live values',()=>{
@@ -39,6 +41,7 @@ test('scan readouts follow a radiology viewer convention and the live values',()
  assert.deepEqual(readout,{layer:'LAYER · Vessels',image:'IM 072 / 100',zoom:'ZOOM 2.00×',angle:'AZ +000°  EL +00°',view:'VIEW · Whole person',left:'R',right:'L'});
  assert.equal(scanReadout({reveal:0,position:[-5,.55,0],target:[0,.55,0],baseRadius:5,view:'Face',preview:'Crown of the skull'}).view,'PREVIEW · Crown of the skull');
  assert.match(scanReadout({reveal:0,position:[-5,3,0],target:[0,.55,0],baseRadius:5,view:'Face'}).angle,/^AZ -090°  EL \+26°$/);
+ assert.equal(scanReadout({reveal:0,position:[0,.55,5],target:[0,.55,0],baseRadius:5,view:'Face',preview:'Crown of the skull',acquiring:true}).view,'ACQUIRING · Face');
  for(const point of [[2.1,1.3,6.7],[-6.2,1,0],[2.4,1.8,-5.4]]){
   const target=[0,.8,.1],back=fromSpherical(toSpherical(point,target),target);
   back.forEach((value,index)=>assert(Math.abs(value-point[index])<1e-9));
@@ -77,8 +80,11 @@ test('new entry content is complete, sourced and free of the corrected mistakes'
  assert(!/Reserarch/.test(text));assert(!/devpost\.com[^"]*[?&]_g[al]/.test(text),'Tracking parameters should not ship in links');
  const experience=sectionById.experience.items,highlights=experience.flatMap(item=>item.highlights||[]);
  assert.equal(new Set(highlights).size,highlights.length,'A highlight is repeated across experience entries');
- const glossary=experience.find(item=>item.id==='boston-scientific').glossary;
- assert(glossary.length>=6);for(const entry of glossary){assert.equal(entry.length,2);assert(entry[0]&&entry[1].length>30);}
+ // Every experience explains exactly three key terms, briefly.
+ for(const item of experience){
+  assert.equal(item.terms.length,3,item.id+' should have three key terms');assert.equal(item.glossary,undefined);
+  for(const entry of item.terms){assert.equal(entry.length,2);assert(entry[0].length<=24&&entry[1].length>30&&entry[1].length<=170,'Key term too long or short: '+entry[0]);}
+ }
  for(const id of ['threshold','symptomai']){
   const writeup=sectionById.projects.items.find(item=>item.id===id).writeup;
   assert(writeup.length>=4);assert.equal(new Set(writeup.map(part=>part.heading)).size,writeup.length);
@@ -95,4 +101,17 @@ test('new entry content is complete, sourced and free of the corrected mistakes'
   const header=await readFile(new URL('../public'+src,import.meta.url));
   assert.equal(header.subarray(0,4).toString('latin1'),'RIFF');assert.equal(header.subarray(8,12).toString('latin1'),'WEBP');
  }
+});
+
+test('blood-flow weights match the artery model and rise away from the aortic root',async()=>{
+ const read=path=>readFile(new URL(path,import.meta.url));
+ const flow=new Uint8Array(await read('../public/models/flow/arteries.bin'));
+ const manifest=JSON.parse(await read('../public/models/flow/manifest.json')),density=JSON.parse(await read('../public/models/density/manifest.json'));
+ assert.equal(flow.length,density.models.arteries.vertexCounts[0],'Run npm run prepare:flow after the artery model changes');
+ assert.equal(manifest.vertexCount,flow.length);assert.equal(manifest.sourceSHA256,density.models.arteries.sourceSHA256);
+ assert.match(manifest.description,/not a blood-flow measurement/i);
+ let min=255,max=0;const histogram=new Uint32Array(8);for(const value of flow){min=Math.min(min,value);max=Math.max(max,value);histogram[value>>5]++;}
+ assert.equal(min,0);assert.equal(max,255);
+ assert(histogram.every(count=>count>0),'Path lengths should cover the whole range without gaps');
+ assert(flowWaves>1&&flowWaves<5);
 });

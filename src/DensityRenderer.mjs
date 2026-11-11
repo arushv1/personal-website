@@ -9,6 +9,9 @@ const descriptions=[
  {name:'arteries',kind:2},{name:'arteries',kind:2,peel:true},{name:'arteries',kind:2,major:true},
  {name:'brain',kind:3},
 ];
+// Blood-flow pulse: `waves` fronts span the artery tree at once, each a sharp
+// leading edge with a tail that fades back toward the heart.
+export const flowWaves=2.6;
 // Supersample small/retina viewers without allowing the seven surface buffers
 // to grow without bound. Never render below one pixel per CSS pixel.
 export function densityPixelRatio(width,height,dpr,mobile=false){
@@ -18,6 +21,8 @@ export function densityPixelRatio(width,height,dpr,mobile=false){
 export class DensityRenderer{
  constructor(renderer,scene,camera,models,density){
   Object.assign(this,{renderer,scene,camera,models,density});this.size=new THREE.Vector2();this.revision=0;this.signature='';this.captures=0;this.needsRefinement=false;this.focus=0;this.lastValue=0;this.sliceSignature='';this.focusPreparationVersion=0;this.disposed=false;
+  // Shared by every composite program. Strength 0 leaves the image unchanged.
+  this.flow={phase:{value:0},strength:{value:0}};
   this.floating=renderer.extensions.has('EXT_color_buffer_float');density.uniforms.densityColorScale.value=this.floating?1:.25;
   this.slots=descriptions.map(spec=>this.createSlot(spec));
   this.materials=new Map();
@@ -63,7 +68,7 @@ export class DensityRenderer{
   const indices=this.activeSlots(value,focus),key=(focus>0?'focus:':'')+indices.join('-');
   if(this.materials.has(key))return this.materials.get(key);
   const n=indices.length;
-  const uniforms={reveal:{value:0},far:{value:this.camera.far},colorScale:{value:this.floating?1:4},encodeScale:{value:this.floating?1:.25},cameraWorld:{value:this.camera.matrixWorld},projectionScale:{value:new THREE.Vector2(this.camera.projectionMatrix.elements[0],this.camera.projectionMatrix.elements[5])}};
+  const uniforms={reveal:{value:0},far:{value:this.camera.far},colorScale:{value:this.floating?1:4},encodeScale:{value:this.floating?1:.25},cameraWorld:{value:this.camera.matrixWorld},flowPhase:this.flow.phase,flowStrength:this.flow.strength,projectionScale:{value:new THREE.Vector2(this.camera.projectionMatrix.elements[0],this.camera.projectionMatrix.elements[5])}};
   if(focus>0){uniforms.focus={value:focus};uniforms.sliceVisible={value:0};}
   indices.forEach((global,i)=>{const slot=this.slots[global];uniforms['surface'+i]={value:slot.target.textures[0]};uniforms['features'+i]={value:slot.target.textures[1]};});
   const declarations=indices.map((_,i)=>`uniform sampler2D surface${i};uniform sampler2D features${i};`).join('\n');
@@ -73,9 +78,11 @@ export class DensityRenderer{
    {
     vec4 surface=texture2D(surface${i},pixel);vec4 f=texture2D(features${i},pixel);
     if(surface.a>.001){
+     ${slot.kind===2?'float flow=clamp(surface.a*2.0-1.0,0.0,1.0);surface.a=1.0;':''}
      f/=surface.a;depths[${i}]=dot(f.xy,vec2(1.0,1.0/255.0))*far;
      vec3 rgb=surface.rgb/max(surface.a,.001)*colorScale;
      ${slot.kind===0?'float glass=ramp(15.0,23.0,reveal)*(1.0-ramp(28.0,34.0,reveal));rgb=rgb*(1.0-.06*glass)+vec3(.10,.13,.16)*f.a*glass;':''}
+     ${slot.kind===2?`if(flowStrength>0.0){float travelled=flowPhase-flow*${flowWaves.toFixed(2)};float wave=fract(travelled);rgb+=vec3(1.0,.36,.25)*exp(-wave*5.0)*smoothstep(0.0,.04,wave)*step(0.0,travelled)*flowStrength;}`:''}
      vec3 p=(cameraWorld*vec4(vec3((pixel*2.0-1.0)/projectionScale,-1.0)*depths[${i}],1.0)).xyz;
      vec3 q=abs(fract(p*.63+vec3(.23,.47,.61))*2.0-1.0);q=q*q*(3.0-2.0*q)-.5;float curve=.08*(q.x*q.y+q.y*q.z+q.z*q.x);
      ${focus>0?`float alpha=${slot.kind===4?'sliceVisible':slot.kind===3?'mix(densityAlpha(3,clamp(f.b+curve,0.0,1.0),f.a,reveal),1.0,focus)':`densityAlpha(${slot.kind},clamp(f.b+curve,0.0,1.0),f.a,reveal)*(1.0-focus)`};colors[${i}]=vec4(rgb,clamp(alpha*surface.a,0.0,1.0));`:`colors[${i}]=vec4(rgb,clamp(densityAlpha(${slot.kind},clamp(f.b+curve,0.0,1.0),f.a,reveal)*surface.a,0.0,1.0));`}
@@ -89,7 +96,7 @@ export class DensityRenderer{
    uniforms,depthTest:false,depthWrite:false,toneMapped:false,
    vertexShader:'varying vec2 pixel;void main(){pixel=uv;gl_Position=vec4(position.xy,0.0,1.0);}',
    fragmentShader:`${declarations}
-    uniform float reveal;uniform float far;uniform float colorScale;uniform float encodeScale;uniform mat4 cameraWorld;uniform vec2 projectionScale;varying vec2 pixel;
+    uniform float reveal;uniform float far;uniform float colorScale;uniform float encodeScale;uniform float flowPhase;uniform float flowStrength;uniform mat4 cameraWorld;uniform vec2 projectionScale;varying vec2 pixel;
     ${focus>0?'uniform float focus;uniform float sliceVisible;':''}
     ${densityTransferGLSL}
     void main(){

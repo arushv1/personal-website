@@ -1,17 +1,17 @@
-# Scan interactions: scroll-driven opening, scan-viewer overlay, hover previews
+# Scan interactions: scroll-driven opening, scan overlay, hover previews, blood flow, scan sweep
 
 Arush requested these three on November 10, 2026, together with a header résumé link. They live on `claude/content-and-scan-interactions` as a preview. Nothing here is released to `main` or production until Arush approves the preview.
 
-Two related ideas are described at the end as proposals only. Arush asked for an explanation before any change: **blood flow in the vessels** and a **scan-sweep section transition**. Do not build either without his go-ahead.
+After reviewing the first preview the same day, Arush asked for two more: **blood flow in the vessels** (pulsing for a few beats after a view settles) and a **scan-sweep transition on the text side as a true wipe**. Both are described below. He also asked for the caption sentences, the atlas "Now" bar and the long glossary to be cut back; see `AGENTS.md`.
 
 ## Scroll-driven opening (home only)
 
-Scrolling the home page peels the avatar through the same four layers as the slider: You (0), Bone (34), Vessels (72), Within (100). A caption names what each layer opens in the atlas, and "Explore the atlas" stays in place throughout.
+Scrolling the home page peels the avatar through the same four layers as the slider: You (0), Bone (34), Vessels (72), Within (100). Each internal layer shows a label and one word, and "Explore the atlas" stays in place throughout.
 
 - **One state.** The page position and the "Look within" slider are two controls for one `reveal` value. Scrolling moves the slider; dragging the slider, pressing a layer button or Reset moves the page to the matching position. `introReveal()` and `introProgressFor()` in `src/intro.mjs` are exact inverses for every whole value, which is regression-tested.
 - **Pinned, not hijacked.** The hero is made tall (240svh of travel on desktop, 210svh on phones) and the headline column and model are `position: sticky`. Native scrolling does the rest: no wheel listeners on the page, no scroll snapping, no smoothing library. On desktop the header is sticky too, so nothing moves while a layer changes.
 - **Rests.** Each layer holds for 16% of a segment either side of its stop, so a caption can be read before the next transfer starts. The last 6% of the travel is spare so Within settles before the footer arrives.
-- **Captions** come from `introCaptions` in `src/intro.mjs`: Bone → "Structure", Vessels → "Flow", Within → "Ideas". Each line names the sections that open from that structure, matching the section presets in `portfolio.mjs`. The caption shown always follows the reveal value, so the slider alone changes it too.
+- **Captions** come from `introCaptions` in `src/intro.mjs`: Bone → "Structure", Vessels → "Flow", Within → "Ideas". Arush removed the supporting sentence that first sat under each word, so keep them to the layer label and a single word. The caption shown always follows the reveal value, so the slider alone changes it too.
 - **Phones.** The headline scrolls away first. The model then pins 8px from the top with its controls, and the caption overlays the lower part of the model. The canvas height is capped so the pinned model and controls always fit the screen.
 - **Idle rotation.** Scrolling pauses the idle turn and eases the camera back to the opening angle, so layers peel from a face-on view. Returning to the top resumes the turn if scrolling was what paused it.
 - **Wheel over the model.** On home, a plain wheel over the model now scrolls the page instead of zooming, because otherwise half the screen would not respond to scrolling. Ctrl/⌘ + wheel and trackpad pinch still zoom, as do the Zoom buttons and the keyboard. Everywhere else (atlas, sections) wheel zoom is unchanged. The hint under the model says which applies.
@@ -53,6 +53,41 @@ Hovering a section label (or giving it keyboard focus), or hovering a row in the
 - The bottom-right readout shows `PREVIEW · <region>` meanwhile.
 - Touch has no hover, so phones are unchanged. With reduced motion the glow is static and the camera does not move.
 
+## Blood flow in the vessels
+
+Arush chose this on November 10 with the first timing option: **a few beats after each view settles**.
+
+A soft pulse of light travels along the arteries, away from the heart. It starts about a third of a second after a view comes to rest with vessels showing (reveal 44 or higher), runs for 6.3 seconds (seven beats at 0.9 s), fades out, and the scene goes idle again. Any movement (orbit, zoom, slider, section change, hover preview) ends it at once, and it starts again when the view next settles. It does not run while the model is auto-rotating, in the brain-slice explorer, or for visitors who prefer reduced motion.
+
+How it works:
+
+1. **Baked path length.** `scripts/bake-flow.mjs` (`npm run prepare:flow`) gives every artery vertex its path length along the mesh from the lowest part of the ascending aorta, normalised to one byte, in `public/models/flow/arteries.bin` (129,527 bytes; `manifest.json` records the source model hash). The source model is hundreds of separate tube segments, so the script welds coincident vertices and joins points within a small radius before running a shortest-path search. This is an illustrative display weight, **not** a blood-flow measurement or simulation, and no vertex is moved.
+2. **Carried in an existing channel.** The artery surface buffers stored a constant 1 in their alpha channel. For arteries that channel now holds the path length (`0.5 + 0.5 × value`), so no extra render target or memory is needed. The compositor decodes it and restores alpha to 1 before the approved density maths runs, so the reveal itself is unchanged.
+3. **One pass per frame.** In the final composite, a travelling band brightens the artery colour: a sharp leading edge with a tail fading back toward the heart. `flowWaves` in `DensityRenderer.mjs` sets how many fronts span the tree. Because it reads cached buffers, a pulse frame redraws no geometry (the browser test asserts the capture count does not change).
+4. **Courses map.** Selecting a connection sends one bright dash along that vessel from the course branch to the work. It plays once (`.course-flow` in `course-map.css`) and never loops.
+
+Tuning lives at the top of the effect in `AnatomyScene.jsx`: `flowSeconds`, `flowBeat`, `flowPeak` (0.42; it was softened from 0.62 after the first look). The pulse exists only in the default density reveal; `?reveal=section` and `?reveal=blend` do not have it. If the weights file is missing the site works normally without a pulse. Re-run `npm run prepare:flow` if `arteries.glb` ever changes; a regression test checks the vertex count and model hash.
+
+Not measured: cost on a physical phone. During a pulse the still view is composited every frame at full resolution for about six seconds.
+
+## Scan-sweep transition (text column, true wipe)
+
+Arush asked for the scan sweep "to the text side, true wipe". When the route changes (home, atlas or any section, including Back and Forward), a thin red line with a faint glow travels down the text column in about 0.8 seconds. Below the line the old text is still there; above it the new text has replaced it. The corner readout says `ACQUIRING · <view>` until the line finishes.
+
+The 3D model is deliberately **not** part of the wipe. It keeps its approved camera glide and layer transfer. A true wipe of the model would need the camera to hold still and would change the approved reveal; that remains an open option, not something built.
+
+How it works:
+
+- `changeRoute()` in `App.jsx` uses the browser's View Transitions API. It marks `<html data-wipe>`, which gives the text column (`.hero-copy`, `.atlas-intro` or `.chapter-content`) a transition name, so the browser snapshots the old column, applies the route change, and snapshots the new one.
+- CSS at the end of `styles.css` clips the two snapshots against a moving edge: the old one from the top down, the new one from the bottom up, both driven by `--wipe-from` and `--wipe-to` (the visible part of the column, measured after the change). A fixed 2px element with the same travel is the line. `--wipe-ms` and `--wipe-ease` set the timing.
+- The rest of the page is excluded from the animation and changes at once, exactly as before. The transition overlay ignores pointer events, and the new content is live in the page from the first frame, so nothing waits on the sweep.
+- A second navigation during a sweep ends it and starts the next one.
+- The history entry is pushed in the same step as the content change, so the address and the page never disagree.
+
+Fallbacks: reduced motion, an open dialog, or a browser without `document.startViewTransition` (older Firefox and Safari) get today's immediate change.
+
+One consequence to know: the route change now lands one frame after the click, because the browser must capture the old column first. Manual input in that single frame (for example a key pressed on the model immediately after clicking a label) can be overridden by the section's camera move. `tests/browser-scene.cjs` now waits for the address before its interruption check.
+
 ## Verification
 
 ```bash
@@ -60,46 +95,6 @@ npm run test:regression                      # includes tests/interactions.test.
 PREVIEW_URL=http://127.0.0.1:5173 node tests/browser-interactions.cjs
 ```
 
-`tests/interactions.test.mjs` covers the scroll mapping and its inverse, readout formatting and orientation, preview limits for every pair of section views, label insets and the new content fields. `tests/browser-interactions.cjs` (optional, needs Playwright and Chromium like the other browser suites) covers the pinned opening on desktop, 390px and 320px, wheel versus Ctrl+wheel, slider/page agreement, the overlay, previews, the résumé link, write-ups, the glossary, the poster viewer, course catalog text and reduced motion. Evidence from the November 10 run is in `qa/scan-interactions/`.
+`tests/interactions.test.mjs` covers the scroll mapping and its inverse, readout formatting and orientation, preview limits for every pair of section views, label insets, the blood-flow weights and the new content fields. `tests/browser-interactions.cjs` (optional, needs Playwright and Chromium like the other browser suites) covers the pinned opening on desktop, 390px and 320px, wheel versus Ctrl+wheel, slider/page agreement, the overlay, previews, the scan sweep, the blood-flow pulse, the résumé link, write-ups, key terms, the poster viewer, course catalog text and reduced motion. Evidence from the November 10 run is in `qa/scan-interactions/`.
 
-Not established: smoothness on a physical phone or a low-power GPU. The checks ran in a software-rendered browser, which shows correct states and layout but not real frame rates.
-
-## Proposed, not built
-
-### Blood flow in the vessels
-
-A soft pulse of light that travels along the arteries, away from the heart, in time with a resting heartbeat.
-
-How it would work:
-
-1. **Bake a "distance from the heart" value for every artery vertex**, once, the same way `scripts/bake-density.mjs` bakes thickness: walk the mesh outward from the aortic root and store the normalized path length in a small sidecar file (roughly 120–240 KB).
-2. **Carry that value through the existing artery capture** into the density compositor, which already holds per-pixel buffers for each layer.
-3. **Add a moving highlight in the final composite pass**: pixels whose distance value falls inside a narrow travelling band are brightened. Because it reads cached buffers, one pulse frame costs one full-screen pass, the same as scrubbing the slider. No geometry is redrawn.
-4. **Courses map**: when a connection is selected, a bright dash runs once along that SVG vessel from the course branch to the project.
-
-Choices for Arush:
-
-- **When it runs.** The scene currently stops drawing when nothing moves, which saves battery. A permanent pulse ends that. Options: pulse for a few seconds after a view settles; pulse only in the Vessels range and Experience; or always on.
-- **Strength and pace.** Barely visible and slow reads as "alive"; stronger reads as decoration.
-- It would be off for reduced motion, paused by the existing Pause control and when the tab is hidden, and absent from the two older comparison reveals.
-
-Risk: phone GPU cost is unmeasured, and a new baked asset must stay in sync with the artery model.
-
-### Scan-sweep section transition
-
-When the section changes, a thin red line sweeps down the model like a scanner plane, and the new section's text appears behind it.
-
-Sequence, about 0.7–0.9 seconds:
-
-1. The old text fades quickly. A 2px red line with a faint trailing band appears at the top of the model view.
-2. The line travels top to bottom. In step with it, the new heading and entries are uncovered from the top by a clip that follows the line, so the text "prints" as the scan passes. The overlay reads `ACQUIRING` and then the new view name.
-3. The line fades at the bottom and focus moves to the new heading, as it does today.
-
-Two ways to treat the model during the sweep:
-
-- **Cosmetic sweep (recommended first).** The line is an overlay. The camera glide and layer transfer continue exactly as approved. Cheap, and it cannot disturb the density reveal.
-- **True wipe.** The compositor shows the new layer state above the line and the old one below. This needs the camera to hold still during the sweep (its cached buffers are per pose) and changes how the approved continuous reveal behaves during navigation.
-
-Rules either way: a second click restarts from the current state; Back and Forward use the same transition; the new content is in the page and clickable immediately; reduced motion keeps today's instant change.
-
-Choices for Arush: cosmetic or true wipe; top-to-bottom or side-to-side; duration; every section change or only the first entry from the atlas.
+Not established: smoothness on a physical phone or a low-power GPU, and any browser other than Chrome. The checks ran in a software-rendered browser, which shows correct states and layout but not real frame rates.

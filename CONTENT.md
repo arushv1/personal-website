@@ -20,7 +20,7 @@ Find the object with `id: 'projects'`. Add an object to its `items` array, copyi
 },
 ```
 
-Only `id`, `title`, and `summary` are required. `subtitle`, `period`, `tags`, `body`, `highlights`, `facts`, `links`, `photos`, `navTitle`, `writeup`, `glossary` and `poster` are optional (the last three are described under [Richer entries](#richer-entries)). `navTitle` provides a shorter label in the item index when a title is long. Omit fields you do not need; do not publish placeholder links or unsupported results. Text is rendered as plain text, without HTML.
+Only `id`, `title`, and `summary` are required. `subtitle`, `period`, `tags`, `body`, `highlights`, `facts`, `links`, `photos`, `navTitle`, `writeup`, `terms` and `poster` are optional (the last three are described under [Richer entries](#richer-entries)). `navTitle` provides a shorter label in the item index when a title is long. Omit fields you do not need; do not publish placeholder links or unsupported results. Text is rendered as plain text, without HTML.
 
 The order in the array is the reading order. A new entry automatically appears in the side index (horizontal on mobile), reader, item count and previous/next controls. No React edits are necessary. The reader uses native scrolling and does not rerun the 3D scene. An item can be linked directly, e.g. `/projects#threshold`.
 
@@ -73,17 +73,17 @@ writeup: [
 
 The Threshold and SymptomAI write-ups were drafted on November 10, 2026 from each project's Devpost page (and Threshold's live app). They describe the team's work as "we" and add no numbers beyond those pages. Please read them and correct anything that is not how you would say it, especially which parts were yours.
 
-### Plain-language glossary
+### Key terms
 
-`glossary` adds an "In plain terms" box of short definitions:
+`terms` adds a compact "Key terms" list under an entry:
 
 ```js
-glossary: [
-  ['Dice score', 'A 0-to-1 measure of how well the model’s outline overlaps an expert’s.'],
+terms: [
+  ['CTA', 'A CT scan taken with contrast dye, so arteries stand out clearly in 3D.'],
 ],
 ```
 
-Boston Scientific uses it for general terms only. It deliberately says nothing about methods or pipelines there.
+Keep it to **three** terms per entry, each a short name and one or two plain sentences. All four Experience entries have them. They define vocabulary only; in particular the Boston Scientific entry says nothing about methods or pipelines.
 
 ### Posters
 
@@ -103,7 +103,7 @@ Put the files in `public/posters/` and note where they came from in `public/post
 
 ### The "Now" note
 
-About Me has an entry with `id: 'now'`. Edit its three `highlights` and its `period` ("Updated November 2026") whenever your focus changes. The same lines appear in a strip at the bottom of the atlas page, which links to the entry. Keep the id; remove the entry and the strip disappears.
+About Me has an entry with `id: 'now'`. Edit its three `highlights` and its `period` ("Updated November 2026") whenever your focus changes. It appears only in About Me.
 
 ### Course catalog summaries
 
@@ -111,7 +111,7 @@ Each course has `catalog` (a short description) and `catalogUrl` (its source). T
 
 ### Opening captions
 
-The three captions that appear while scrolling the home page ("Structure", "Flow", "Ideas") are in `src/intro.mjs`, not in `portfolio.mjs`. See [INTERACTIONS.md](INTERACTIONS.md).
+The three words that appear while scrolling the home page ("Structure", "Flow", "Ideas") are in `src/intro.mjs`, not in `portfolio.mjs`. They are a layer label and one word each, by design. See [INTERACTIONS.md](INTERACTIONS.md).
 
 ## Section locations and camera views
 

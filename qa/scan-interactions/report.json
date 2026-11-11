@@ -4,13 +4,15 @@
     "slider, layer buttons, reset and Ctrl+wheel zoom stay in step with the page position",
     "scan overlay reports layer, slice, zoom, view angle and patient-style orientation from the live scene",
     "header résumé link opens the served PDF in a new tab",
+    "scan sweep: the text column wipes from old to new behind a travelling line, restarts cleanly and follows Back",
     "hover previews glow the anchor, lean the camera a few degrees, keep labels still and return on leave",
-    "Now note appears on the atlas and opens its About entry",
-    "glossary, both project write-ups and the corrected entries render from content data",
+    "Now note lives in About Me and is no longer shown on the atlas",
+    "blood flow: a few beats after a vessel view settles, from cached buffers, stopping on movement and where vessels are hidden",
+    "key terms, both project write-ups and the corrected entries render from content data",
     "poster opens in a zoomable viewer and Escape closes only the viewer",
     "course catalog summaries appear with their source link",
     "390 and 320 px phones: header fits, the model pins after the headline, captions overlay the pinned model",
-    "reduced motion: no scroll track, slider drives captions, previews glow without camera movement"
+    "reduced motion: no scroll track, sweep or pulse; slider drives captions; previews glow without camera movement"
   ],
   "errors": []
 }

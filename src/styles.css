@@ -115,7 +115,6 @@
 .intro-stage:first-child{visibility:visible}
 .intro-kicker{font:500 12px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:#ff6a64}
 .intro-layer h2{font-size:clamp(64px,6.4vw,124px);font-weight:750;letter-spacing:-.045em;line-height:.95;margin-top:12px}
-.site-shell .hero-copy .intro-layer .hero-subtitle{max-width:440px;white-space:normal}
 .scroll-cue{display:flex;align-items:center;gap:8px;margin-top:22px;font-size:12px;letter-spacing:.03em;color:#8d8d8d;transition:opacity 300ms ease}
 .scroll-cue[data-hidden=true]{opacity:0}
 .scroll-cue svg{animation:cue-bob 1.8s ease-in-out infinite}
@@ -135,23 +134,15 @@
  .intro-stage:first-child{opacity:1;transform:none;pointer-events:auto}
  .intro-caption-overlay{display:block;position:absolute;left:0;right:0;bottom:32px;z-index:1;padding:44px 2px 4px;background:linear-gradient(#0000,#000d 58%);pointer-events:none}
  .intro-overlay-title{font-size:34px;font-weight:750;letter-spacing:-.04em;line-height:1;margin-top:4px}
- .intro-caption-overlay p:last-child{font-size:13px;line-height:1.5;color:#ddd;margin-top:6px;max-width:300px}
  .scroll-cue{margin-top:16px}
 }
 @media(max-width:360px){.has-intro .anatomy-canvas{height:min(450px,calc(100svh - 230px))}}
 @media(prefers-reduced-motion:reduce){.scroll-cue svg,.marker-dot::after{animation:none!important}}
 
-/* The "Now" note on the atlas overview. */
-.now-strip{display:flex;align-items:center;gap:14px;margin-top:22px;padding:12px 15px;border:1px solid #2c2c2c;border-radius:9px;background:#070707;text-decoration:none;font-size:13px;line-height:1.55;color:#cfcfcf}
-.now-strip .eyebrow{display:flex;align-items:center;gap:7px;flex:none;color:#ff6a64}
-.now-strip .eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red)}
-.now-strip>span:nth-child(2){flex:1;min-width:0}.now-strip svg{color:#888}
-.now-strip:hover{border-color:#777;color:#fff}
-
-/* Entry write-ups, plain-language glossaries and posters. */
+/* Entry write-ups, key terms and posters. */
 .entry-writeup{margin-top:26px;padding-top:4px;border-top:1px solid #232323}
 .entry-writeup section{margin-top:22px}
-.entry-writeup h3,.entry-glossary h3{margin:0 0 10px;font-size:11px;font-weight:550;letter-spacing:.14em;text-transform:uppercase;color:#ff736c}
+.entry-writeup h3{margin:0 0 10px;font-size:11px;font-weight:550;letter-spacing:.14em;text-transform:uppercase;color:#ff736c}
 .entry-writeup p,.entry-writeup li{font-size:13px;line-height:1.8;color:#b4b4b4}
 .entry-writeup p+p,.entry-writeup p+ul{margin-top:10px}
 .entry-writeup ul{margin:0;padding-left:18px}.entry-writeup ul li+li{margin-top:8px}
@@ -160,10 +151,12 @@
 .writeup-steps li:last-child{padding-bottom:0}
 .writeup-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:24px;height:24px;display:grid;place-items:center;border:1px solid #b73a33;border-radius:50%;background:#000;font-size:11px;line-height:1;color:#ff8a84}
 .writeup-steps li:not(:last-child)::after{content:"";position:absolute;left:12px;top:26px;bottom:0;width:1px;background:#5a2623}
-.entry-glossary{margin-top:24px;padding:16px 16px 6px;border:1px solid #262626;border-radius:8px;background:#070707}
-.entry-glossary dl{margin:0}.entry-glossary dl>div{padding:9px 0;border-top:1px solid #1d1d1d}
-.entry-glossary dt{font-size:12.5px;font-weight:550;color:#e6e6e6}
-.entry-glossary dd{margin:3px 0 0;font-size:12.5px;line-height:1.65;color:#a9a9a9}
+.entry-terms{margin-top:20px;padding-left:12px;border-left:1px solid #3a2523}
+.entry-terms h3{margin:0 0 6px;font-size:10px;font-weight:550;letter-spacing:.14em;text-transform:uppercase;color:#999}
+.entry-terms dl{margin:0;display:grid;gap:5px}
+.entry-terms dl>div{font-size:12px;line-height:1.6;color:#9c9c9c}
+.entry-terms dt{display:inline;font-weight:550;color:#dcdcdc}.entry-terms dt::after{content:": "}
+.entry-terms dd{display:inline;margin:0}
 .entry-poster{margin:20px 0 0;min-width:0}
 .poster-open{position:relative;display:block;width:100%;padding:0;border:1px solid #292929;border-radius:8px;overflow:hidden;background:#111;cursor:zoom-in}
 .poster-open img{display:block;width:100%;height:auto}
@@ -181,7 +174,28 @@ dialog.poster-dialog[open]{display:flex;flex-direction:column}
 .poster-stage{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#555 #141414;background:#000}
 .poster-stage img{display:block;max-width:none;height:auto}
 .poster-stage[data-zoomed=true]{cursor:grab}.poster-stage[data-zoomed=true]:active{cursor:grabbing}
-@media(max-width:760px){.entry-writeup p,.entry-writeup li{font-size:14px}.entry-glossary dt,.entry-glossary dd{font-size:13.5px}dialog.poster-dialog{width:calc(100% - 16px);max-height:88svh}}
+@media(max-width:760px){.entry-writeup p,.entry-writeup li{font-size:14px}.entry-terms dl>div{font-size:13px}dialog.poster-dialog{width:calc(100% - 16px);max-height:88svh}}
 /* Entries are laid out at their real height. The earlier content-visibility
    estimate (380px) made deep links to items below a long write-up land in the
    wrong place, because heights changed after the jump. */
+
+/* Scan sweep between routes (text column only). The column is captured before
+   and after the change; a line travels down it, with the old text clipped away
+   below the line and the new text uncovered above it. See INTERACTIONS.md. */
+:root{--wipe-ms:780ms;--wipe-ease:cubic-bezier(.45,.05,.5,.95)}
+.scan-sweep{display:none}
+html[data-wipe] :is(.hero-copy,.atlas-intro,.chapter-content){view-transition-name:text-column}
+html[data-wipe=run] .scan-sweep{display:block;position:fixed;z-index:6;left:var(--wipe-x);top:calc(var(--wipe-y) + var(--wipe-from));width:var(--wipe-w);height:2px;background:#ff4a3d;box-shadow:0 0 10px 1px #ff3b2acc,0 -26px 38px 10px #ff3b2a2e;pointer-events:none;view-transition-name:scan-line}
+html[data-wipe]::view-transition{pointer-events:none}
+/* Everything outside the column changes at once, exactly as before. */
+html[data-wipe]::view-transition-old(root){display:none}
+html[data-wipe]::view-transition-new(root){animation:none}
+html[data-wipe]::view-transition-group(text-column),html[data-wipe]::view-transition-group(scan-line){animation:none}
+html[data-wipe]::view-transition-image-pair(text-column){isolation:auto}
+html[data-wipe]::view-transition-old(text-column),html[data-wipe]::view-transition-new(text-column){width:auto;height:auto;max-width:none;mix-blend-mode:normal;animation-duration:var(--wipe-ms);animation-timing-function:var(--wipe-ease);animation-fill-mode:both}
+html[data-wipe]::view-transition-old(text-column){background:#000;animation-name:wipe-old}
+html[data-wipe]::view-transition-new(text-column){animation-name:wipe-new}
+html[data-wipe]::view-transition-new(scan-line){animation:wipe-line var(--wipe-ms) var(--wipe-ease) both}
+@keyframes wipe-old{from{clip-path:inset(var(--wipe-from) 0 0 0)}to{clip-path:inset(var(--wipe-to) 0 0 0)}}
+@keyframes wipe-new{from{clip-path:inset(0 0 calc(100% - var(--wipe-from)) 0)}to{clip-path:inset(0 0 calc(100% - var(--wipe-to)) 0)}}
+@keyframes wipe-line{0%{translate:0 0;opacity:0}7%{opacity:1}93%{opacity:1}100%{translate:0 calc(var(--wipe-to) - var(--wipe-from));opacity:0}}

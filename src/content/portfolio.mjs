@@ -2,7 +2,7 @@
 // Copy an existing item, give it a stable unique id, and keep text as plain strings.
 // Optional photos: [{src: "/photos/projects/my-project/demo.webp", alt: "Describe the photo", caption: "Optional caption"}].
 // Upload photos under public/photos; see CONTENT.md. Empty arrays add no visible space.
-// Optional richer fields (all documented in CONTENT.md): writeup, glossary, poster, and catalog (courses).
+// Optional richer fields (all documented in CONTENT.md): writeup, terms, poster, and catalog (courses).
 export const sections = [
   {
     id:'about', label:'About Me', eyebrow:'THE PERSON', title:'About Me',
@@ -15,7 +15,7 @@ export const sections = [
         subtitle:'Dublin, CA · Boston, MA',
         summary:'I’m a biomedical engineering student at Boston University, working at the intersection of medical imaging and AI.',
         body:['My work connects tissue-scale patterns, three-dimensional vascular imaging, and the questions behind useful clinical tools.']},
-      // The "Now" note. Update `period` and `highlights` whenever your focus changes; the atlas page shows the same lines.
+      // The "Now" note. Update `period` and `highlights` whenever your focus changes.
       {id:'now',
         title:'Now',
         period:'Updated November 2026',
@@ -72,16 +72,12 @@ export const sections = [
           'Benchmarked model variants, loss functions, attention mechanisms, and foundation-model fine-tuning.',
           'Co-invented patent-pending imaging technology and presented technical findings to leadership.'
         ],
-        // General definitions only; nothing here describes Boston Scientific's methods.
-        glossary:[
-          ['CTA (CT angiography)','A CT scan taken with contrast dye in the bloodstream, so arteries stand out clearly in 3D.'],
-          ['Segmentation','Labeling every 3D pixel (voxel) in a scan as part of a structure or not, here artery versus everything else.'],
-          ['Dice score','A 0-to-1 measure of how well the model’s outline overlaps an expert’s. A score of 1 is a perfect match.'],
-          ['clDice (centerline Dice)','A version of Dice that checks the vessel’s centerline, so it rewards keeping thin vessels connected instead of only matching volume.'],
-          ['Loss function','The error score a model tries to shrink during training. Different choices push it toward different behavior.'],
-          ['Attention mechanism','A part of a neural network that learns which regions of the input deserve the most weight.'],
-          ['Foundation-model fine-tuning','Starting from a large model trained on broad data and adapting it to one specific task.'],
-          ['3D Slicer','Open-source software for viewing and annotating medical images.'],
+        // Key terms: three short, general definitions per entry. They explain vocabulary
+        // only and say nothing about any employer's or lab's methods.
+        terms:[
+          ['CTA','A CT scan taken with contrast dye, so arteries stand out clearly in 3D.'],
+          ['Segmentation','Labeling every 3D pixel in a scan as artery or not artery.'],
+          ['Dice and clDice','Scores from 0 to 1 for how closely a model’s outline matches an expert’s. Dice measures overlap; clDice checks that thin vessels stay connected.'],
         ]},
       {id:'tian-lab',
         title:'Tian Lab',
@@ -92,6 +88,11 @@ export const sections = [
         highlights:[
           'Curating 2,500+ annotated tissue patches from 40+ whole-slide images and a diagnosis manifest of 760+ slides.',
           'Introduced multi-resolution viewing and scripted tile extraction to streamline dataset curation.'
+        ],
+        terms:[
+          ['Whole-slide image','A glass microscope slide scanned at high magnification into one very large digital image.'],
+          ['Patch','A small square cut from a slide image, sized so a model can process it.'],
+          ['QuPath','Open-source software for viewing and annotating whole-slide images.'],
         ]},
       {id:'btec',
         title:'BTEC',
@@ -102,6 +103,11 @@ export const sections = [
         highlights:[
           'Maintain a retrieval knowledge base spanning 1,800+ documents across 12 subject areas.',
           'Prepare resources for retrieval and benchmark answer accuracy against real assistant queries.'
+        ],
+        terms:[
+          ['RAG','Retrieval-augmented generation: an AI assistant finds relevant documents first, then writes its answer from them.'],
+          ['Knowledge base','The curated set of documents the assistant searches.'],
+          ['Benchmarking','Scoring answers against a fixed set of questions with known good answers.'],
         ]},
       {id:'albro-lab',
         title:'Albro Lab',
@@ -112,6 +118,11 @@ export const sections = [
         highlights:[
           'Developed a multi-scale computational model in MATLAB that models how cartilage breaks down under inflammatory conditions, using 9 coupled partial differential equations in cylindrical coordinates that simulate biochemical degradation',
           'Performed glycosaminoglycan (GAG) assays on 30+ tissue samples and conducted 2D cell culture studies to detect cell pathways'
+        ],
+        terms:[
+          ['PDE model','Partial differential equations describe how quantities change across both space and time, here inside tissue.'],
+          ['GAGs','Glycosaminoglycans: long sugar chains that help cartilage hold water and resist compression.'],
+          ['Raman spectroscopy','A laser technique that identifies molecules from how they scatter light, without destroying the sample.'],
         ]}
     ],
   },

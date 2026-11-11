@@ -24,7 +24,7 @@ export function fromSpherical({radius,theta,phi},target){
 
 const signed=(degrees,width)=>(degrees<0?'-':'+')+String(Math.abs(degrees)).padStart(width,'0')+'°';
 // Every value is derived from the live scene; nothing imitates patient data.
-export function scanReadout({reveal,position,target,baseRadius,view,preview}){
+export function scanReadout({reveal,position,target,baseRadius,view,preview,acquiring}){
   const {radius,theta,phi}=toSpherical(position,target);
   const azimuth=Math.round(theta*180/Math.PI),elevation=Math.round(90-phi*180/Math.PI);
   return {
@@ -32,7 +32,7 @@ export function scanReadout({reveal,position,target,baseRadius,view,preview}){
     image:'IM '+String(Math.round(Math.max(0,Math.min(100,reveal)))).padStart(3,'0')+' / 100',
     zoom:'ZOOM '+(baseRadius/radius).toFixed(2)+'×',
     angle:'AZ '+signed(azimuth,3)+'  EL '+signed(elevation,2),
-    view:(preview?'PREVIEW · ':'VIEW · ')+(preview||view),
+    view:(acquiring?'ACQUIRING · ':preview?'PREVIEW · ':'VIEW · ')+(acquiring?view:preview||view),
     ...orientationLabels(theta),
   };
 }
